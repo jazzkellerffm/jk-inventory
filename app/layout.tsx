@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { aceBold, aceMedium, polySans } from "./local-fonts";
+import { aceBold, aceMedium, polySans, polySansBulky } from "./local-fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${aceBold.variable} ${aceMedium.variable} ${polySans.variable} h-full antialiased`}
+      className={`${aceBold.variable} ${aceMedium.variable} ${polySans.variable} ${polySansBulky.variable} h-full antialiased`}
     >
       <body
         className={`${polySans.className} min-h-dvh flex flex-col bg-[#F6F4EF] text-neutral-900 font-normal`}

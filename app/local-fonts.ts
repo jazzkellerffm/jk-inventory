@@ -33,3 +33,10 @@ export const polySans = localFont({
   variable: "--font-poly",
   display: "swap",
 });
+
+/** PolySans Bulky only — use for status badges without relying on font-weight mapping. */
+export const polySansBulky = localFont({
+  src: "./fonts/PolySans-Bulky.woff2",
+  variable: "--font-poly-bulky-only",
+  display: "swap",
+});

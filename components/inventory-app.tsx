@@ -321,15 +321,15 @@ export function InventoryApp() {
 
           <div className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-3">
             <DashboardStatPill variant="ok" label="OK" value={counts.ok} />
-            <DashboardStatPill variant="low" label="Low" value={counts.low} />
+            <DashboardStatPill variant="low" label="LOW" value={counts.low} />
             <DashboardStatPill
               variant="critical"
-              label="Critical"
+              label="CRITICAL"
               value={counts.critical}
             />
             <DashboardStatPill
               variant="unchecked"
-              label="Not Checked"
+              label="NOT CHECKED"
               value={counts.unchecked}
             />
           </div>
@@ -352,7 +352,7 @@ export function InventoryApp() {
                         strokeWidth={2.5}
                         aria-hidden
                       />
-                      Critical items
+                      CRITICAL ITEMS
                     </h3>
                     <ul className="font-poly-neutral mt-3 space-y-2">
                       {attention.criticalItems.map((it) => (
@@ -390,7 +390,7 @@ export function InventoryApp() {
                         strokeWidth={2}
                         aria-hidden
                       />
-                      Low items
+                      LOW ITEMS
                     </h3>
                     <ul className="font-poly-neutral mt-2 space-y-1.5">
                       {attention.lowItems.map((it) => (
@@ -521,7 +521,7 @@ export function InventoryApp() {
                 aria-hidden
               />
               <span className="font-poly-bulky shrink-0 text-[15px] font-semibold leading-none text-[#9E7228]">
-                Low
+                LOW
               </span>
               <span
                 className="font-poly-neutral ml-2.5 min-w-0 flex-1 truncate text-[12.5px] font-normal leading-none text-neutral-600 opacity-75 sm:ml-3"
@@ -537,7 +537,7 @@ export function InventoryApp() {
                 aria-hidden
               />
               <span className="font-poly-bulky shrink-0 text-[15px] font-semibold leading-none text-[#B54A4A]">
-                Critical
+                CRITICAL
               </span>
               <span
                 className="font-poly-neutral ml-2.5 min-w-0 flex-1 truncate text-[12.5px] font-normal leading-none text-neutral-600 opacity-75 sm:ml-3"
@@ -635,21 +635,21 @@ export function InventoryApp() {
                         type="button"
                         data-testid={`${itemDomToken(it)}-low`}
                         aria-pressed={it.status === "low"}
-                        aria-label={`${it.name}, ${it.unit}: Low`}
+                        aria-label={`${it.name}, ${it.unit}: LOW`}
                         className={pickSeg("low", it.status)}
                         onClick={() => setStatus(it.id, "low")}
                       >
-                        Low
+                        LOW
                       </button>
                       <button
                         type="button"
                         data-testid={`${itemDomToken(it)}-critical`}
                         aria-pressed={it.status === "critical"}
-                        aria-label={`${it.name}, ${it.unit}: Critical`}
+                        aria-label={`${it.name}, ${it.unit}: CRITICAL`}
                         className={pickSeg("critical", it.status)}
                         onClick={() => setStatus(it.id, "critical")}
                       >
-                        Critical
+                        CRITICAL
                       </button>
                     </div>
                   </div>
@@ -896,7 +896,7 @@ function StatusBadge({
         <span
           className={`${b} border-[#C89B3C]/65 bg-[#C89B3C]/22 text-[#5C430A] ring-1 ring-[#C89B3C]/25 shadow-[0_1px_3px_rgba(200,155,60,0.2)]`}
         >
-          Low
+          LOW
         </span>
       );
     if (status === "critical")
@@ -904,14 +904,14 @@ function StatusBadge({
         <span
           className={`${b} border-[#B71C1C]/80 bg-[#C62828]/30 text-[#5C0A0A] ring-1 ring-[#C62828]/35 shadow-[0_2px_8px_rgba(198,40,40,0.32)]`}
         >
-          Critical
+          CRITICAL
         </span>
       );
     return (
       <span
         className={`${b} border-neutral-400/70 bg-neutral-100 text-neutral-700 ring-1 ring-neutral-300/50 shadow-[0_1px_2px_rgba(0,0,0,0.06)]`}
       >
-        Not Checked
+        NOT CHECKED
       </span>
     );
   }
@@ -931,7 +931,7 @@ function StatusBadge({
       <span
         className={`${badgeBase} border-[#C89B3C]/45 bg-[#C89B3C]/18 text-[#7A5A1A]`}
       >
-        Low
+        LOW
       </span>
     );
   if (status === "critical")
@@ -939,14 +939,14 @@ function StatusBadge({
       <span
         className={`${badgeBase} border-[#C62828]/45 bg-[#C62828]/18 text-[#B71C1C]`}
       >
-        Critical
+        CRITICAL
       </span>
     );
   return (
     <span
       className={`${badgeBase} border-neutral-300/90 bg-neutral-100 text-neutral-600`}
     >
-      Not Checked
+      NOT CHECKED
     </span>
   );
 }

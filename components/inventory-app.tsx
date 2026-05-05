@@ -743,7 +743,7 @@ export function InventoryApp() {
             className="font-poly-bulky flex min-h-[46px] min-w-0 flex-1 items-center justify-center rounded-xl px-3 text-[14px] text-white transition active:scale-[0.99] active:opacity-95"
             style={{ backgroundColor: racing }}
           >
-            <span className="truncate">Submit Stock Check</span>
+            <span className="truncate">Complete Stock Check</span>
           </button>
           <div className="flex h-[46px] shrink-0 items-center rounded-xl bg-[#F4F1EC] px-3 ring-1 ring-[#E8E4DC]/90">
             <span className="font-poly-bulky text-[16px] font-semibold tabular-nums tracking-tight text-[#1A1A1A]">

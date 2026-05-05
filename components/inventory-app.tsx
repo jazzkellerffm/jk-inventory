@@ -496,39 +496,54 @@ export function InventoryApp() {
       </header>
 
       <div className="mx-auto max-w-md px-4">
-        <div className="mt-3 rounded-2xl border border-neutral-100/90 bg-white px-3 py-2.5 shadow-[0_2px_14px_rgba(11,51,40,0.04)]">
-          <ul className="space-y-1.5">
-            <li className="flex gap-2 text-[11px] leading-snug text-neutral-600">
+        <div className="mt-3 rounded-2xl border border-neutral-100/90 bg-white px-4 py-3 shadow-[0_2px_14px_rgba(11,51,40,0.04)]">
+          <ul className="flex flex-col gap-2.5">
+            <li className="flex min-w-0 items-center overflow-hidden whitespace-nowrap">
               <CheckCircle
-                className="mt-0.5 size-3.5 shrink-0 text-[#2E7D32]"
+                className="mr-2 size-4 shrink-0 text-[#3A7D40]"
+                strokeWidth={2}
                 aria-hidden
               />
-              <span className="font-poly-neutral min-w-0">
-                <span className="font-poly-bulky text-[#2E7D32]">OK</span>
-                {" — "}
-                Enough for two or more nights
+              <span className="font-poly-bulky shrink-0 text-[15px] font-semibold leading-none text-[#2F6B34]">
+                OK
+              </span>
+              <span
+                className="font-poly-neutral ml-2.5 min-w-0 flex-1 truncate text-[12.5px] font-normal leading-none text-neutral-600 opacity-75 sm:ml-3"
+                title="Enough for two or more nights"
+              >
+                — Enough for two or more nights
               </span>
             </li>
-            <li className="flex gap-2 text-[11px] leading-snug text-neutral-600">
+            <li className="flex min-w-0 items-center overflow-hidden whitespace-nowrap">
               <AlertTriangle
-                className="mt-0.5 size-3.5 shrink-0 text-[#C89B3C]"
+                className="mr-2 size-4 shrink-0 text-[#B8893A]"
+                strokeWidth={2}
                 aria-hidden
               />
-              <span className="font-poly-neutral min-w-0">
-                <span className="font-poly-bulky text-[#C89B3C]">Low</span>
-                {" — "}
-                Enough for one night, reorder soon
+              <span className="font-poly-bulky shrink-0 text-[15px] font-semibold leading-none text-[#9E7228]">
+                Low
+              </span>
+              <span
+                className="font-poly-neutral ml-2.5 min-w-0 flex-1 truncate text-[12.5px] font-normal leading-none text-neutral-600 opacity-75 sm:ml-3"
+                title="Enough for one night, reorder soon"
+              >
+                — Enough for one night, reorder soon
               </span>
             </li>
-            <li className="flex gap-2 text-[11px] leading-snug text-neutral-600">
+            <li className="flex min-w-0 items-center overflow-hidden whitespace-nowrap">
               <XCircle
-                className="mt-0.5 size-3.5 shrink-0 text-[#C62828]"
+                className="mr-2 size-4 shrink-0 text-[#C25555]"
+                strokeWidth={2}
                 aria-hidden
               />
-              <span className="font-poly-neutral min-w-0">
-                <span className="font-poly-bulky text-[#C62828]">Critical</span>
-                {" — "}
-                Not enough for tonight
+              <span className="font-poly-bulky shrink-0 text-[15px] font-semibold leading-none text-[#B54A4A]">
+                Critical
+              </span>
+              <span
+                className="font-poly-neutral ml-2.5 min-w-0 flex-1 truncate text-[12.5px] font-normal leading-none text-neutral-600 opacity-75 sm:ml-3"
+                title="Not enough for tonight"
+              >
+                — Not enough for tonight
               </span>
             </li>
           </ul>

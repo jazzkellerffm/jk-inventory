@@ -13,7 +13,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { aceBold, aceMedium } from "@/app/local-fonts";
-import { appendSavedCheck } from "@/lib/check-storage";
 import {
   createInitialInventory,
   INVENTORY_TOTAL,
@@ -153,7 +152,7 @@ export function InventoryApp() {
   const [nameSubmitAttempted, setNameSubmitAttempted] = useState(false);
   const [submittedAt, setSubmittedAt] = useState<Date | null>(null);
   const [generalNotes, setGeneralNotes] = useState("");
-  /** Snapshot from saved check for dashboard display. */
+  /** Snapshot from submitted check for dashboard display. */
   const [dashboardGeneralNotes, setDashboardGeneralNotes] = useState("");
   /** Shift notes panel: collapsed saves space; expand to edit (scrollable, not fixed). */
   const [shiftNotesOpen, setShiftNotesOpen] = useState(false);
@@ -164,6 +163,10 @@ export function InventoryApp() {
   const categoryNavScrollSourceRef = useRef<"scroll" | "tap">("scroll");
   const [copyMissingCopied, setCopyMissingCopied] = useState(false);
   const copyMissingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const [shareFallbackCopied, setShareFallbackCopied] = useState(false);
+  const shareFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
 
@@ -248,6 +251,8 @@ export function InventoryApp() {
   useEffect(() => {
     return () => {
       if (copyMissingTimerRef.current) clearTimeout(copyMissingTimerRef.current);
+      if (shareFallbackTimerRef.current)
+        clearTimeout(shareFallbackTimerRef.current);
     };
   }, []);
 
@@ -306,20 +311,59 @@ export function InventoryApp() {
     );
   }, [submittedAt, attention, staffName, dashboardGeneralNotes]);
 
-  const handleCopyMissingItems = useCallback(async () => {
-    if (!missingItemsShareText) return;
+  const copyReportText = useCallback(async () => {
+    if (!missingItemsShareText) return false;
     try {
       await navigator.clipboard.writeText(missingItemsShareText);
-      if (copyMissingTimerRef.current) clearTimeout(copyMissingTimerRef.current);
-      setCopyMissingCopied(true);
-      copyMissingTimerRef.current = setTimeout(() => {
-        setCopyMissingCopied(false);
-        copyMissingTimerRef.current = null;
-      }, 2000);
+      return true;
     } catch {
-      /* ignore */
+      return false;
     }
   }, [missingItemsShareText]);
+
+  const handleCopyMissingItems = useCallback(async () => {
+    const copied = await copyReportText();
+    if (!copied) return;
+    if (shareFallbackTimerRef.current) {
+      clearTimeout(shareFallbackTimerRef.current);
+      shareFallbackTimerRef.current = null;
+    }
+    setShareFallbackCopied(false);
+    if (copyMissingTimerRef.current) clearTimeout(copyMissingTimerRef.current);
+    setCopyMissingCopied(true);
+    copyMissingTimerRef.current = setTimeout(() => {
+      setCopyMissingCopied(false);
+      copyMissingTimerRef.current = null;
+    }, 2000);
+  }, [copyReportText]);
+
+  const handleSendToWhatsApp = useCallback(async () => {
+    if (!missingItemsShareText) return;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ text: missingItemsShareText });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    const copied = await copyReportText();
+    if (!copied) return;
+    if (copyMissingTimerRef.current) {
+      clearTimeout(copyMissingTimerRef.current);
+      copyMissingTimerRef.current = null;
+    }
+    setCopyMissingCopied(false);
+    if (shareFallbackTimerRef.current) clearTimeout(shareFallbackTimerRef.current);
+    setShareFallbackCopied(true);
+    shareFallbackTimerRef.current = setTimeout(() => {
+      setShareFallbackCopied(false);
+      shareFallbackTimerRef.current = null;
+    }, 2600);
+  }, [copyReportText, missingItemsShareText]);
 
   function setStatus(id: string, status: StockStatus) {
     setItems((prev) =>
@@ -340,43 +384,19 @@ export function InventoryApp() {
     setNameSubmitAttempted(false);
 
     const at = new Date();
-    const checked = items.filter((i) => i.status !== "unchecked").length;
-    const saved = appendSavedCheck({
-      staffName: name,
-      submittedAt: at.toISOString(),
-      checkedCount: checked,
-      totalCount: INVENTORY_TOTAL,
-      counts: { ...counts },
-      generalNotes: generalNotes.trim(),
-      items: items.map((i) => ({
-        id: i.id,
-        section: i.section,
-        name: i.name,
-        unit: i.unit,
-        status: i.status,
-        note: i.note,
-      })),
-    });
-
-    setDashboardGeneralNotes(saved.generalNotes);
+    setDashboardGeneralNotes(generalNotes.trim());
     setSubmittedAt(at);
     setView("dashboard");
   }
 
-  function startNewCheck() {
-    setItems(createInitialInventory());
-    setStaffName("");
-    setNameBlurred(false);
-    setNameSubmitAttempted(false);
-    setSubmittedAt(null);
-    setGeneralNotes("");
-    setDashboardGeneralNotes("");
-    setShiftNotesOpen(false);
+  function editInventory() {
     setCopyMissingCopied(false);
-    if (copyMissingTimerRef.current) {
-      clearTimeout(copyMissingTimerRef.current);
-      copyMissingTimerRef.current = null;
-    }
+    setShareFallbackCopied(false);
+    if (copyMissingTimerRef.current) clearTimeout(copyMissingTimerRef.current);
+    if (shareFallbackTimerRef.current)
+      clearTimeout(shareFallbackTimerRef.current);
+    copyMissingTimerRef.current = null;
+    shareFallbackTimerRef.current = null;
     setView("form");
   }
 
@@ -399,9 +419,6 @@ export function InventoryApp() {
     return (
       <div className="min-h-dvh pb-8" style={{ backgroundColor: cream }}>
         <main className="relative mx-auto max-w-md px-4 pt-7">
-          <div className="pointer-events-none absolute right-4 top-5 z-10 sm:top-6">
-            <JkosSystemBadge />
-          </div>
           <header className="text-center">
             <h1
               className={`${aceBold.className} text-[1.7rem] leading-[1.15] tracking-tight text-neutral-900 sm:text-[1.85rem]`}
@@ -417,14 +434,33 @@ export function InventoryApp() {
             </p>
           </header>
 
-          <button
-            type="button"
-            onClick={handleCopyMissingItems}
-            className="font-poly-neutral mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-neutral-200/80 bg-white py-3 text-sm font-medium text-[#0B3328] shadow-[0_2px_12px_rgba(11,51,40,0.05)] transition-[transform,background-color,box-shadow] hover:bg-[#FAFAF8] active:scale-[0.99] active:bg-neutral-100/90"
-          >
-            <Copy className="size-4 shrink-0 opacity-80" strokeWidth={2} aria-hidden />
-            {copyMissingCopied ? "Copied" : "Copy missing items"}
-          </button>
+          <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handleSendToWhatsApp}
+              className="font-poly-bulky flex w-full items-center justify-center rounded-2xl py-3 text-sm text-white shadow-[0_8px_28px_rgba(11,51,40,0.22)] transition active:scale-[0.99]"
+              style={{ backgroundColor: racing }}
+            >
+              Send to WhatsApp
+            </button>
+            <button
+              type="button"
+              onClick={handleCopyMissingItems}
+              className="font-poly-neutral flex w-full items-center justify-center gap-2 rounded-2xl border border-neutral-200/80 bg-white py-3 text-sm font-medium text-[#0B3328] shadow-[0_2px_12px_rgba(11,51,40,0.05)] transition-[transform,background-color,box-shadow] hover:bg-[#FAFAF8] active:scale-[0.99] active:bg-neutral-100/90"
+            >
+              <Copy
+                className="size-4 shrink-0 opacity-80"
+                strokeWidth={2}
+                aria-hidden
+              />
+              {copyMissingCopied ? "Copied" : "Copy report"}
+            </button>
+          </div>
+          {shareFallbackCopied ? (
+            <p className="font-poly-neutral mt-2 text-center text-sm text-neutral-600">
+              Report copied. Paste it into JK Cartel.
+            </p>
+          ) : null}
 
           {dashboardGeneralNotes.trim() ? (
             <section className="mt-5 rounded-2xl border border-neutral-100/80 bg-white p-4 shadow-[0_4px_20px_rgba(11,51,40,0.055)]">
@@ -576,11 +612,11 @@ export function InventoryApp() {
 
           <button
             type="button"
-            onClick={startNewCheck}
+            onClick={editInventory}
             className="font-poly-bulky mt-8 w-full rounded-2xl py-4 text-base text-white shadow-[0_8px_28px_rgba(11,51,40,0.22)] transition active:scale-[0.99]"
             style={{ backgroundColor: racing }}
           >
-            Start new check
+            Edit Inventory
           </button>
         </main>
       </div>

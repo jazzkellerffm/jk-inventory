@@ -89,6 +89,16 @@ const SECTIONS: { section: string; items: SeedRow[] }[] = [
     ],
   },
   {
+    section: "Wine & Crémant",
+    items: [
+      { name: "Crémant", unit: "Bottle" },
+      { name: "Lugana", unit: "Bottle" },
+      { name: "Grauburgunder", unit: "Bottle" },
+      { name: "Sauvignon Blanc", unit: "Bottle" },
+      { name: "Primitivo", unit: "Bottle" },
+    ],
+  },
+  {
     section: "Soft Drinks",
     items: [
       { name: "Water still", unit: "Box" },
@@ -138,6 +148,7 @@ export function sectionHeading(section: string): string {
     Ice: "ICE",
     "Core Spirits": "CORE SPIRITS",
     Beer: "BEER",
+    "Wine & Crémant": "WINE & CRÉMANT",
     "Soft Drinks": "SOFT DRINKS",
     Snacks: "SNACKS",
     "Bar Essentials": "BAR ESSENTIALS",

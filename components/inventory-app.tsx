@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import {
   AlertTriangle,
   CheckCircle,
@@ -27,6 +28,32 @@ const racing = "#0B3328";
 const ok = "#2E7D32";
 const low = "#C89B3C";
 const critical = "#C62828";
+
+/** Active category pill — muted dusty plum (PolySans pills only). */
+const categoryNavActivePlum = "#766281";
+
+/** JKOS system badge: dark green glass; image uses explicit max size caps. */
+const jkosBadgeShellClass =
+  "inline-flex h-[30px] w-[80px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.09] bg-[#1a2f2a]/90 px-[8px] shadow-[0_2px_10px_-4px_rgba(11,51,40,0.22)] backdrop-blur-[6px]";
+
+function JkosSystemBadge({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`${jkosBadgeShellClass} ${className}`.trim()}
+      aria-label="JKOS"
+      title="JKOS"
+    >
+      <Image
+        src="/JKOS.png"
+        alt=""
+        width={560}
+        height={200}
+        sizes="60px"
+        className="mx-auto block h-auto max-h-[16px] w-auto max-w-[60px] object-contain object-center opacity-[0.98]"
+      />
+    </div>
+  );
+}
 
 const segTrack = "rounded-2xl bg-[#F2EFE9] p-1 ring-1 ring-inset ring-black/[0.04]";
 
@@ -103,6 +130,19 @@ const noteFieldClass =
 const generalShiftNotesFieldClass =
   "jk-note-input min-h-[5.5rem] w-full resize-y rounded-2xl border border-neutral-200 bg-[#FAF8F3] px-4 py-3 text-sm leading-relaxed text-neutral-900 outline-none transition-[border-color,background-color,box-shadow] placeholder:italic placeholder:text-neutral-400/75 focus-visible:border-[#0B3328]/25 focus-visible:bg-[#FCFAF6] focus-visible:shadow-[0_0_0_3px_rgba(11,51,40,0.06)]";
 
+/** Sticky bar + breathing room for `scrollIntoView` / scroll-margin. */
+const CATEGORY_STICKY_SCROLL_PAD_PX = 76;
+
+const categoryPillBaseClass =
+  "font-poly-neutral inline-flex h-[34px] shrink-0 snap-start items-center justify-center rounded-[10px] px-[1.35rem] text-[13px] font-medium leading-none tracking-[0.01em] transition-[background-color,color,transform,box-shadow] duration-200 ease-out [-webkit-tap-highlight-color:transparent] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#766281]/22 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F6F4EF] active:scale-[0.98]";
+
+const categoryPillInactiveClass = `${categoryPillBaseClass} bg-[#E8E5DF] text-[#1a1a1a]`;
+
+const categoryPillActiveClass = `${categoryPillBaseClass} text-white shadow-[0_1px_3px_rgba(118,98,129,0.28)]`;
+
+const categoryNavScrollerClass =
+  "flex snap-x snap-proximity gap-2 overflow-x-auto overscroll-x-contain py-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+
 export function InventoryApp() {
   const [view, setView] = useState<"form" | "dashboard">("form");
   const [items, setItems] = useState<InventoryItem[]>(() =>
@@ -118,10 +158,92 @@ export function InventoryApp() {
   /** Shift notes panel: collapsed saves space; expand to edit (scrollable, not fixed). */
   const [shiftNotesOpen, setShiftNotesOpen] = useState(false);
   const shiftNotesSectionRef = useRef<HTMLDivElement>(null);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const pillRefsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const scrollSyncSkipRef = useRef(false);
+  const categoryNavScrollSourceRef = useRef<"scroll" | "tap">("scroll");
   const [copyMissingCopied, setCopyMissingCopied] = useState(false);
   const copyMissingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+
+  /** Same section order as the list below: first index where each `section` appears in `items`. */
+  const categoryNavItems = useMemo(() => {
+    const seen = new Set<string>();
+    const order: string[] = [];
+    for (const it of items) {
+      if (!seen.has(it.section)) {
+        seen.add(it.section);
+        order.push(it.section);
+      }
+    }
+    return order.map((section) => ({ section, label: section }));
+  }, [items]);
+
+  const [activeCategorySection, setActiveCategorySection] = useState("");
+  useEffect(() => {
+    const first = categoryNavItems[0]?.section ?? "";
+    setActiveCategorySection((prev) =>
+      prev && categoryNavItems.some((c) => c.section === prev) ? prev : first,
+    );
+  }, [categoryNavItems]);
+
+  const scrollToCategorySection = useCallback((section: string) => {
+    const el = document.getElementById(sectionDomId(section));
+    if (!el) return;
+    scrollSyncSkipRef.current = true;
+    categoryNavScrollSourceRef.current = "tap";
+    setActiveCategorySection(section);
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => {
+      scrollSyncSkipRef.current = false;
+    }, 700);
+  }, []);
+
+  useEffect(() => {
+    const sections = categoryNavItems.map((c) => c.section);
+    if (sections.length === 0) return;
+
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      if (scrollSyncSkipRef.current) return;
+      const line = CATEGORY_STICKY_SCROLL_PAD_PX + 14;
+      let current = sections[0]!;
+      for (const sec of sections) {
+        const el = document.getElementById(sectionDomId(sec));
+        if (!el) continue;
+        if (el.getBoundingClientRect().top <= line) current = sec;
+      }
+      setActiveCategorySection((p) => (p === current ? p : current));
+    };
+
+    const onScrollOrResize = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    };
+
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+    update();
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [categoryNavItems]);
+
+  useEffect(() => {
+    if (!activeCategorySection) return;
+    const btn = pillRefsRef.current.get(activeCategorySection);
+    btn?.scrollIntoView({
+      behavior:
+        categoryNavScrollSourceRef.current === "tap" ? "smooth" : "auto",
+      inline: "center",
+      block: "nearest",
+    });
+    categoryNavScrollSourceRef.current = "scroll";
+  }, [activeCategorySection]);
 
   useEffect(() => {
     return () => {
@@ -276,7 +398,10 @@ export function InventoryApp() {
 
     return (
       <div className="min-h-dvh pb-8" style={{ backgroundColor: cream }}>
-        <main className="mx-auto max-w-md px-4 pt-7">
+        <main className="relative mx-auto max-w-md px-4 pt-7">
+          <div className="pointer-events-none absolute right-4 top-5 z-10 sm:top-6">
+            <JkosSystemBadge />
+          </div>
           <header className="text-center">
             <h1
               className={`${aceBold.className} text-[1.7rem] leading-[1.15] tracking-tight text-neutral-900 sm:text-[1.85rem]`}
@@ -475,22 +600,25 @@ export function InventoryApp() {
           >
             <Package className="size-6" strokeWidth={1.75} color={racing} />
           </div>
-          <div className="min-w-0 pt-0.5">
-            <h1
-              className={`${aceBold.className} text-2xl leading-tight tracking-tight`}
-              style={{ color: racing }}
-            >
-              JK Inventory
-            </h1>
-            <p
-              className="font-poly-bulky mt-0.5 text-[15px]"
-              style={{ color: racing }}
-            >
-              Fast Stock Check
-            </p>
-            <p className="font-poly-neutral mt-2 text-xs leading-relaxed text-neutral-400">
-              Tap to update stock levels, scroll for more.
-            </p>
+          <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+            <div className="min-w-0 pt-0.5">
+              <h1
+                className={`${aceBold.className} text-2xl leading-tight tracking-tight`}
+                style={{ color: racing }}
+              >
+                JK Inventory
+              </h1>
+              <p
+                className="font-poly-bulky mt-0.5 text-[15px]"
+                style={{ color: racing }}
+              >
+                Fast Stock Check
+              </p>
+              <p className="font-poly-neutral mt-2 text-xs leading-relaxed text-neutral-400">
+                Tap to update stock levels, scroll for more.
+              </p>
+            </div>
+            <JkosSystemBadge className="mt-1.5 sm:mt-2" />
           </div>
         </div>
       </header>
@@ -581,7 +709,47 @@ export function InventoryApp() {
           ) : null}
         </div>
 
-        <div className="mt-5 space-y-4 pb-2">
+        {categoryNavItems.length > 0 ? (
+          <nav
+            aria-label="Inventory categories"
+            className="sticky z-40 -mx-4 mt-4 border-b border-black/[0.03] bg-[#F6F4EF]/95 px-4 py-2.5 shadow-[0_8px_28px_-18px_rgba(11,51,40,0.12)] backdrop-blur-md backdrop-saturate-150 supports-[backdrop-filter]:bg-[#F6F4EF]/80"
+            style={{ top: 0 }}
+          >
+            <div
+              ref={categoryScrollRef}
+              className={categoryNavScrollerClass}
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {categoryNavItems.map(({ label, section }) => {
+                const active = activeCategorySection === section;
+                return (
+                  <button
+                    key={section}
+                    type="button"
+                    ref={(el) => {
+                      if (el) pillRefsRef.current.set(section, el);
+                      else pillRefsRef.current.delete(section);
+                    }}
+                    aria-current={active ? "true" : undefined}
+                    onClick={() => scrollToCategorySection(section)}
+                    className={
+                      active ? categoryPillActiveClass : categoryPillInactiveClass
+                    }
+                    style={
+                      active ? { backgroundColor: categoryNavActivePlum } : undefined
+                    }
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        ) : null}
+
+        <div
+          className={`space-y-4 pb-2 ${categoryNavItems.length > 0 ? "mt-4" : "mt-5"}`}
+        >
           {items.map((it, idx) => {
             const showHeading =
               idx === 0 || items[idx - 1]!.section !== it.section;
@@ -595,7 +763,8 @@ export function InventoryApp() {
                 {showHeading ? (
                   <h2
                     id={sectionDomId(it.section)}
-                    className={`${aceMedium.className} scroll-mt-24 sm:scroll-mt-28 mb-4 px-0.5 text-[18px] font-medium uppercase leading-snug tracking-[0.05em] text-[#0B3328] sm:text-[20px]`}
+                    style={{ scrollMarginTop: CATEGORY_STICKY_SCROLL_PAD_PX }}
+                    className={`${aceMedium.className} mb-4 px-0.5 text-[18px] font-medium uppercase leading-snug tracking-[0.05em] text-[#0B3328] sm:text-[20px]`}
                   >
                     {sectionHeading(it.section)}
                   </h2>

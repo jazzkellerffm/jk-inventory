@@ -6,7 +6,6 @@ import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, Eye, EyeOff, R
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
 import { IncludedDrinks } from "./included-drinks";
 import { Bestsellers } from "./bestsellers";
-import { Performance } from "./performance";
 import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
 import { staffModules } from "./modules";
@@ -99,8 +98,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
     .flatMap(entry => entry.items.flatMap((item, index) => isCocktail(item.name)
       ? [{ ...item, at: entry.at, source: entry.source, key: [entry.source, entry.id, index].join("/") }]
-      : []))
-    .slice(0, 4);
+      : []));
   const effort = (paid?.paidEffort ?? 0) + (open?.openEffort ?? 0);
   const complete = paid && open && !paid.missingReceiptDetails;
   const level = effort >= 5 ? 3 : effort >= 3 ? 2 : complete ? 1 : 0;
@@ -131,7 +129,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           <strong role="status">{board || error ? loadLabel : "Lädt …"}</strong>
         </div>
         <div className="load-meter" aria-hidden="true"/>
-        {cocktailTiles.length > 0 && <ul className="cocktail-tiles" aria-label="Letzte Cocktails">
+        {cocktailTiles.length > 0 && <ul className="cocktail-tiles" tabIndex={0} aria-label="Letzte Cocktails, horizontal scrollbar">
           {cocktailTiles.map(tile => <li key={tile.key}>
             <b>{tile.quantity !== null && tile.quantity > 1 && tile.quantity + " × "}{tile.name}</b>
             <small><time dateTime={tile.at}>{time.format(new Date(tile.at))}</time> · {tile.source}</small>
@@ -177,7 +175,6 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <NightDrinks {...tickets} example={!!example}/>
       <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
       <Bestsellers example={!!example}/>
-      <Performance feed={tickets.feed} example={!!example}/>
       <TicketSales {...tickets} example={!!example}/>
       <h2 className="staff-tools-title">Für die Schicht</h2>
       <div className="staff-modules">

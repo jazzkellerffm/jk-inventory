@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Performance } from "./performance";
 import { ServicePlan } from "./service-plan";
 import { Ticket } from "lucide-react";
 import type { TicketFeed } from "@/lib/staff/tickets";
@@ -95,5 +96,7 @@ export function TicketSales({example,feed,state}:Props) {
       <p className="ticket-legend"><i aria-hidden="true"/> Neu gebuchte Gäste in den letzten 24 Stunden</p>
     </> :
       <p>{feed ? "Keine Veranstaltungen in dieser Woche." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : state === "loading" ? "Ticketverkauf wird geladen …" : ""}</p>}
-  </section><ServicePlan nights={feed?.nights ?? []} defaultId={upcoming[0]?.id} example={example}/></>;
+  </section>
+  <Performance feed={feed} example={example}/>
+  <ServicePlan nights={feed?.nights ?? []} defaultId={upcoming[0]?.id} example={example}/></>;
 }

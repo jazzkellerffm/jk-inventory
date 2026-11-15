@@ -1,5 +1,5 @@
 import "server-only";
-import type { BarFeed, Payment, ReceiptItem } from "./types";
+import type { BarFeed, Payment, ReceiptItem, BestsellerFeed } from "./types";
 
 const minute = 60_000;
 const api = "https://api.sumup.com";
@@ -38,8 +38,8 @@ async function receiptItems(merchant: string, id: string, token: string): Promis
       const quantity = Number(product?.quantity);
       return name ? [{ name, quantity: quantity > 0 && Number.isFinite(quantity) ? quantity : null }] : [];
     }) : [];
-    if (receiptCache.size >= 200) receiptCache.delete(receiptCache.keys().next().value!);
-    receiptCache.set(key, { items, until: Date.now() + (items.length ? 60 : 1) * minute });
+    if (receiptCache.size >= 2000) receiptCache.delete(receiptCache.keys().next().value!);
+    receiptCache.set(key, { items, until: Date.now() + (items.length ? 24 * 60 : 1) * minute });
     return items;
   } catch {
     // The payment remains visible if the receipt has not arrived yet.
@@ -47,8 +47,7 @@ async function receiptItems(merchant: string, id: string, token: string): Promis
   }
 }
 
-async function collect(merchant: string, token: string, now: number): Promise<BarFeed> {
-  const since = now - 60 * minute;
+async function history(merchant: string, token: string, since: number, now: number) {
   const path = `/v2.1/merchants/${encodeURIComponent(merchant)}/transactions/history`;
   const query = new URLSearchParams({
     oldest_time: new Date(since).toISOString(), newest_time: new Date(now).toISOString(),
@@ -71,9 +70,14 @@ async function collect(merchant: string, token: string, now: number): Promise<Ba
       payments.set(id, { id, at: row.timestamp, amount: row.amount, currency: row.currency, items: [] });
     }
     const next = page.links?.find((link: { rel: string }) => link.rel === "next");
-    cursor = next ? String(next.href).replace(/^\?/, "") : "";
+    cursor = next ? new URL(next.href, api + path).searchParams.toString() : "";
   }
-  const sorted = [...payments.values()].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+  return [...payments.values()].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+
+async function collect(merchant: string, token: string, now: number): Promise<BarFeed> {
+  const since = now - 60 * minute;
+  const sorted = await history(merchant,token,since,now);
   const buckets = Array<number>(12).fill(0);
   for (const payment of sorted) buckets[Math.floor((Date.parse(payment.at) - since) / (5 * minute))]++;
   const latest = sorted.slice(0, 8);
@@ -93,4 +97,44 @@ export function readBarFeed(merchant: string, token: string) {
   lastFeed = { key: merchant, until: now + 12_000, value };
   value.catch(() => { if (lastFeed?.value === value) lastFeed = undefined; });
   return value;
+}
+
+const berlinDate = new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Berlin"});
+const berlinHour = new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Berlin",hour:"2-digit",hourCycle:"h23"});
+
+function serviceStart(now:number) {
+  const day = new Date(berlinDate.format(now)+"T06:00:00Z");
+  if (Number(berlinHour.format(now))<6) day.setUTCDate(day.getUTCDate()-1);
+  return day.getTime()-(Number(berlinHour.format(day))-6)*60*minute;
+}
+
+async function rankSales(merchant:string,token:string,start:number,now:number):Promise<BestsellerFeed> {
+  const sales = await history(merchant,token,start,now);
+  const totals = new Map<string,{name:string;quantity:number}>();
+  let incomplete=0;
+  for (let i=0;i<sales.length;i+=8) {
+    const receipts=await Promise.all(sales.slice(i,i+8).map(p=>receiptItems(merchant,p.id,token)));
+    for (const items of receipts) {
+      if (!items.length || items.some(item=>item.quantity===null)) incomplete++;
+      for (const {name,quantity} of items) {
+        if (quantity===null) continue;
+        const key=name.normalize("NFC").toLocaleLowerCase("de");
+        const entry=totals.get(key);
+        if (entry) entry.quantity+=quantity;
+        else totals.set(key,{name,quantity});
+      }
+    }
+  }
+  const products=[...totals.values()].sort((a,b)=>b.quantity-a.quantity || a.name.localeCompare(b.name,"de")).slice(0,10);
+  return {products,incomplete,asOf:new Date(now).toISOString()};
+}
+
+let ranking:{merchant:string;start:number;until:number;data:Promise<BestsellerFeed>} | undefined;
+export function readBestsellers(merchant:string,token:string) {
+  const now=Date.now(), start=serviceStart(now);
+  if (ranking?.merchant===merchant && ranking.start===start && ranking.until>now) return ranking.data;
+  const data=rankSales(merchant,token,start,now);
+  ranking={merchant,start,until:now+minute,data};
+  data.catch(()=>{if(ranking?.data===data) ranking=undefined;});
+  return data;
 }

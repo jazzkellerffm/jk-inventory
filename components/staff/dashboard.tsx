@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, ReceiptText } from "lucide-react";
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
 import { IncludedDrinks } from "./included-drinks";
+import { Bestsellers } from "./bestsellers";
 import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
 import { staffModules } from "./modules";
@@ -106,6 +107,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           {feed && feed.payments.length > 4 && <button className="staff-more" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "Weniger anzeigen" : `Alle ${feed.payments.length} anzeigen`} <ChevronDown size={16}/></button>}
         </section>
       </div>
+      <Bestsellers example={!!example}/>
       <TicketSales {...tickets} example={!!example}/>
       <h2 className="staff-tools-title">Für die Schicht</h2>
       <div className="staff-modules">

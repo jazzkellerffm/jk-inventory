@@ -24,3 +24,4 @@ export type StaffBoard = {
   shifts: Shift[];
   scheduleError: boolean;
 };
+export type BestsellerFeed = { products:{name:string;quantity:number}[]; incomplete:number; asOf:string };

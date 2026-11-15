@@ -241,3 +241,11 @@
 .door-guests section { margin-top:14px; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
 .door-guests header { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; background:var(--accent); color:var(--cream); }
 .door-guests article { padding:12px 14px; }
+
+.staff-bestsellers { margin-top:16px; background:var(--card); }
+.staff-bestsellers ol { padding:0; margin:14px 0; list-style:none; }
+.staff-bestsellers li { display:grid; grid-template-columns:20px minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 0; }
+.staff-bestsellers li>span,.staff-bestsellers small { color:var(--muted); }
+.staff-bestsellers strong { font:700 22px var(--staff-display),sans-serif; }
+.best-track { margin-top:4px; border-radius:100px; height:6px; background:#e5ebe4; overflow:hidden; }
+.best-track i { display:block; height:100%; background:#456d5d; border-radius:inherit; }

@@ -261,7 +261,7 @@
 .staff-turnover p { margin:6px 0 0; }
 
 .door-guests header { background:white; color:var(--paper); padding:14px; }
-.door-guests header strong { padding:4px 11px; border-radius:999px; background:#28463f; color:#fffef9; font:700 16px/1.25 var(--staff-display),sans-serif; }
+.door-guests header strong { padding:2.5px 11px 5.5px; border-radius:999px; background:#28463f; color:#fffef9; font:700 16px/1.25 var(--staff-display),sans-serif; }
 .door-guests header span { color:var(--paper); background:var(--cream); border-radius:999px; padding:4px 10px; }
 .booking-name { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
 .checkin-pill { display:inline-flex; align-items:center; gap:3px; border-radius:999px; padding:1px 6px; border:1px solid currentColor; background:transparent; color:#a6cbb7; font-size:12px; line-height:1.25; white-space:nowrap; }

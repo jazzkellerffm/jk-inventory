@@ -203,3 +203,21 @@
 .service-pills span { padding:5px 11px; background:#eeefed; color:#424944; border-radius:14px; }
 .service-pills [data-kind="wine"] { background:#f5dce2; color:#652c41; }
 .service-pills [data-kind="food"] { background:#dcefe4; color:#244c39; }
+
+.staff-brand img { border-radius:999px; padding-inline:12px; }
+.service-switch { display:inline-flex; flex-wrap:nowrap; gap:0; max-width:100%; padding:4px; border-radius:999px; background:#f4f5f3; }
+.service-switch button { border:0; padding:9px clamp(9px,3vw,18px); background:transparent; color:#52605a; font-weight:700; }
+.service-switch button[aria-pressed="true"] { background:#29463f; color:white; }
+.service-drinks { margin:0 0 16px; background:#28463f; color:var(--cream); border-color:#28463f; }
+.service-drinks .staff-eyebrow,.service-drinks h2 { color:inherit; }
+.service-drinks strong { font-size:clamp(60px,7vw,80px); font-variant-numeric:tabular-nums; }
+.staff-shell:has(.staff-quick) { padding-bottom:calc(100px + env(safe-area-inset-bottom)); }
+.staff-quick { position:fixed; bottom:calc(12px + env(safe-area-inset-bottom)); left:50%; z-index:20;
+  display:flex; padding:5px; max-width:calc(100% - 20px); border:1px solid #ffffffab; border-radius:999px;
+  background:#fffffff0; color:#20352e; box-shadow:0 4px 24px #142d2526; backdrop-filter:blur(16px);
+  transform:translateX(-50%); transition:transform .22s ease,opacity .18s,background .2s; }
+.staff-quick[data-dark="true"] { color:white; background:#203a33ed; border-color:#ffffff50; }
+.staff-quick[data-hidden="true"]:not(:focus-visible):not(:has(:focus-visible)) { transform:translate(-50%,calc(100% + 28px + env(safe-area-inset-bottom))); opacity:0; pointer-events:none; }
+.staff-quick a { display:grid; min-width:clamp(60px,17vw,80px); min-height:44px; align-content:center; justify-items:center; gap:2px; border-radius:999px; color:inherit; text-decoration:none; font-size:12px; }
+.staff-quick a:hover,.staff-quick a:focus-visible { background:#849b8926; }
+@media(prefers-reduced-motion:reduce) { .staff-quick { transition:none; } }

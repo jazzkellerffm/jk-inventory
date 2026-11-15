@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, ReceiptText } from "lucide-react";
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
 import { IncludedDrinks } from "./included-drinks";
-import { TicketSales } from "./ticket-sales";
+import { QuickMenu } from "./quick-menu";
+import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
 import { staffModules } from "./modules";
 import { Masthead } from "./masthead";
 
@@ -68,6 +69,7 @@ function ActivityChart({ feed }: { feed: BarFeed }) {
 }
 
 export function StaffDashboard({ example }: { example?: StaffBoard }) {
+  const tickets = useTicketFeed(!!example);
   const { board, error } = useBoard(example);
   const [showAll, setShowAll] = useState(false);
   const feed = board?.feed;
@@ -89,6 +91,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           {feed ? <ActivityChart feed={feed}/> : <p className="staff-placeholder">{message}</p>}
           <p className="staff-note"><Clock3 size={14}/>{stale && feed ? "Letzter Stand · " + time.format(new Date(feed.asOf)) + " Uhr" : example ? "Beispielabend · 60 Minuten" : "Aktualisierung alle 15 Sekunden"}</p>
         </section>
+      <NightDrinks {...tickets} example={!!example}/>
       <div className="staff-grid">
         <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
         <section className="staff-feed staff-panel" aria-labelledby="payments">
@@ -103,7 +106,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           {feed && feed.payments.length > 4 && <button className="staff-more" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "Weniger anzeigen" : `Alle ${feed.payments.length} anzeigen`} <ChevronDown size={16}/></button>}
         </section>
       </div>
-      <TicketSales example={!!example}/>
+      <TicketSales {...tickets} example={!!example}/>
       <h2 className="staff-tools-title">Für die Schicht</h2>
       <div className="staff-modules">
         {staffModules.map(module => {
@@ -117,5 +120,6 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       </div>
       {example && <Link className="staff-exit-demo" href="/staff">Zum Teamzugang <ArrowRight size={15}/></Link>}
     </main>
+    <QuickMenu/>
   </div>;
 }

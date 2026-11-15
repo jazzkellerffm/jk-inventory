@@ -62,7 +62,7 @@ function ActivityChart({ feed }: { feed: BarFeed }) {
     <figcaption>Zahlungen je 5 Minuten</figcaption>
     <div className="staff-plot" role="img" aria-label={`Zahlungen in 5-Minuten-Abschnitten ab ${tick(60)} Uhr: ${feed.buckets.join(", ")}`}>
       {feed.buckets.map((value, i) => <div key={i} className="staff-column" title={`${tick(60 - i * 5)} Uhr · ${value} Zahlungen`}>
-        <span className={i >= 9 ? "staff-bright" : ""} style={{ height: value ? `${value / max * 100}%` : "3px" }}/>
+        <span className={i === feed.buckets.length - 1 ? "staff-bright" : ""} style={{ height: value ? `${value / max * 100}%` : "3px" }}/>
       </div>)}
     </div>
     <div className="staff-axis"><span>{tick(60)}</span><span>{tick(30)}</span><span>{tick(0)}</span></div>
@@ -74,6 +74,10 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const { board, error } = useBoard(example);
   const [showAll, setShowAll] = useState(false);
   const feed = board?.feed;
+  const lastFive = feed?.buckets.at(-1);
+  const preceding = feed?.buckets.slice(0,-1) ?? [];
+  const typical = preceding.reduce((total,n)=>total+n,0) / (preceding.length || 1);
+  const busy = lastFive !== undefined && lastFive >= 3 && lastFive >= 1.5 * typical;
   const stale = error || board?.feedState === "unavailable";
   const status = example ? "Beispieldaten" : stale ? "Verbindung unterbrochen" : feed ? "Verbunden" : board ? "Einrichtung offen" : "Lädt …";
   const timestamps = [feed?.asOf, board?.drinks?.asOf].filter((at): at is string => !!at);
@@ -88,13 +92,12 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <section aria-labelledby="activity" className="staff-activity staff-panel">
           <div className="staff-section-head"><span className="staff-eyebrow"><Activity size={17}/> SumUp</span><span className={`staff-status ${stale ? "staff-warn" : ""}`} role="status"><i/>{status}</span></div>
           <h2 id="activity">Baraktivität</h2>
-          <div className="staff-metric"><strong>{feed?.recentCount ?? "–"}</strong><span>Zahlungen<br/>in 15 Minuten</span></div>
+          <div className="staff-metric"><strong>{lastFive ?? "–"}</strong><span>Zahlungen<br/>in 5 Minuten</span></div>
           {feed ? <ActivityChart feed={feed}/> : <p className="staff-placeholder">{message}</p>}
+          {busy && !stale && <p className="bar-surge" role="status">Erhöhtes Aufkommen</p>}
           <p className="staff-note"><Clock3 size={14}/>{stale && feed ? "Letzter Stand · " + time.format(new Date(feed.asOf)) + " Uhr" : example ? "Beispielabend · 60 Minuten" : "Aktualisierung alle 15 Sekunden"}</p>
         </section>
-      <NightDrinks {...tickets} example={!!example}/>
-      <div className="staff-grid">
-        <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
+
         <section className="staff-feed staff-panel" aria-labelledby="payments">
           <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={17}/> SumUp</span><span className="staff-period">Letzte Stunde</span></div>
           <h2 id="payments">Letzte Zahlungen</h2>
@@ -106,7 +109,8 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
             </li>)}</ol>}
           {feed && feed.payments.length > 4 && <button className="staff-more" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "Weniger anzeigen" : `Alle ${feed.payments.length} anzeigen`} <ChevronDown size={16}/></button>}
         </section>
-      </div>
+      <NightDrinks {...tickets} example={!!example}/>
+      <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
       <Bestsellers example={!!example}/>
       <TicketSales {...tickets} example={!!example}/>
       <h2 className="staff-tools-title">Für die Schicht</h2>

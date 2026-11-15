@@ -42,14 +42,23 @@ type Props = ReturnType<typeof useTicketFeed> & {example:boolean};
 
 export function NightDrinks({example,feed,state}:Props) {
   const berlinDay = new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Berlin"});
-  const today = berlinDay.format(example ? demo.nights[0].start * 1000 : Date.now());
-  const tonight = feed?.nights.filter(n => berlinDay.format(n.start * 1000) === today);
+  const [selection,setSelection] = useState("");
+  const today = berlinDay.format(example ? demo.asOf * 1000 : Date.now());
+  const upcoming = (feed?.nights ?? []).filter(n=>berlinDay.format(n.start*1000)>=today);
+  const days = [...new Set(upcoming.map(n=>berlinDay.format(n.start*1000)))];
+  const selected = days.includes(selection) ? selection : days[0];
+  const events = upcoming.filter(n=>berlinDay.format(n.start*1000)===selected);
+  const period = selected===today ? "Heute Abend" : selected && selected===days[0] ? "Nächster Abend" : "Vorschau";
   return <section className="staff-panel service-drinks" aria-labelledby="night-drinks">
-    <div className="staff-section-head"><span className="staff-eyebrow">Heute Abend · Ticket Tailor</span>
+    <div className="staff-section-head"><span className="staff-eyebrow">{period} · Ticket Tailor</span>
       <small>{example ? "Beispieldaten" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : ""}</small></div>
     <h2 id="night-drinks">Included Drinks</h2>
-    <strong>{tonight ? tonight.reduce((sum,n)=>sum+n.drinks,0) : "–"}</strong>
-    <p>{tonight?.length === 0 ? "Heute ist kein Termin eingetragen." : "Mit Club Plus und Premium gebuchte Drinks"}</p>
+    {days.length>1 && <label className="drinks-date">Abend auswählen
+      <select value={selected} onChange={e=>setSelection(e.target.value)}>{days.map(key=>
+        <option key={key} value={key}>{date.format(new Date(key+"T12:00:00Z"))}</option>)}</select></label>}
+    {events.length>0 && <p>{days.length===1 && date.format(events[0].start*1000)+" · "}{events.map(n=>n.name).join(" · ")}</p>}
+    <strong>{events.length ? events.reduce((sum,n)=>sum+n.drinks,0) : "–"}</strong>
+    <p>{events.length ? "Mit Club Plus und Premium gebuchte Drinks" : feed ? "Keine kommenden Termine." : state==="setup" ? "Ticket Tailor ist noch nicht verbunden." : state==="loading" ? "Termine werden geladen …" : ""}</p>
     {state === "unavailable" && <small>Aktualisierung fehlgeschlagen.</small>}
   </section>;
 }

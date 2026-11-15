@@ -1,4 +1,5 @@
 import "server-only";
+import {weekDay} from "./ticket-weeks";
 import { includedDrinks, packageSize, paidSupply, type Supply } from "./entitlements";
 
 type EventRow = { id: string; name: string; status: string; start: { unix: number; date: string } };
@@ -25,11 +26,11 @@ async function pages<T extends { id: string }>(resource: string, filters: Record
 
 async function collect(key: string): Promise<TicketFeed> {
   const now = Math.floor(Date.now()/1000);
-  const today = new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Berlin"}).format(now*1000);
+  const start=weekDay(now,0), end=weekDay(now,28);
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
-  const events = (await pages<EventRow>("events",{},auth))
-    .filter(e => e.start?.date >= today && ["published","close_sales","sales_closed"].includes(e.status))
-    .sort((a,b)=>a.start.unix-b.start.unix).slice(0,5);
+  const events = (await pages<EventRow>("events",{start_at_gte:String(Date.parse(start+"T00:00:00Z")/1000-86400),start_at_lt:String(Date.parse(end+"T00:00:00Z")/1000+86400)},auth))
+    .filter(e => e.start?.date >= start && e.start.date < end && ["published","close_sales","sales_closed"].includes(e.status))
+    .sort((a,b)=>a.start.unix-b.start.unix);
   const nights = [];
   for (const event of events) {
     const tickets = await pages<Ticket>("issued_tickets",{event_id:event.id,status:"valid"},auth);
@@ -63,14 +64,14 @@ type ServiceOrder = {
   line_items: { type: string; description: string; quantity: number; event_summary?: { event_id: string } | null }[];
 };
 export type Booking = {
-  id: string; name: string; tickets: string[]; extras: Supply[];
+  id: string; name: string; tickets: string[]; extras: Supply[]; checkedIn: boolean;
 };
 
 export async function readServicePlan(key: string, eventId: string): Promise<Booking[]> {
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
   const [orders, tickets] = await Promise.all([
     pages<ServiceOrder>("orders", {event_id:eventId}, auth),
-    pages<Ticket & { order_id?: string; full_name?: string }>("issued_tickets", {event_id:eventId,status:"valid"}, auth),
+    pages<Ticket & { order_id?: string; full_name?: string; checked_in?: boolean|string }>("issued_tickets", {event_id:eventId,status:"valid"}, auth),
   ]);
   const byOrder = new Map(orders.map(order => [order.id,order]));
   const bookings = new Map<string,Booking>();
@@ -81,10 +82,11 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
     if (order && !["completed","paid"].includes(order.status)) continue;
     const existing = bookings.get(id);
     const description = ticket.description?.trim() || "Ticketkategorie offen";
-    if (existing) { existing.tickets.push(description); continue; }
+    const checkedIn = ticket.checked_in === true || ticket.checked_in === "true";
+    if (existing) { existing.tickets.push(description); existing.checkedIn ||= checkedIn; continue; }
     const buyer = order?.buyer_details;
     const name = buyer?.name?.trim() || [buyer?.first_name,buyer?.last_name].filter(Boolean).join(" ") || ticket.full_name?.trim() || "Buchungsname fehlt";
-    const booking: Booking = {id,name,tickets:[description],extras:[]};
+    const booking: Booking = {id,name,tickets:[description],extras:[],checkedIn};
     bookings.set(id,booking);
     if (!order) continue;
     const ids = new Set(order.line_items.map(line => line.event_summary?.event_id).filter(Boolean));

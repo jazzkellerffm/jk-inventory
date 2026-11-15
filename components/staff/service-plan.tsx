@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ClipboardList } from "lucide-react";
+import { Check, ClipboardList } from "lucide-react";
 import type { Booking, TicketNight } from "@/lib/staff/tickets";
 
 import { combine, includedSupply, packageSize, type Supply } from "@/lib/staff/entitlements";
@@ -25,7 +25,7 @@ function demoBookings(night:TicketNight):Booking[] {
     const size=Math.min(plus ? drinks : other, i===0 ? 2 : 4);
     const type=plus ? (i%4===1 ? "Club PLUS" : "Premium") : i===2 ? "VIP Table" : "Club";
     const ticket=type+" – "+size+" Guests"+(plus ? " · incl. "+size+" Drinks" : type==="VIP Table" ? " · incl. 1 Bottle Crémant" : "");
-    result.push({id:"demo-"+i,name:names[i%names.length],tickets:[ticket],extras:i===0 ? [{label:"Hummus-Platte",quantity:2,kind:"food"},{label:"Flasche Crémant",quantity:1,kind:"wine"}] : []});
+    result.push({id:"demo-"+i,name:names[i%names.length],tickets:[ticket],checkedIn:i%2===0,extras:i===0 ? [{label:"Hummus-Platte",quantity:2,kind:"food"},{label:"Flasche Crémant",quantity:1,kind:"wine"}] : []});
     if (plus) drinks-=size; else other-=size;
   }
   return result;
@@ -37,6 +37,11 @@ function guestCount(tickets:string[]) {
   return known.includes(0) ? total+" Gäste + ungeklärte Paketgröße" : total+(total===1 ? " Gast" : " Gäste");
 }
 
+function BookingName({row}:{row:Booking}) {
+  return <div className="booking-name"><strong>{row.name}</strong>{row.checkedIn &&
+    <span className="checkin-pill"><Check size={13} aria-hidden="true"/>Checked in</span>}</div>;
+}
+
 function GuestList({rows}:{rows:Booking[]}) {
   return <div className="door-guests"><h3>{guestCount(rows.flatMap(row=>row.tickets))} insgesamt</h3>
     {categories.map(label=>{
@@ -44,7 +49,7 @@ function GuestList({rows}:{rows:Booking[]}) {
         .filter(row=>row.tickets.length).sort((a,b)=>a.name.localeCompare(b.name,"de"));
       if (!entries.length) return null;
       return <section key={label}><header><strong>{label}</strong><span>{guestCount(entries.flatMap(row=>row.tickets))}</span></header>
-        {entries.map(row=><article key={row.id}><div className="service-person"><strong>{row.name}</strong>
+        {entries.map(row=><article key={row.id}><div className="service-person"><BookingName row={row}/>
           <span>{guestCount(row.tickets)}</span></div><small>{row.tickets.join(" · ")}</small>
           {row.extras.length>0 && <><h4>Vorbestellungen der Buchung</h4><Pills items={row.extras}/></>}
           <Pills items={row.tickets.flatMap(includedSupply)}/></article>)}</section>;
@@ -88,6 +93,7 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
   return <>
     <div className="service-switch" role="group" aria-label="Ansicht">{["Vorbestellungen","Gästeliste"].map(label =>
       <button type="button" key={label} aria-pressed={view===label} onClick={()=>setView(label)}>{label}</button>)}</div>
+    {rows && rows.length>0 && <p className="checkin-total">{rows.filter(row=>row.checkedIn).length} von {rows.length} Buchungen eingecheckt</p>}
     {error && <p role="status">Aktualisierung fehlgeschlagen.</p>}
     {!rows && !error && <p>Buchungen werden geladen …</p>}
     {view === "Vorbestellungen" && supplies.length > 0 && <div className="service-prep">
@@ -98,7 +104,7 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
     {view==="Vorbestellungen" && visible?.map(row=>{
       const included = row.tickets.flatMap(includedSupply);
       const sizes = row.tickets.map(packageSize);
-      return <article key={row.id}><div className="service-person"><strong>{row.name}</strong>
+      return <article key={row.id}><div className="service-person"><BookingName row={row}/>
         {sizes.length>0 && sizes.every(Boolean) && <span>{sizes.reduce((a,b)=>a+b,0)} Gäste</span>}</div>
         <small>{row.tickets.join(" · ")}</small>
         {row.extras.length>0 && <><h4>Bezahlte Vorbestellungen</h4><Pills items={row.extras}/></>}
@@ -108,11 +114,11 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
 
 }
 
-export function ServicePlan({nights,example}:{nights:TicketNight[];example:boolean}){
+export function ServicePlan({nights,example,defaultId}:{nights:TicketNight[];example:boolean;defaultId?:string}){
   const [view,setView] = useState("Vorbestellungen");
   const [open,setOpen]=useState(false);
   const [selected,setSelected]=useState("");
-  const night=nights.find(n=>n.id===selected) ?? nights[0];
+  const night=nights.find(n=>n.id===(selected || defaultId)) ?? nights[0];
   const id=night?.id;
   return <details id="service-door" className="staff-panel staff-service" onToggle={e=>setOpen(e.currentTarget.open)}>
     <summary><ClipboardList size={20}/> Service &amp; Door</summary>

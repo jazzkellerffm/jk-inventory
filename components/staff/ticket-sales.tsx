@@ -5,11 +5,13 @@ import { ServicePlan } from "./service-plan";
 import { Ticket } from "lucide-react";
 import type { TicketFeed } from "@/lib/staff/tickets";
 
+import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
+
 const date = new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"});
 const clock = new Intl.DateTimeFormat("de-DE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Berlin"});
-const demo: TicketFeed = {asOf:1794690000,nights:["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
-  id:String(i),name,start:1795028400+i*86400,guests:[26,18,42,52,60][i],recent:[4,2,8,5,0][i],drinks:[12,6,18,24,20][i],unknown:0,
-}))};
+const demo: TicketFeed = {asOf:1794859200,nights:Array.from({length:4},(_,week)=>["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
+  id:String(week*5+i),name,start:1795028400+(week*7+i)*86400,guests:[26,18,42,52,60][i],recent:[4,2,8,5,0][i],drinks:[12,6,18,24,20][i],unknown:0,
+}))).flat()};
 
 export function useTicketFeed(example:boolean) {
   const [feed,setFeed] = useState<TicketFeed|null>(example ? demo : null);
@@ -64,14 +66,23 @@ export function NightDrinks({example,feed,state}:Props) {
 }
 
 export function TicketSales({example,feed,state}:Props) {
+  const [week,setWeek]=useState(0);
+  const asOf=feed?.asOf ?? Math.floor(Date.now()/1000);
+  const start=weekDay(asOf,week*7), end=weekDay(asOf,week*7+7);
+  const nights=(feed?.nights ?? []).filter(n=>ticketDay(n.start)>=start && ticketDay(n.start)<end);
+  const today=ticketDay(asOf);
+  const upcoming=(feed?.nights ?? []).filter(n=>ticketDay(n.start)>=today);
   const scale = Math.max(60,...(feed?.nights.map(n=>n.guests) ?? []));
   return <><section className="staff-panel ticket-sales" aria-labelledby="ticket-title">
     <div className="staff-section-head"><span className="staff-eyebrow"><Ticket size={16}/> Ticket Tailor</span>
       <span className="staff-period">{example ? "Beispieldaten" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : "Vorverkauf"}</span></div>
     <h2 id="ticket-title">Gebuchte Gäste</h2>
+    <div className="service-switch week-switch" role="group" aria-label="Verkaufswoche">{[0,1,2,3].map(i=>
+      <button key={i} type="button" aria-pressed={week===i} onClick={()=>setWeek(i)}>{i===0 ? "Aktuell" : "Woche "+(i+1)}</button>)}</div>
+    <p className="ticket-week-range">{date.format(new Date(start+"T12:00:00Z"))} – {date.format(new Date(weekDay(asOf,week*7+6)+"T12:00:00Z"))}</p>
     {state === "unavailable" && <p role="status">Ticket Tailor ist gerade nicht erreichbar.</p>}
-    {feed?.nights.length ? <>
-      <ul className="ticket-chart">{feed.nights.map(n => <li key={n.id} className="ticket-night">
+    {nights.length ? <>
+      <ul className="ticket-chart">{nights.map(n => <li key={n.id} className="ticket-night">
         <div className="ticket-event"><b>{date.format(n.start * 1000)}</b><span>{n.name}</span></div>
         <div className="ticket-track" aria-hidden="true">
           <div className="ticket-fill" style={{width:100 * n.guests / scale + "%"}}>
@@ -83,6 +94,6 @@ export function TicketSales({example,feed,state}:Props) {
       </li>)}</ul>
       <p className="ticket-legend"><i aria-hidden="true"/> Neu gebuchte Gäste in den letzten 24 Stunden</p>
     </> :
-      <p>{feed ? "Keine kommenden Termine." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : state === "loading" ? "Ticketverkauf wird geladen …" : ""}</p>}
-  </section><ServicePlan nights={feed?.nights ?? []} example={example}/></>;
+      <p>{feed ? "Keine Veranstaltungen in dieser Woche." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : state === "loading" ? "Ticketverkauf wird geladen …" : ""}</p>}
+  </section><ServicePlan nights={feed?.nights ?? []} defaultId={upcoming[0]?.id} example={example}/></>;
 }

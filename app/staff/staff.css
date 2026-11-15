@@ -153,3 +153,16 @@
   .staff-stamp b { font-size: 15px; }
   .staff-feed li, .staff-orders li { gap: 7px; }
 }
+
+.ticket-sales { margin-top: 16px; background: #fffaf1; }
+.ticket-legend { color: var(--muted); font-size: 13px; }
+.ticket-legend i { display:inline-block; width:10px; height:10px; border-radius:50%; background:#ac706a; }
+.ticket-chart { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(85px,1fr); overflow-x:auto; gap:12px; padding:16px 0 6px; }
+.ticket-night { display:flex; flex-direction:column; gap:2px; align-items:flex-start; }
+.ticket-track { width:100%; height:76px; display:flex; align-items:flex-end; border-bottom:1px solid var(--line); }
+.ticket-track div { width:65%; max-width:54px; overflow:hidden; border-radius:8px; background:#ebcbc4; }
+.ticket-track i { display:block; width:100%; background:#ac706a; }
+.ticket-night strong { font:700 30px/1.2 var(--staff-display),sans-serif; }
+.ticket-night small { color:#764941; font-size:12px; }
+.ticket-night b { margin-top:5px; font-size:14px; }
+.ticket-night span { font-size:13px; overflow-wrap:anywhere; }

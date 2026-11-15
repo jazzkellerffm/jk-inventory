@@ -1,1 +1,53 @@
-[]
+[
+  {
+    "date": "2026-11-18",
+    "role": "Backstage",
+    "names": [
+      "Joab"
+    ]
+  },
+  {
+    "date": "2026-11-18",
+    "role": "Bar",
+    "names": [
+      "Adri",
+      "Hamad"
+    ]
+  },
+  {
+    "date": "2026-11-18",
+    "role": "Service",
+    "names": [
+      "Adriano"
+    ]
+  },
+  {
+    "date": "2026-11-18",
+    "role": "Door",
+    "names": [
+      "Saven"
+    ]
+  },
+  {
+    "date": "2026-11-19",
+    "role": "Bar inkl. Backstage (vorläufig)",
+    "names": [
+      "Joab",
+      "Hamad"
+    ]
+  },
+  {
+    "date": "2026-11-19",
+    "role": "Service",
+    "names": [
+      "Laura"
+    ]
+  },
+  {
+    "date": "2026-11-19",
+    "role": "Door",
+    "names": [
+      "Ana"
+    ]
+  }
+]

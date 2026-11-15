@@ -123,9 +123,14 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           <button type="button" onClick={() => setShowRevenue(!showRevenue)}
             aria-label={showRevenue ? "Abendumsatz " + money(feed.eveningCents / 100, "EUR") + " verbergen" : "Abendumsatz anzeigen"}
             className="inline-flex min-h-11 items-center gap-3 text-left">
-            <strong aria-hidden="true" className={showRevenue ? undefined : "select-none blur-[7px]"}>
-              {showRevenue ? money(feed.eveningCents / 100, "EUR") : "0.000,00 €"}
-            </strong>
+            {showRevenue ? (
+              <strong key="amount" aria-hidden="true">{money(feed.eveningCents / 100, "EUR")}</strong>
+            ) : (
+              <strong key="mask" aria-hidden="true" className="select-none text-transparent"
+                style={{ backgroundImage: "radial-gradient(ellipse 52% 48% at center, rgb(43 69 61 / 34%) 0%, rgb(43 69 61 / 22%) 48%, transparent 100%)" }}>
+                0.000,00 €
+              </strong>
+            )}
             {showRevenue ? <EyeOff size={18} aria-hidden="true"/> : <Eye size={18} aria-hidden="true"/>}
           </button>
         ) : <strong>–</strong>}

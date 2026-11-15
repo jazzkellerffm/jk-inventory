@@ -166,3 +166,13 @@
 .ticket-night small { color:#764941; font-size:12px; }
 .ticket-night b { margin-top:5px; font-size:14px; }
 .ticket-night span { font-size:13px; overflow-wrap:anywhere; }
+
+.staff-service { margin-top:16px; background:var(--card); }
+.staff-service summary { display:flex; align-items:center; gap:10px; font-size:22px; }
+.staff-service summary::after { content:"+"; margin-left:auto; }
+.staff-service[open] summary::after { content:"−"; }
+.staff-service label { display:block; margin:16px 0; }
+.staff-service select { display:block; width:100%; margin-top:6px; border:1px solid var(--line); border-radius:8px; padding:8px; }
+.staff-service article { border-top:1px solid var(--line); padding:12px 0; }
+.staff-service article strong { font-size:20px; }
+.staff-service article b { display:block; color:var(--accent); }

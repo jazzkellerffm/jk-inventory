@@ -54,3 +54,43 @@ export function readTicketFeed(key:string) {
   data.catch(()=>{ if(cached?.data === data) cached = undefined; });
   return data;
 }
+
+type ServiceOrder = {
+  id: string;
+  status: string;
+  buyer_details?: { name?: string; first_name?: string; last_name?: string };
+  line_items: { type: string; description: string; quantity: number; event_summary?: { event_id: string } | null }[];
+};
+export type Booking = {
+  id: string; name: string; tickets: string[]; extras: string[];
+};
+
+export async function readServicePlan(key: string, eventId: string): Promise<Booking[]> {
+  const auth = "Basic " + Buffer.from(key + ":").toString("base64");
+  const [orders, tickets] = await Promise.all([
+    pages<ServiceOrder>("orders", {event_id:eventId}, auth),
+    pages<Ticket & { order_id?: string }>("issued_tickets", {event_id:eventId,status:"valid"}, auth),
+  ]);
+  const packages = new Map<string,string[]>();
+  for (const ticket of tickets) {
+    if (ticket.event_id !== eventId || ticket.status !== "valid" || !ticket.order_id || ticket.add_on_id) continue;
+    const group = packages.get(ticket.order_id) ?? [];
+    group.push(ticket.description);
+    packages.set(ticket.order_id, group);
+  }
+  const bookings: Booking[] = [];
+  for (const order of orders) {
+    if (!["completed","paid"].includes(order.status)) continue;
+    const valid = packages.get(order.id) ?? [];
+    const ids = new Set(order.line_items.map(line => line.event_summary?.event_id).filter(Boolean));
+    const extras = order.line_items.filter(line =>
+      ["product","add_on"].includes(line.type) && line.quantity > 0 &&
+      (line.event_summary?.event_id === eventId || (!line.event_summary?.event_id && ids.size === 1 && ids.has(eventId)))
+    ).map(line => line.quantity + " × " + line.description.replace(/^add-on:\s*/i,""));
+    if (!valid.length && !extras.length) continue;
+    const buyer = order.buyer_details;
+    const name = buyer?.name?.trim() || [buyer?.first_name,buyer?.last_name].filter(Boolean).join(" ") || "Buchungsname fehlt";
+    bookings.push({id:order.id,name,tickets:valid,extras});
+  }
+  return bookings.sort((a,b)=>a.name.localeCompare(b.name,"de"));
+}

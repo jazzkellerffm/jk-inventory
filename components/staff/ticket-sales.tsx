@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ServicePlan } from "./service-plan";
 import { Ticket } from "lucide-react";
 import type { TicketFeed } from "@/lib/staff/tickets";
 
@@ -35,7 +36,7 @@ export function TicketSales({example}:{example:boolean}) {
     return ()=>{controller.abort();clearInterval(timer);document.removeEventListener("visibilitychange",refresh);};
   },[example]);
   const scale = Math.max(60,...(feed?.nights.map(n=>n.guests) ?? []));
-  return <section className="staff-panel ticket-sales" aria-labelledby="ticket-title">
+  return <><section className="staff-panel ticket-sales" aria-labelledby="ticket-title">
     <div className="staff-section-head"><span className="staff-eyebrow"><Ticket size={16}/> Ticket Tailor</span>
       <span className="staff-period">{example ? "Beispieldaten" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : "Vorverkauf"}</span></div>
     <h2 id="ticket-title">Gebuchte Gäste</h2>
@@ -47,5 +48,5 @@ export function TicketSales({example}:{example:boolean}) {
         <small>{n.recent} neu</small><b>{date.format(n.start*1000)}</b><span>{n.name}</span>
         {n.unknown>0 && <small>{n.unknown} Pakete ungeklärt</small>}</div>)}</div></> :
       <p>{feed ? "Keine kommenden Termine." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : state === "loading" ? "Ticketverkauf wird geladen …" : ""}</p>}
-  </section>;
+  </section><ServicePlan nights={feed?.nights ?? []} example={example}/></>;
 }

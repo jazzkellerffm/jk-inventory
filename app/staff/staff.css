@@ -261,9 +261,10 @@
 .staff-turnover p { margin:6px 0 0; }
 
 .door-guests header { background:white; color:var(--paper); padding:14px; }
-.door-guests header strong { font:700 21px var(--staff-display),sans-serif; }
+.door-guests header strong { padding:4px 11px; border-radius:999px; background:#28463f; color:#fffef9; font:700 16px/1.25 var(--staff-display),sans-serif; }
 .door-guests header span { color:var(--paper); background:var(--cream); border-radius:999px; padding:4px 10px; }
 .booking-name { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
-.checkin-pill { display:inline-flex; align-items:center; gap:3px; border-radius:999px; padding:3px 8px; background:#28463f; color:white; font-size:12px; white-space:nowrap; }
+.checkin-pill { display:inline-flex; align-items:center; gap:3px; border-radius:999px; padding:1px 6px; border:1px solid #a6cbb7; background:transparent; color:#325b47; font-size:12px; line-height:1.25; white-space:nowrap; }
+.checkin-pill svg { width:11px; height:11px; }
 .checkin-total,.ticket-week-range { font-size:14px; color:var(--muted); }
 .week-switch button { padding-inline:clamp(6px,2vw,16px); }

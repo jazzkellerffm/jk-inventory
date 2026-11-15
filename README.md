@@ -34,3 +34,28 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## JK Staff OS
+
+The mobile staff dashboard lives at `/staff`. The existing inventory opens at
+`/`. Use `/staff/demo` for an independent example evening with fictional
+payments and shifts. The demo never calls SumUp.
+
+Set the following server-side environment variables for the relevant Vercel
+environment and redeploy. For local development use `.env.local`.
+
+| Variable | Purpose |
+| --- | --- |
+| `STAFF_ACCESS_KEY` | A long random shared team password. Rotating it invalidates staff sessions. |
+| `SUMUP_MERCHANT_CODE` | Jazzkeller's SumUp merchant code. |
+| `SUMUP_API_KEY` | SumUp API key for the venue's own merchant account. |
+| `STAFF_SHIFTS_JSON` | Optional list of upcoming shifts, e.g. `[{"date":"2027-01-15","start":"19:00","names":["Alex","Sam"]}]`. Publish changes by redeploying. Dates and start times are local to Frankfurt. |
+
+Keep real rosters and credentials in the deployment environment. Staff sign in
+at `/staff` and can filter shifts by first name. The protected feed reads the
+merchant transaction history and up to eight corresponding receipts every
+15 seconds while visible. It shows successful payments from the last hour,
+including those for which SumUp supplies no item details. Counts cover all
+pages of that hour. The server discards customer and card details. To verify
+the connection, compare a recent QR Order & Pay sale and a manually entered
+item sale with their original receipts (time, items, quantities and amount).

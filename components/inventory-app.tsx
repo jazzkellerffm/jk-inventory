@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   AlertTriangle,
   CheckCircle,
@@ -37,10 +38,11 @@ const jkosBadgeShellClass =
 
 function JkosSystemBadge({ className = "" }: { className?: string }) {
   return (
-    <div
+    <Link
+      href="/staff"
       className={`${jkosBadgeShellClass} ${className}`.trim()}
-      aria-label="JKOS"
-      title="JKOS"
+      aria-label="Open JK Staff OS"
+      title="JK Staff OS"
     >
       <Image
         src="/JKOS.png"
@@ -50,7 +52,7 @@ function JkosSystemBadge({ className = "" }: { className?: string }) {
         sizes="60px"
         className="mx-auto block h-auto max-h-[16px] w-auto max-w-[60px] object-contain object-center opacity-[0.98]"
       />
-    </div>
+    </Link>
   );
 }
 

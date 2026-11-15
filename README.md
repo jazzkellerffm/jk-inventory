@@ -64,15 +64,20 @@ item sale with their original receipts (time, items, quantities and amount).
 
 The Included Drinks panel shows the latest eight orders placed in the last hour, newest first, with table, drink quantities and open/served status. It refreshes with the board every 15 seconds. Staff view access requires the team password. Order fulfilment stays in the Included Drinks app.
 
-### Wochenplanung in Staff OS
+### Dienstplan veröffentlichen
 
-Für die gemeinsame Veröffentlichung pro Woche benötigt die Server-Umgebung
-`ROSTER_REDIS_URL` (Upstash-kompatible Redis REST URL),
-`ROSTER_REDIS_TOKEN` (Schreibzugriff) und `STAFF_PLANNER_KEY` (separater
-Planungsschlüssel). Der Teamzugang muss ebenfalls eingerichtet sein.
-Dienstplan → Wochenplan bearbeiten: Woche laden, Namen zuordnen und
-„Woche veröffentlichen“ wählen. Entwürfe bleiben bis zur Veröffentlichung
-im offenen Editor. Parallel geänderte Wochen müssen neu geladen werden.
-Vorhandene Wochen aus `STAFF_SHIFTS_JSON` bleiben lesbar und werden einzeln
-durch veröffentlichte Wochen ersetzt. Die Demo speichert veröffentlichte
-Beispielwochen ausschließlich im Browser.
+In `data/dienstplan.json` stehen die freigegebenen Schichten für das Team.
+Pro Einsatz Datum, Rolle und Vornamen eintragen. Eine Startzeit ist optional.
+
+```json
+[
+  {"date":"2026-11-18","role":"Bar","names":["Adri","Hamad"]},
+  {"date":"2026-11-18","role":"Backstage","names":["Joab"]}
+]
+```
+
+Datei in GitHub oder Cursor bearbeiten und die Änderung auf dem Branch der Staff-App
+speichern (Commit, bei Cursor zusätzlich Push). Nach dem Deployment sehen alle über
+denselben Staff-Link den Plan. Die Ansicht zeigt die aktuelle und kommende
+Wochen mit Einträgen. Die Demo hat eigene Beispieldaten. Bei leerer Datei
+liest die App einen gegebenenfalls vorhandenen Altplan aus `STAFF_SHIFTS_JSON`.

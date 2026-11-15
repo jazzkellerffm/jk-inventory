@@ -1,5 +1,5 @@
 import { hasSession } from "@/lib/staff/session";
-import { publishedShifts } from "@/lib/staff/roster-store";
+import { upcomingShifts } from "@/lib/staff/schedule";
 import { readBarFeed } from "@/lib/staff/sumup";
 import { readIncludedDrinks } from "@/lib/staff/included-drinks";
 import type { StaffBoard } from "@/lib/staff/types";
@@ -19,6 +19,6 @@ export async function GET() {
   if (!(await hasSession())) return Response.json({ error: "unauthorized" }, { status: 401, headers });
   const [payments, drinks] = await Promise.all([readPayments(), readIncludedDrinks()]);
   const board: StaffBoard = { ...payments, ...drinks, shifts: [], scheduleError: false };
-  try { board.shifts = await publishedShifts(); } catch { board.scheduleError = true; }
+  try { board.shifts = upcomingShifts(); } catch { board.scheduleError = true; }
   return Response.json(board, { headers });
 }

@@ -254,6 +254,16 @@
 .bar-load h2 { font-size:13px; line-height:1.3; margin:0 0 3px; color:var(--muted); }
 .bar-load strong { font:700 23px/1.1 var(--staff-display),sans-serif; }
 .load-meter { margin-top:10px; height:12px; border-radius:999px; background:#e4eae4; overflow:hidden; }
+.cocktail-tiles { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; list-style:none; margin:12px 0 0; padding:0; }
+.cocktail-tiles li { padding:8px 10px; border-radius:10px; background:#edf2ee; overflow-wrap:anywhere; }
+.cocktail-tiles b,.cocktail-tiles small { display:block; }
+.cocktail-tiles b { font-size:14px; line-height:1.2; }
+.cocktail-tiles small { margin-top:4px; color:var(--muted); font-size:12px; }
+@media(max-width:620px){ .cocktail-tiles { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(prefers-reduced-motion:no-preference){
+  .cocktail-tiles li { animation:cocktail-arrives .25s ease-out; }
+  @keyframes cocktail-arrives { from { opacity:0; transform:translateY(4px); } }
+}
 .load-meter::before { content:""; display:block; height:100%; width:0; border-radius:inherit; background:#42675a; }
 .bar-load[data-level="1"] .load-meter::before { width:24%; }
 .bar-load[data-level="2"] .load-meter::before { width:60%; }

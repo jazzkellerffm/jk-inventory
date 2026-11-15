@@ -11,6 +11,7 @@ import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
 import { staffModules } from "./modules";
 import { ticketDay } from "@/lib/staff/ticket-weeks";
+import { isCocktail } from "@/lib/staff/bar-workload";
 import { Masthead } from "./masthead";
 
 const time = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" });
@@ -92,6 +93,14 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const lastFive = feed?.buckets.at(-1);
   const paid = !error && board?.feedState === "ready" ? feed : null;
   const open = !error && board?.drinksState === "ready" ? board.drinks : null;
+  const cocktailTiles = [
+    ...(paid?.payments ?? []).map(payment => ({ ...payment, source: "SumUp" })),
+    ...(open?.orders ?? []).map(order => ({ ...order, source: "Included Drinks" })),
+  ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
+    .flatMap(entry => entry.items.flatMap((item, index) => isCocktail(item.name)
+      ? [{ ...item, at: entry.at, source: entry.source, key: [entry.source, entry.id, index].join("/") }]
+      : []))
+    .slice(0, 4);
   const effort = (paid?.paidEffort ?? 0) + (open?.openEffort ?? 0);
   const complete = paid && open && !paid.missingReceiptDetails;
   const level = effort >= 5 ? 3 : effort >= 3 ? 2 : complete ? 1 : 0;
@@ -122,6 +131,12 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           <strong role="status">{board || error ? loadLabel : "Lädt …"}</strong>
         </div>
         <div className="load-meter" aria-hidden="true"/>
+        {cocktailTiles.length > 0 && <ul className="cocktail-tiles" aria-label="Letzte Cocktails">
+          {cocktailTiles.map(tile => <li key={tile.key}>
+            <b>{tile.quantity !== null && tile.quantity > 1 && tile.quantity + " × "}{tile.name}</b>
+            <small><time dateTime={tile.at}>{time.format(new Date(tile.at))}</time> · {tile.source}</small>
+          </li>)}
+        </ul>}
       </section>
 
       <section id="abendumsatz" className="staff-panel staff-turnover" aria-labelledby="turnover-title">

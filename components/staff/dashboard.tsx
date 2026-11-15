@@ -90,7 +90,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   return <div className="staff-shell">
     <Masthead signedIn={!example} demo={!!example}/>
     <main>
-      <div className="staff-heading"><div><p className="staff-kicker">SCHICHTÜBERSICHT</p><h1>Bar-Monitor<span>.</span></h1></div>
+      <div className="staff-heading"><div><h1>Bar-Monitor<span>.</span></h1></div>
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>
       <section aria-labelledby="activity" className="staff-activity staff-panel">

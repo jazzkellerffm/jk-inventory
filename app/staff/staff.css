@@ -234,7 +234,7 @@
 .roster-day dl>div { min-height:42px; padding:7px 0; }
 .roster-day dl>div+div { border-top:1px solid var(--line); }
 .roster-day dd { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px; margin:0; }
-.roster-day dd span { padding:4px 9px; border-radius:20px; background:#f3e7e3; font-weight:600; }
+.roster-day dd span,.shift-line dd span { padding:4px 9px; border-radius:20px; background:#f3e7e3; font-weight:600; }
 .roster-day dd span[data-match="true"] { background:var(--accent); color:white; }
 
 .door-guests { margin-top:18px; }
@@ -290,5 +290,6 @@
 .shift-line dl div { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; }
 .shift-line dt,.shift-line p { color:var(--muted); font-size:13px; }
 .shift-line dd,.shift-line p { margin:0; }
-.shift-line dd { font-size:14px; }
+.shift-line dd { display:flex; flex-wrap:wrap; gap:4px; font-size:13px; }
+.shift-line dd span { padding:2px 8px; }
 @media(max-width:420px){.staff-heading { flex-wrap:wrap; row-gap:6px; }}

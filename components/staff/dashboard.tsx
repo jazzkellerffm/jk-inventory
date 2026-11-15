@@ -123,7 +123,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       {board && <section className="shift-line" aria-labelledby="tonight-team">
         <h2 id="tonight-team">Team heute Abend</h2>
         {board.scheduleError || error ? <p>Dienstplan derzeit nicht verfügbar.</p> : tonight.length ?
-          <dl>{tonight.map((shift,i)=><div key={i}><dt>{shift.role || "Team"}</dt><dd>{shift.names.join(" · ")}</dd></div>)}</dl>
+          <dl>{tonight.map((shift,i)=><div key={i}><dt>{shift.role || "Team"}</dt><dd>{shift.names.map((name,index)=><span key={index}>{name}</span>)}</dd></div>)}</dl>
           : <p>Für heute ist keine Schicht eingetragen.</p>}
       </section>}
       <NightDrinks {...tickets} example={!!example}/>

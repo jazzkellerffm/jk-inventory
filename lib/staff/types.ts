@@ -6,10 +6,21 @@ export type BarFeed = {
   buckets: number[];
   payments: Payment[];
 };
+export type DrinkOrder = {
+  id: string;
+  at: string;
+  table: string;
+  status: "open" | "served";
+  items: { name: string; quantity: number }[];
+};
+export type DrinkFeed = { asOf: string; orders: DrinkOrder[] };
+export type FeedState = "ready" | "setup" | "unavailable";
 export type Shift = { date: string; names: string[]; start?: string };
 export type StaffBoard = {
   feed: BarFeed | null;
-  feedState: "ready" | "setup" | "unavailable";
+  feedState: FeedState;
+  drinks: DrinkFeed | null;
+  drinksState: FeedState;
   shifts: Shift[];
   scheduleError: boolean;
 };

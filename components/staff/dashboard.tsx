@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, ReceiptText } from "lucide-react";
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
+import { IncludedDrinks } from "./included-drinks";
 import { staffModules } from "./modules";
 import { Masthead } from "./masthead";
 
@@ -27,7 +28,11 @@ function useBoard(example?: StaffBoard) {
         if (!response.ok) throw new Error();
         const next: StaffBoard = await response.json();
         if (controller.signal.aborted) return;
-        setBoard(prior => next.feedState === "unavailable" ? { ...next, feed: prior?.feed ?? null } : next);
+        setBoard(prior => ({
+          ...next,
+          feed: next.feedState === "unavailable" ? prior?.feed ?? null : next.feed,
+          drinks: next.drinksState === "unavailable" ? prior?.drinks ?? null : next.drinks,
+        }));
         setError(false);
       } catch { if (!controller.signal.aborted) setError(true); }
       finally { busy = false; }
@@ -67,7 +72,8 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const feed = board?.feed;
   const stale = error || board?.feedState === "unavailable";
   const status = example ? "Beispieldaten" : stale ? "Verbindung unterbrochen" : feed ? "Verbunden" : board ? "Einrichtung offen" : "Lädt …";
-  const snapshot = feed ? new Date(feed.asOf) : undefined;
+  const timestamps = [feed?.asOf, board?.drinks?.asOf].filter((at): at is string => !!at);
+  const snapshot = timestamps.length ? new Date(Math.max(...timestamps.map(at => Date.parse(at)))) : undefined;
   const message = stale ? "SumUp ist gerade nicht erreichbar." : board?.feedState === "setup" ? "SumUp ist noch nicht verbunden." : "Zahlungen werden geladen …";
   return <div className="staff-shell">
     <Masthead signedIn={!example} demo={!!example}/>
@@ -75,14 +81,15 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <div className="staff-heading"><div><p className="staff-kicker">SCHICHTÜBERSICHT</p><h1>An der Bar<span>.</span></h1></div>
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>
-      <div className="staff-grid">
-        <section aria-labelledby="activity" className="staff-activity staff-panel">
+      <section aria-labelledby="activity" className="staff-activity staff-panel">
           <div className="staff-section-head"><span className="staff-eyebrow"><Activity size={17}/> SumUp</span><span className={`staff-status ${stale ? "staff-warn" : ""}`} role="status"><i/>{status}</span></div>
           <h2 id="activity">Baraktivität</h2>
           <div className="staff-metric"><strong>{feed?.recentCount ?? "–"}</strong><span>Zahlungen<br/>in 15 Minuten</span></div>
           {feed ? <ActivityChart feed={feed}/> : <p className="staff-placeholder">{message}</p>}
-          <p className="staff-note"><Clock3 size={14}/>{stale && snapshot ? "Letzter Stand · " + time.format(snapshot) + " Uhr" : example ? "Beispielabend · 60 Minuten" : "Aktualisierung alle 15 Sekunden"}</p>
+          <p className="staff-note"><Clock3 size={14}/>{stale && feed ? "Letzter Stand · " + time.format(new Date(feed.asOf)) + " Uhr" : example ? "Beispielabend · 60 Minuten" : "Aktualisierung alle 15 Sekunden"}</p>
         </section>
+      <div className="staff-grid">
+        <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
         <section className="staff-feed staff-panel" aria-labelledby="payments">
           <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={17}/> SumUp</span><span className="staff-period">Letzte Stunde</span></div>
           <h2 id="payments">Letzte Zahlungen</h2>

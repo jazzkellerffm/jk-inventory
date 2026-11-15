@@ -39,7 +39,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 The mobile staff dashboard lives at `/staff`. The existing inventory opens at
 `/`. Use `/staff/demo` for an independent example evening with fictional
-payments and shifts. The demo never calls SumUp.
+payments and shifts. The demo uses fixtures for both SumUp and Included Drinks.
 
 Set the following server-side environment variables for the relevant Vercel
 environment and redeploy. For local development use `.env.local`.
@@ -48,6 +48,8 @@ environment and redeploy. For local development use `.env.local`.
 | --- | --- |
 | `STAFF_ACCESS_KEY` | A long random shared team password. Rotating it invalidates staff sessions. |
 | `SUMUP_MERCHANT_CODE` | Jazzkeller's SumUp merchant code. |
+| `INCLUDED_DRINKS_SUPABASE_URL` | Supabase URL of the Included Drinks menu. |
+| `INCLUDED_DRINKS_PUBLISHABLE_KEY` | Publishable key for the same menu project. The Staff server reads order fields under its existing anonymous read policy. |
 | `SUMUP_API_KEY` | SumUp API key for the venue's own merchant account. |
 | `STAFF_SHIFTS_JSON` | Optional list of upcoming shifts, e.g. `[{"date":"2027-01-15","start":"19:00","names":["Alex","Sam"]}]`. Publish changes by redeploying. Dates and start times are local to Frankfurt. |
 
@@ -59,3 +61,5 @@ including those for which SumUp supplies no item details. Counts cover all
 pages of that hour. The server discards customer and card details. To verify
 the connection, compare a recent QR Order & Pay sale and a manually entered
 item sale with their original receipts (time, items, quantities and amount).
+
+The Included Drinks panel shows the latest eight orders placed in the last hour, newest first, with table, drink quantities and open/served status. It refreshes with the board every 15 seconds. Staff view access requires the team password. Order fulfilment stays in the Included Drinks app.

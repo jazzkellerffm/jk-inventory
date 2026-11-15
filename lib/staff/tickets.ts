@@ -70,28 +70,28 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
   const [orders, tickets] = await Promise.all([
     pages<ServiceOrder>("orders", {event_id:eventId}, auth),
-    pages<Ticket & { order_id?: string }>("issued_tickets", {event_id:eventId,status:"valid"}, auth),
+    pages<Ticket & { order_id?: string; full_name?: string }>("issued_tickets", {event_id:eventId,status:"valid"}, auth),
   ]);
-  const packages = new Map<string,string[]>();
+  const byOrder = new Map(orders.map(order => [order.id,order]));
+  const bookings = new Map<string,Booking>();
   for (const ticket of tickets) {
-    if (ticket.event_id !== eventId || ticket.status !== "valid" || !ticket.order_id || ticket.add_on_id) continue;
-    const group = packages.get(ticket.order_id) ?? [];
-    group.push(ticket.description);
-    packages.set(ticket.order_id, group);
-  }
-  const bookings: Booking[] = [];
-  for (const order of orders) {
-    if (!["completed","paid"].includes(order.status)) continue;
-    const valid = packages.get(order.id) ?? [];
+    if (ticket.event_id !== eventId || ticket.status !== "valid" || ticket.add_on_id) continue;
+    const id = ticket.order_id || ticket.id;
+    const order = byOrder.get(id);
+    if (order && !["completed","paid"].includes(order.status)) continue;
+    const existing = bookings.get(id);
+    const description = ticket.description?.trim() || "Ticketkategorie offen";
+    if (existing) { existing.tickets.push(description); continue; }
+    const buyer = order?.buyer_details;
+    const name = buyer?.name?.trim() || [buyer?.first_name,buyer?.last_name].filter(Boolean).join(" ") || ticket.full_name?.trim() || "Buchungsname fehlt";
+    const booking: Booking = {id,name,tickets:[description],extras:[]};
+    bookings.set(id,booking);
+    if (!order) continue;
     const ids = new Set(order.line_items.map(line => line.event_summary?.event_id).filter(Boolean));
-    const extras = order.line_items.filter(line =>
+    booking.extras = order.line_items.filter(line =>
       ["product","add_on"].includes(line.type) && line.quantity > 0 &&
       (line.event_summary?.event_id === eventId || (!line.event_summary?.event_id && ids.size === 1 && ids.has(eventId)))
     ).map(line => paidSupply(line.description,line.quantity));
-    if (!valid.length) continue;
-    const buyer = order.buyer_details;
-    const name = buyer?.name?.trim() || [buyer?.first_name,buyer?.last_name].filter(Boolean).join(" ") || "Buchungsname fehlt";
-    bookings.push({id:order.id,name,tickets:valid,extras});
   }
-  return bookings.sort((a,b)=>a.name.localeCompare(b.name,"de"));
+  return [...bookings.values()].sort((a,b)=>a.name.localeCompare(b.name,"de"));
 }

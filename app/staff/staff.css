@@ -236,3 +236,8 @@
 .roster-day dd { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px; margin:0; }
 .roster-day dd span { padding:4px 9px; border-radius:20px; background:#f3e7e3; font-weight:600; }
 .roster-day dd span[data-match="true"] { background:var(--accent); color:white; }
+
+.door-guests { margin-top:18px; }
+.door-guests section { margin-top:14px; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+.door-guests header { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; background:var(--accent); color:var(--cream); }
+.door-guests article { padding:12px 14px; }

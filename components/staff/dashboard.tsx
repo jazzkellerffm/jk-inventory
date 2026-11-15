@@ -126,9 +126,9 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
             {showRevenue ? (
               <strong key="amount" aria-hidden="true">{money(feed.eveningCents / 100, "EUR")}</strong>
             ) : (
-              <strong key="mask" aria-hidden="true" className="select-none text-transparent"
-                style={{ backgroundImage: "radial-gradient(ellipse 52% 48% at center, rgb(43 69 61 / 34%) 0%, rgb(43 69 61 / 22%) 48%, transparent 100%)" }}>
-                0.000,00 €
+              <strong key="mask" aria-hidden="true" className="select-none"
+                style={{ filter: "blur(0.12em)", opacity: 0.48 }}>
+                2.738,65 €
               </strong>
             )}
             {showRevenue ? <EyeOff size={18} aria-hidden="true"/> : <Eye size={18} aria-hidden="true"/>}

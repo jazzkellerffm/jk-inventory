@@ -41,12 +41,19 @@ export function TicketSales({example}:{example:boolean}) {
       <span className="staff-period">{example ? "Beispieldaten" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : "Vorverkauf"}</span></div>
     <h2 id="ticket-title">Gebuchte Gäste</h2>
     {state === "unavailable" && <p role="status">Ticket Tailor ist gerade nicht erreichbar.</p>}
-    {feed?.nights.length ? <><p className="ticket-legend"><i/> In den letzten 24 Stunden neu gebucht</p>
-      <div className="ticket-chart">{feed.nights.map(n=><div key={n.id} className="ticket-night">
-        <div className="ticket-track" aria-hidden="true"><div style={{height:100*n.guests/scale+"%"}}><i style={{height:(n.guests ? 100*n.recent/n.guests : 0)+"%"}}/></div></div>
-        <strong>{n.unknown ? "≥ " : ""}{n.guests}</strong>
-        <small>{n.recent} neu</small><b>{date.format(n.start*1000)}</b><span>{n.name}</span>
-        {n.unknown>0 && <small>{n.unknown} Pakete ungeklärt</small>}</div>)}</div></> :
+    {feed?.nights.length ? <>
+      <ul className="ticket-chart">{feed.nights.map(n => <li key={n.id} className="ticket-night">
+        <div className="ticket-event"><b>{date.format(n.start * 1000)}</b><span>{n.name}</span></div>
+        <div className="ticket-track" aria-hidden="true">
+          <div className="ticket-fill" style={{width:100 * n.guests / scale + "%"}}>
+            <i style={{width:(n.guests ? 100 * n.recent / n.guests : 0) + "%"}}/>
+          </div>
+        </div>
+        <div className="ticket-figures"><strong>{n.unknown ? "≥ " : ""}{n.guests}</strong><small>{n.recent} neu</small></div>
+        {n.unknown > 0 && <small className="ticket-uncertain">{n.unknown} Pakete ungeklärt</small>}
+      </li>)}</ul>
+      <p className="ticket-legend"><i aria-hidden="true"/> Neu gebuchte Gäste in den letzten 24 Stunden</p>
+    </> :
       <p>{feed ? "Keine kommenden Termine." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : state === "loading" ? "Ticketverkauf wird geladen …" : ""}</p>}
   </section><ServicePlan nights={feed?.nights ?? []} example={example}/></>;
 }

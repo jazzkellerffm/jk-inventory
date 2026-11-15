@@ -154,18 +154,29 @@
   .staff-feed li, .staff-orders li { gap: 7px; }
 }
 
-.ticket-sales { margin-top: 16px; background: #fffaf1; }
-.ticket-legend { color: var(--muted); font-size: 13px; }
-.ticket-legend i { display:inline-block; width:10px; height:10px; border-radius:50%; background:#ac706a; }
-.ticket-chart { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(85px,1fr); overflow-x:auto; gap:12px; padding:16px 0 6px; }
-.ticket-night { display:flex; flex-direction:column; gap:2px; align-items:flex-start; }
-.ticket-track { width:100%; height:76px; display:flex; align-items:flex-end; border-bottom:1px solid var(--line); }
-.ticket-track div { width:65%; max-width:54px; overflow:hidden; border-radius:8px; background:#ebcbc4; }
-.ticket-track i { display:block; width:100%; background:#ac706a; }
-.ticket-night strong { font:700 30px/1.2 var(--staff-display),sans-serif; }
-.ticket-night small { color:#764941; font-size:12px; }
-.ticket-night b { margin-top:5px; font-size:14px; }
-.ticket-night span { font-size:13px; overflow-wrap:anywhere; }
+.ticket-sales { margin-top:16px; background:var(--card); box-shadow:0 8px 24px -20px rgb(32 53 46 / 35%); }
+.ticket-sales h2 { font-family:var(--staff-display), sans-serif; font-weight:700; }
+.ticket-chart { list-style:none; padding:0; margin:22px 0 0; display:grid; gap:16px; }
+.ticket-night { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.65fr) minmax(3.75rem,auto); gap:4px 16px; align-items:center; }
+.ticket-event { min-width:0; }
+.ticket-event b, .ticket-event span, .ticket-figures small { display:block; }
+.ticket-event b { font-size:16px; }
+.ticket-event span { font-size:14px; color:var(--muted); line-height:1.35; overflow-wrap:anywhere; }
+.ticket-track { height:32px; border-radius:999px; background:#f7eeeb; overflow:hidden; }
+.ticket-fill { height:100%; display:flex; justify-content:flex-end; border-radius:inherit; overflow:hidden; background:linear-gradient(90deg,#ebcbc4,#d6a39a); transition:width .5s ease-out; }
+.ticket-fill i, .ticket-legend i { background:#b57c73; }
+.ticket-figures { text-align:right; font-variant-numeric:tabular-nums; }
+.ticket-figures strong { font-size:24px; line-height:1.05; }
+.ticket-figures small, .ticket-uncertain, .ticket-legend { font-size:13px; color:var(--muted); }
+.ticket-uncertain { grid-column:1 / -1; }
+.ticket-legend { display:flex; align-items:center; gap:8px; border-top:1px solid var(--line); padding-top:12px; margin:18px 0 0; }
+.ticket-legend i { width:10px; height:10px; border-radius:50%; flex:none; }
+@media (max-width:600px) {
+  .ticket-night { grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; }
+  .ticket-track { grid-column:1 / -1; grid-row:2; height:20px; }
+  .ticket-figures { grid-column:2; grid-row:1; }
+}
+@media (prefers-reduced-motion:reduce) { .ticket-fill { transition:none; } }
 
 .staff-service { margin-top:16px; background:var(--card); }
 .staff-service summary { display:flex; align-items:center; gap:10px; font-size:22px; }

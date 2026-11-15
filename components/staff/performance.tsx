@@ -25,6 +25,14 @@ export function Performance({feed,example}:{feed:TicketFeed|null;example:boolean
     <div className="perf-grid"><section><h3>Gebuchte Gäste</h3><strong>{nights.some(n=>n.unknown)?"≥ ":""}{total}</strong>
       <div className="perf-bars">{nights.map(n=><div key={n.id} title={n.name}><b>{n.guests}</b><i style={{height:Math.max(2,n.guests/max*78)}}/><small>{new Intl.DateTimeFormat("de-DE",{timeZone:"Europe/Berlin",weekday:"short",day:"numeric"}).format(n.start*1000)}</small></div>)}</div></section>
       <section><h3>Neu in 24 Stunden</h3><div className="perf-ring" style={{background:`conic-gradient(var(--accent) ${pct}%, #dbe8df 0)`}}><b>{pct}%</b></div><p>{recent} von {total} gebuchten Gästen</p></section></div>}
+    {feed?.monthlyTables && <section className="mt-4 border-t border-[var(--line)] pt-4">
+      <h3 className="font-bold">VIP-Tische · {new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric", timeZone:"Europe/Berlin"}).format(feed.asOf * 1000)}</h3>
+      <dl className="mt-2 grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-[#dbe8df] px-3 py-2"><dt>VIP</dt><dd className="text-2xl font-bold">{feed.monthlyTables.vip}</dd></div>
+        <div className="rounded-xl bg-[#f4e3e3] px-3 py-2"><dt>Worldstar VIP</dt><dd className="text-2xl font-bold">{feed.monthlyTables.worldstar}</dd></div>
+      </dl>
+      <p className="mt-2 text-sm text-[var(--muted)]">Gebuchte Tische für Veranstaltungen in diesem Monat</p>
+    </section>}
     {feed && <details className="mt-4 border-t border-[var(--line)] pt-4">
       <summary>Top 10 kommende Events</summary>
       <p className="text-sm text-[var(--muted)]">Nach gebuchten Gästen · bis {eventDate.format(new Date(weekDay(now, 27) + "T12:00:00Z"))}</p>

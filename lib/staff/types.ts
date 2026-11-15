@@ -14,7 +14,7 @@ export type DrinkOrder = {
   status: "open" | "served";
   items: { name: string; quantity: number }[];
 };
-export type DrinkFeed = { asOf: string; orders: DrinkOrder[] };
+export type DrinkFeed = { asOf: string; newDrinks: number; openDrinks: number; orders: DrinkOrder[] };
 export type FeedState = "ready" | "setup" | "unavailable";
 export type Shift = { date: string; names: string[]; role?: string; start?: string };
 export type StaffBoard = {

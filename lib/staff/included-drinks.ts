@@ -32,14 +32,29 @@ export async function readIncludedDrinks(): Promise<{ drinks: DrinkFeed | null; 
     url.search = new URLSearchParams({
       select: "id,created_at,table_number,status,items",
       created_at: "gte." + new Date(now - 3_600_000).toISOString(),
-      status: "in.(open,served)", order: "created_at.desc,id.desc", limit: "8",
+      status: "in.(open,served)", order: "created_at.desc,id.desc", limit: "100",
     }).toString();
-    const res = await fetch(url, {
-      headers: { apikey: key }, cache: "no-store", signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) throw new Error("Included Drinks unavailable");
-    const rows: OrderRow[] = await res.json();
-    return { drinksState: "ready", drinks: { asOf: new Date(now).toISOString(), orders: rows.map(orderFromRow) } };
+    url.searchParams.append("created_at", "lte." + new Date(now).toISOString());
+    const orders: DrinkOrder[] = [];
+    let newDrinks = 0;
+    let openDrinks = 0;
+    for (let offset = 0; ; offset += 100) {
+      url.searchParams.set("offset", String(offset));
+      const res = await fetch(url, {
+        headers: { apikey: key }, cache: "no-store", signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) throw new Error("Included Drinks unavailable");
+      const rows: OrderRow[] = await res.json();
+      for (const row of rows) {
+        const order = orderFromRow(row);
+        const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+        if (Date.parse(order.at) >= now - 300_000) newDrinks += quantity;
+        if (order.status === "open") openDrinks += quantity;
+        if (orders.length < 8) orders.push(order);
+      }
+      if (rows.length < 100) break;
+    }
+    return { drinksState: "ready", drinks: { asOf: new Date(now).toISOString(), orders, newDrinks, openDrinks } };
   } catch {
     return { drinks: null, drinksState: "unavailable" };
   }

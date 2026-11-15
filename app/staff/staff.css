@@ -250,7 +250,20 @@
 .best-track { margin-top:4px; border-radius:100px; height:6px; background:#e5ebe4; overflow:hidden; }
 .best-track i { display:block; height:100%; background:#456d5d; border-radius:inherit; }
 
-.staff-activity .bar-surge { grid-column:1 / -1; justify-self:start; margin:10px 0 0; padding:5px 12px; border-radius:999px; background:var(--cream); color:#28463f; font-weight:700; }
+.bar-load { margin-bottom:12px; background:#e5eee8; color:var(--paper); }
+.bar-load[data-level="0"] { background:#efefeb; }
+.bar-load[data-level="2"] { background:var(--cream); }
+.bar-load[data-level="3"] { background:#f4e3e3; }
+.bar-load h2 { font-size:16px; margin:0; }
+.load-reading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:6px 0 12px; }
+.load-reading strong { font:700 clamp(25px,6vw,40px)/1.15 var(--staff-display),sans-serif; }
+.load-meter { display:flex; align-items:flex-end; gap:4px; }
+.load-meter i { width:11px; height:10px; border-radius:3px; background:currentColor; opacity:.13; }
+.load-meter i:nth-child(2) { height:19px; }
+.load-meter i:nth-child(3) { height:28px; }
+.load-meter i[data-active="true"] { opacity:1; }
+.bar-load p { margin:2px 0; }
+.bar-load small { color:var(--muted); }
 .staff-feed + .service-drinks { margin-top:16px; }
 .drinks-date { display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-size:14px; }
 .drinks-date select { padding:8px 12px; color:var(--paper); background:var(--cream); border:0; border-radius:999px; font:inherit; }

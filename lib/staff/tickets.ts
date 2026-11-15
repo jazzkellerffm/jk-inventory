@@ -28,7 +28,7 @@ async function collect(key: string): Promise<TicketFeed> {
   const now = Math.floor(Date.now()/1000);
   const start=weekDay(now,0), end=weekDay(now,28);
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
-  const events = (await pages<EventRow>("events",{start_at_gte:String(Date.parse(start+"T00:00:00Z")/1000-86400),start_at_lt:String(Date.parse(end+"T00:00:00Z")/1000+86400)},auth))
+  const events = (await pages<EventRow>("events",{},auth))
     .filter(e => e.start?.date >= start && e.start.date < end && ["published","close_sales","sales_closed"].includes(e.status))
     .sort((a,b)=>a.start.unix-b.start.unix);
   const nights = [];

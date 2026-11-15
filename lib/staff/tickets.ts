@@ -1,8 +1,9 @@
 import "server-only";
+import { includedDrinks, packageSize, paidSupply, type Supply } from "./entitlements";
 
 type EventRow = { id: string; name: string; status: string; start: { unix: number; date: string } };
 type Ticket = { id: string; event_id: string; description: string; status: string; add_on_id?: string; created_at: number };
-export type TicketNight = { id: string; name: string; start: number; guests: number; recent: number; unknown: number };
+export type TicketNight = { id: string; name: string; start: number; guests: number; recent: number; drinks: number; unknown: number };
 export type TicketFeed = { asOf: number; nights: TicketNight[] };
 
 async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string) {
@@ -32,16 +33,16 @@ async function collect(key: string): Promise<TicketFeed> {
   const nights = [];
   for (const event of events) {
     const tickets = await pages<Ticket>("issued_tickets",{event_id:event.id,status:"valid"},auth);
-    let guests = 0, recent = 0, unknown = 0;
+    let guests = 0, recent = 0, drinks = 0, unknown = 0;
     for (const ticket of tickets) {
       if (ticket.event_id !== event.id || ticket.status !== "valid" || ticket.add_on_id) continue;
-      const size = ticket.description?.match(/\b(\d+)\s*(?:guests?|gäste|personen)\b/i)?.[1] ??
-        ticket.description?.match(/cr[eé]mant\s+(?:for|für)\s+(\d+)\b/i)?.[1];
+      const size = packageSize(ticket.description ?? "");
+      drinks += includedDrinks(ticket.description ?? "");
       if (!size) { unknown++; continue; }
       guests += Number(size);
       if (ticket.created_at >= now - 86400) recent += Number(size);
     }
-    nights.push({id:event.id,name:event.name,start:event.start.unix,guests,recent,unknown});
+    nights.push({id:event.id,name:event.name,start:event.start.unix,guests,recent,drinks,unknown});
   }
   return {asOf:now,nights};
 }
@@ -62,7 +63,7 @@ type ServiceOrder = {
   line_items: { type: string; description: string; quantity: number; event_summary?: { event_id: string } | null }[];
 };
 export type Booking = {
-  id: string; name: string; tickets: string[]; extras: string[];
+  id: string; name: string; tickets: string[]; extras: Supply[];
 };
 
 export async function readServicePlan(key: string, eventId: string): Promise<Booking[]> {
@@ -86,8 +87,8 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
     const extras = order.line_items.filter(line =>
       ["product","add_on"].includes(line.type) && line.quantity > 0 &&
       (line.event_summary?.event_id === eventId || (!line.event_summary?.event_id && ids.size === 1 && ids.has(eventId)))
-    ).map(line => line.quantity + " × " + line.description.replace(/^add-on:\s*/i,""));
-    if (!valid.length && !extras.length) continue;
+    ).map(line => paidSupply(line.description,line.quantity));
+    if (!valid.length) continue;
     const buyer = order.buyer_details;
     const name = buyer?.name?.trim() || [buyer?.first_name,buyer?.last_name].filter(Boolean).join(" ") || "Buchungsname fehlt";
     bookings.push({id:order.id,name,tickets:valid,extras});

@@ -8,7 +8,7 @@ import type { TicketFeed } from "@/lib/staff/tickets";
 const date = new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"});
 const clock = new Intl.DateTimeFormat("de-DE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Berlin"});
 const demo: TicketFeed = {asOf:1794690000,nights:["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
-  id:String(i),name,start:1795028400+i*86400,guests:[26,18,42,52,60][i],recent:[4,2,8,5,0][i],unknown:0,
+  id:String(i),name,start:1795028400+i*86400,guests:[26,18,42,52,60][i],recent:[4,2,8,5,0][i],drinks:[12,6,18,24,20][i],unknown:0,
 }))};
 
 export function TicketSales({example}:{example:boolean}) {
@@ -36,6 +36,9 @@ export function TicketSales({example}:{example:boolean}) {
     return ()=>{controller.abort();clearInterval(timer);document.removeEventListener("visibilitychange",refresh);};
   },[example]);
   const scale = Math.max(60,...(feed?.nights.map(n=>n.guests) ?? []));
+  const berlinDay = new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Berlin"});
+  const today = berlinDay.format(example ? demo.nights[0].start * 1000 : Date.now());
+  const tonight = feed?.nights.filter(n => berlinDay.format(n.start * 1000) === today);
   return <><section className="staff-panel ticket-sales" aria-labelledby="ticket-title">
     <div className="staff-section-head"><span className="staff-eyebrow"><Ticket size={16}/> Ticket Tailor</span>
       <span className="staff-period">{example ? "Beispieldaten" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : "Vorverkauf"}</span></div>
@@ -55,5 +58,12 @@ export function TicketSales({example}:{example:boolean}) {
       <p className="ticket-legend"><i aria-hidden="true"/> Neu gebuchte Gäste in den letzten 24 Stunden</p>
     </> :
       <p>{feed ? "Keine kommenden Termine." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : state === "loading" ? "Ticketverkauf wird geladen …" : ""}</p>}
+  </section><section className="staff-panel service-drinks" aria-labelledby="night-drinks">
+    <div className="staff-section-head"><span className="staff-eyebrow">Heute Abend · Ticket Tailor</span>
+      <small>{example ? "Beispieldaten" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : ""}</small></div>
+    <h2 id="night-drinks">Included Drinks</h2>
+    <strong>{tonight ? tonight.reduce((sum,n)=>sum+n.drinks,0) : "–"}</strong>
+    <p>{tonight?.length === 0 ? "Heute ist kein Termin eingetragen." : "Mit Club Plus und Premium gebuchte Drinks"}</p>
+    {state === "unavailable" && <small>Aktualisierung fehlgeschlagen.</small>}
   </section><ServicePlan nights={feed?.nights ?? []} example={example}/></>;
 }

@@ -187,3 +187,19 @@
 .staff-service article { border-top:1px solid var(--line); padding:12px 0; }
 .staff-service article strong { font-size:20px; }
 .staff-service article b { display:block; color:var(--accent); }
+
+.service-drinks { margin-top:16px; background:#e4eee6; }
+.service-drinks strong { display:block; font:700 clamp(48px,8vw,76px)/1.05 var(--staff-display),sans-serif; }
+.service-drinks p { margin:5px 0 0; }
+.staff-service { background:#fff; }
+.service-switch,.service-pills,.service-person { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.service-switch button { padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:white; color:var(--paper); font:inherit; }
+.service-switch button[aria-pressed="true"] { background:var(--accent); color:white; }
+.service-prep { margin:16px 0; padding:14px; border:1px solid var(--line); border-radius:14px; }
+.service-prep h3 { margin:0 0 8px; }
+.service-prep small { display:block; margin-top:8px; }
+.service-person { justify-content:space-between; }
+.staff-service article h4 { font-size:12px; margin:9px 0 4px; }
+.service-pills span { padding:5px 11px; background:#eeefed; color:#424944; border-radius:14px; }
+.service-pills [data-kind="wine"] { background:#f5dce2; color:#652c41; }
+.service-pills [data-kind="food"] { background:#dcefe4; color:#244c39; }

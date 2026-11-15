@@ -79,7 +79,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   useEffect(() => {
     if (!showRevenue) return;
     const hide = () => setShowRevenue(false);
-    const timer = window.setTimeout(hide, 10000);
+    const timer = window.setTimeout(hide, 5000);
     document.addEventListener("visibilitychange", hide);
     window.addEventListener("pagehide", hide);
     return () => {
@@ -126,10 +126,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
             {showRevenue ? (
               <strong key="amount" aria-hidden="true">{money(feed.eveningCents / 100, "EUR")}</strong>
             ) : (
-              <strong key="mask" aria-hidden="true" className="select-none"
-                style={{ filter: "blur(0.12em)", opacity: 0.48 }}>
-                2.738,65 €
-              </strong>
+              <strong key="mask" aria-hidden="true" className="select-none tracking-widest opacity-60">••••</strong>
             )}
             {showRevenue ? <EyeOff size={18} aria-hidden="true"/> : <Eye size={18} aria-hidden="true"/>}
           </button>

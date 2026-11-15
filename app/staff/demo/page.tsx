@@ -26,9 +26,13 @@ const example: StaffBoard = {
     }),
   },
   shifts: [
-    { date: "2026-11-14", start: "19:30", names: ["Alex", "Sam", "Lou"] },
-    { date: "2026-11-18", start: "19:00", names: ["Lou", "Kim"] },
-    { date: "2026-11-19", start: "19:00", names: ["Sam", "Alex"] },
+    { date: "2026-11-18", role: "Bar", names: ["Adri", "Hamad"] },
+    { date: "2026-11-18", role: "Backstage", names: ["Joab"] },
+    { date: "2026-11-18", role: "Service", names: ["Adriano"] },
+    { date: "2026-11-18", role: "Door", names: ["Saven"] },
+    { date: "2026-11-19", role: "Bar", names: ["Adrian", "Joab"] },
+    { date: "2026-11-19", role: "Service", names: ["Laura"] },
+    { date: "2026-11-19", role: "Door", names: ["Ana"] },
   ],
 };
 

@@ -114,7 +114,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           const label = <><span className="staff-tile-icon"><Icon size={22}/></span><span className="staff-tile-copy"><b>{title}</b><small>{hint}</small></span></>;
           return "href" in module ?
             <Link key={id} className="staff-tile" href={module.href}>{label}<ArrowUpRight size={20}/></Link> :
-            <details key={id} className="staff-tile-detail"><summary className="staff-tile">{label}<ChevronDown size={20}/></summary>
+            <details key={id} id={id} className="staff-tile-detail"><summary className="staff-tile">{label}<ChevronDown size={20}/></summary>
               {module.render(board, error)}</details>;
         })}
       </div>

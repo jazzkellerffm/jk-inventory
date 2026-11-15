@@ -15,7 +15,7 @@ export type DrinkOrder = {
 };
 export type DrinkFeed = { asOf: string; orders: DrinkOrder[] };
 export type FeedState = "ready" | "setup" | "unavailable";
-export type Shift = { date: string; names: string[]; start?: string };
+export type Shift = { date: string; names: string[]; role?: string; start?: string };
 export type StaffBoard = {
   feed: BarFeed | null;
   feedState: FeedState;

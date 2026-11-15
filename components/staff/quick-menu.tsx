@@ -27,7 +27,7 @@ export function QuickMenu() {
       }
       const layer=document.elementsFromPoint(window.innerWidth/2,window.innerHeight-44)
         .find(el=>el.closest("main"));
-      setDark(!!layer?.closest(".staff-activity,.service-drinks"));
+      setDark(!!layer?.closest(".staff-activity,.service-drinks,.staff-turnover"));
     }
     function onScroll() {
       if (!frame) frame=requestAnimationFrame(update);

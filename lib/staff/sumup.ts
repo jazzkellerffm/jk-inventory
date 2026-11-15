@@ -77,7 +77,12 @@ async function history(merchant: string, token: string, since: number, now: numb
 
 async function collect(merchant: string, token: string, now: number): Promise<BarFeed> {
   const since = now - 60 * minute;
-  const sorted = await history(merchant,token,since,now);
+  const start = serviceStart(now);
+  const historyRows = await history(merchant,token,Math.min(since,start),now);
+  const sorted = historyRows.filter(payment => Date.parse(payment.at) >= since);
+  const eveningCents = historyRows.reduce((sum,payment) =>
+    payment.currency === "EUR" && Date.parse(payment.at) >= start
+      ? sum + Math.round(payment.amount * 100) : sum, 0);
   const buckets = Array<number>(12).fill(0);
   for (const payment of sorted) buckets[Math.floor((Date.parse(payment.at) - since) / (5 * minute))]++;
   const latest = sorted.slice(0, 8);
@@ -85,7 +90,7 @@ async function collect(merchant: string, token: string, now: number): Promise<Ba
     payment.items = await receiptItems(merchant, payment.id, token);
   }));
   return {
-    asOf: new Date(now).toISOString(), buckets, payments: latest,
+    asOf: new Date(now).toISOString(), buckets, payments: latest, eveningCents,
     recentCount: buckets.slice(-3).reduce((a, b) => a + b, 0),
   };
 }

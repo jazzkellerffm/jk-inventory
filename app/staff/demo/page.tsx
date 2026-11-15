@@ -19,7 +19,7 @@ const example: StaffBoard = {
     { id: "order-5", at: "2026-11-14T20:47:00Z", table: "19", status: "served", items: [{ name: "Margarita", quantity: 2 }] },
   ] },
   feed: {
-    asOf, buckets, recentCount: buckets.slice(-3).reduce((a,b) => a+b, 0),
+    asOf, buckets, eveningCents: 124850, recentCount: buckets.slice(-3).reduce((a,b) => a+b, 0),
     payments: minutesAgo.toReversed().slice(0, 8).map((ago, index) => {
       const [name, quantity, amount] = products[index];
       return { id: "demo-" + index, at: new Date(Date.parse(asOf) - ago * 60_000).toISOString(), amount, currency: "EUR", items: [{ name, quantity }] };

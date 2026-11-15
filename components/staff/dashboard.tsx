@@ -98,6 +98,13 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           <p className="staff-note"><Clock3 size={14}/>{stale && feed ? "Letzter Stand · " + time.format(new Date(feed.asOf)) + " Uhr" : example ? "Beispielabend · 60 Minuten" : "Aktualisierung alle 15 Sekunden"}</p>
         </section>
 
+      <section id="abendumsatz" className="staff-panel staff-turnover" aria-labelledby="turnover-title">
+        <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={16}/> SumUp</span>
+          <small>{example ? "Beispieldaten" : feed ? "Stand "+time.format(new Date(feed.asOf))+" Uhr" : "Geschäftstag"}</small></div>
+        <h2 id="turnover-title">Abendumsatz</h2>
+        <strong>{typeof feed?.eveningCents === "number" ? money(feed.eveningCents/100,"EUR") : "–"}</strong>
+        <p>{stale ? "Aktualisierung fehlgeschlagen." : "Erfolgreiche Zahlungen · seit 06:00 Uhr"}</p>
+      </section>
         <section className="staff-feed staff-panel" aria-labelledby="payments">
           <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={17}/> SumUp</span><span className="staff-period">Letzte Stunde</span></div>
           <h2 id="payments">Letzte Zahlungen</h2>

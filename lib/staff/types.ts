@@ -3,6 +3,7 @@ export type Payment = { id: string; at: string; amount: number; currency: string
 export type BarFeed = {
   asOf: string;
   recentCount: number;
+  eveningCents: number;
   buckets: number[];
   payments: Payment[];
 };

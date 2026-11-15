@@ -250,17 +250,15 @@
 .best-track { margin-top:4px; border-radius:100px; height:6px; background:#e5ebe4; overflow:hidden; }
 .best-track i { display:block; height:100%; background:#456d5d; border-radius:inherit; }
 
-.staff-panel.bar-load { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 14px; padding:12px 20px; background:var(--card); }
+.staff-panel.bar-load { margin:0 0 14px; padding:14px 20px; background:var(--card); }
 .bar-load h2 { font-size:13px; line-height:1.3; margin:0 0 3px; color:var(--muted); }
 .bar-load strong { font:700 23px/1.1 var(--staff-display),sans-serif; }
-.load-meter { display:flex; align-items:flex-end; gap:4px; }
-.load-meter i { width:9px; height:10px; border-radius:4px; background:#e3e7e1; }
-.load-meter i:nth-child(2) { height:15px; }
-.load-meter i:nth-child(3) { height:20px; }
-.load-meter i:nth-child(4) { height:25px; }
-.load-meter i:nth-child(5) { height:30px; }
-.load-meter i[data-active="true"] { background:var(--accent); }
-.bar-load[data-level="3"] .load-meter i[data-active="true"] { background:#a95e73; }
+.load-meter { margin-top:10px; height:12px; border-radius:999px; background:#e4eae4; overflow:hidden; }
+.load-meter::before { content:""; display:block; height:100%; width:0; border-radius:inherit; background:#42675a; }
+.bar-load[data-level="1"] .load-meter::before { width:24%; }
+.bar-load[data-level="2"] .load-meter::before { width:60%; }
+.bar-load[data-level="3"] .load-meter { background:#f5ebe7; }
+.bar-load[data-level="3"] .load-meter::before { width:100%; background:linear-gradient(90deg,#ebcbc4,#d6a39a); }
 .staff-feed + .service-drinks { margin-top:16px; }
 .drinks-date { display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-size:14px; }
 .drinks-date select { padding:8px 12px; color:var(--paper); background:var(--cream); border:0; border-radius:999px; font:inherit; }

@@ -121,8 +121,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
         <div><h2 id="load-title">Barpegel · geschätzt</h2>
           <strong role="status">{board || error ? loadLabel : "Lädt …"}</strong>
         </div>
-        <div className="load-meter" aria-hidden="true">{[1,2,3,4,5].map(step =>
-          <i key={step} data-active={step <= [0,1,3,5][level]}/>)}</div>
+        <div className="load-meter" aria-hidden="true"/>
       </section>
 
       <section id="abendumsatz" className="staff-panel staff-turnover" aria-labelledby="turnover-title">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, ReceiptText } from "lucide-react";
+import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, Eye, EyeOff, ReceiptText } from "lucide-react";
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
 import { IncludedDrinks } from "./included-drinks";
 import { Bestsellers } from "./bestsellers";
@@ -75,6 +75,19 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const tickets = useTicketFeed(!!example);
   const { board, error } = useBoard(example);
   const [showAll, setShowAll] = useState(false);
+  const [showRevenue, setShowRevenue] = useState(false);
+  useEffect(() => {
+    if (!showRevenue) return;
+    const hide = () => setShowRevenue(false);
+    const timer = window.setTimeout(hide, 10000);
+    document.addEventListener("visibilitychange", hide);
+    window.addEventListener("pagehide", hide);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", hide);
+      window.removeEventListener("pagehide", hide);
+    };
+  }, [showRevenue]);
   const feed = board?.feed;
   const lastFive = feed?.buckets.at(-1);
   const preceding = feed?.buckets.slice(0,-1) ?? [];
@@ -106,7 +119,16 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
         <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={16}/> SumUp</span>
           <small>{example ? "Beispieldaten" : feed ? "Stand "+time.format(new Date(feed.asOf))+" Uhr" : "Geschäftstag"}</small></div>
         <h2 id="turnover-title">Abendumsatz</h2>
-        <strong>{typeof feed?.eveningCents === "number" ? money(feed.eveningCents/100,"EUR") : "–"}</strong>
+        {typeof feed?.eveningCents === "number" ? (
+          <button type="button" onClick={() => setShowRevenue(!showRevenue)}
+            aria-label={showRevenue ? "Abendumsatz " + money(feed.eveningCents / 100, "EUR") + " verbergen" : "Abendumsatz anzeigen"}
+            className="inline-flex min-h-11 items-center gap-3 text-left">
+            <strong aria-hidden="true" className={showRevenue ? undefined : "select-none blur-[7px]"}>
+              {showRevenue ? money(feed.eveningCents / 100, "EUR") : "0.000,00 €"}
+            </strong>
+            {showRevenue ? <EyeOff size={18} aria-hidden="true"/> : <Eye size={18} aria-hidden="true"/>}
+          </button>
+        ) : <strong>–</strong>}
         <p>{stale ? "Aktualisierung fehlgeschlagen." : "Erfolgreiche Zahlungen · seit 06:00 Uhr"}</p>
       </section>
         <section className="staff-feed staff-panel" aria-labelledby="payments">

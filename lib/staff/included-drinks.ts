@@ -1,4 +1,5 @@
 import "server-only";
+import { prepWeight } from "./bar-workload";
 import type { DrinkFeed, DrinkOrder, FeedState } from "./types";
 
 type OrderRow = {
@@ -36,8 +37,7 @@ export async function readIncludedDrinks(): Promise<{ drinks: DrinkFeed | null; 
     }).toString();
     url.searchParams.append("created_at", "lte." + new Date(now).toISOString());
     const orders: DrinkOrder[] = [];
-    let newDrinks = 0;
-    let openDrinks = 0;
+    let openEffort = 0;
     for (let offset = 0; ; offset += 100) {
       url.searchParams.set("offset", String(offset));
       const res = await fetch(url, {
@@ -47,14 +47,14 @@ export async function readIncludedDrinks(): Promise<{ drinks: DrinkFeed | null; 
       const rows: OrderRow[] = await res.json();
       for (const row of rows) {
         const order = orderFromRow(row);
-        const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
-        if (Date.parse(order.at) >= now - 300_000) newDrinks += quantity;
-        if (order.status === "open") openDrinks += quantity;
+        if (order.status === "open") {
+          for (const item of order.items) openEffort += prepWeight(item.name) * item.quantity;
+        }
         if (orders.length < 8) orders.push(order);
       }
       if (rows.length < 100) break;
     }
-    return { drinksState: "ready", drinks: { asOf: new Date(now).toISOString(), orders, newDrinks, openDrinks } };
+    return { drinksState: "ready", drinks: { asOf: new Date(now).toISOString(), orders, openEffort } };
   } catch {
     return { drinks: null, drinksState: "unavailable" };
   }

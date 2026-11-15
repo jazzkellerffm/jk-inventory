@@ -1,4 +1,5 @@
 import "server-only";
+import { prepWeight } from "./bar-workload";
 import type { BarFeed, Payment, ReceiptItem, BestsellerFeed } from "./types";
 
 const minute = 60_000;
@@ -86,10 +87,24 @@ async function collect(merchant: string, token: string, now: number): Promise<Ba
   const buckets = Array<number>(12).fill(0);
   for (const payment of sorted) buckets[Math.floor((Date.parse(payment.at) - since) / (5 * minute))]++;
   const latest = sorted.slice(0, 8);
-  await Promise.all(latest.map(async payment => {
-    payment.items = await receiptItems(merchant, payment.id, token);
-  }));
+  const recent = sorted.filter(payment => Date.parse(payment.at) >= now - 5 * minute);
+  const needsItems = sorted.slice(0, Math.max(latest.length, recent.length));
+  for (let i = 0; i < needsItems.length; i += 8) {
+    await Promise.all(needsItems.slice(i, i + 8).map(async payment => {
+      payment.items = await receiptItems(merchant, payment.id, token);
+    }));
+  }
+  let paidEffort = 0;
+  let missingReceiptDetails = false;
+  for (const payment of recent) {
+    if (!payment.items.length) missingReceiptDetails = true;
+    for (const item of payment.items) {
+      if (item.quantity === null) missingReceiptDetails = true;
+      paidEffort += prepWeight(item.name) * (item.quantity ?? 1);
+    }
+  }
   return {
+    paidEffort, missingReceiptDetails,
     asOf: new Date(now).toISOString(), buckets, payments: latest, eveningCents,
     recentCount: buckets.slice(-3).reduce((a, b) => a + b, 0),
   };

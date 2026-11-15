@@ -90,16 +90,12 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   }, [showRevenue]);
   const feed = board?.feed;
   const lastFive = feed?.buckets.at(-1);
-  const payments = !error && board?.feedState === "ready" ? lastFive : undefined;
-  const drinks = !error && board?.drinksState === "ready" ? board.drinks : null;
-  const arrivals = (payments ?? 0) + (drinks?.newDrinks ?? 0);
-  const open = drinks?.openDrinks ?? 0;
-  const complete = payments !== undefined && drinks != null;
-  let level = 0;
-  if (arrivals >= 8 || open >= 6) level = 3;
-  else if (arrivals >= 4 || open >= 3) level = 2;
-  else if (complete) level = 1;
-  const loadLabel = ["Daten fehlen", "Ruhig", "Mehr Betrieb", "Hoher Andrang"][level];
+  const paid = !error && board?.feedState === "ready" ? feed : null;
+  const open = !error && board?.drinksState === "ready" ? board.drinks : null;
+  const effort = (paid?.paidEffort ?? 0) + (open?.openEffort ?? 0);
+  const complete = paid && open && !paid.missingReceiptDetails;
+  const level = effort >= 5 ? 3 : effort >= 3 ? 2 : complete ? 1 : 0;
+  const loadLabel = ["Daten fehlen", "Ruhig", "Zieht an", "Viel los"][level];
   const stale = error || board?.feedState === "unavailable";
   const status = example ? "Beispieldaten" : stale ? "Verbindung unterbrochen" : feed ? "Verbunden" : board ? "Einrichtung offen" : "Lädt …";
   const timestamps = [feed?.asOf, board?.drinks?.asOf].filter((at): at is string => !!at);
@@ -113,17 +109,6 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <div className="staff-heading"><div><h1>Bar-Monitor<span>.</span></h1></div>
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>
-      <section className="staff-panel bar-load" aria-labelledby="load-title" data-level={level}>
-        <h2 id="load-title">Auslastung an der Bar</h2>
-        <div className="load-reading"><strong role="status">{board || error ? loadLabel : "Lädt …"}</strong>
-          <div className="load-meter" aria-hidden="true">{[1,2,3].map(step =>
-            <i key={step} data-active={step <= level}/>)}</div>
-        </div>
-        <p>{payments ?? "–"} Zahlungen · {drinks?.newDrinks ?? "–"} neue Drinks in 5 Min.</p>
-        <p>{drinks?.openDrinks ?? "–"} Drinks offen aus der letzten Stunde</p>
-        {board && !complete && <small>Live-Daten unvollständig</small>}
-        {example && <small>Beispieldaten</small>}
-      </section>
       <section aria-labelledby="activity" className="staff-activity staff-panel">
           <div className="staff-section-head"><span className="staff-eyebrow"><Activity size={17}/> SumUp</span><span className={`staff-status ${stale ? "staff-warn" : ""}`} role="status"><i/>{status}</span></div>
           <h2 id="activity">Baraktivität</h2>
@@ -131,6 +116,14 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           {feed ? <ActivityChart feed={feed}/> : <p className="staff-placeholder">{message}</p>}
           <p className="staff-note"><Clock3 size={14}/>{stale && feed ? "Letzter Stand · " + time.format(new Date(feed.asOf)) + " Uhr" : example ? "Beispielabend · 60 Minuten" : "Aktualisierung alle 15 Sekunden"}</p>
         </section>
+
+      <section id="barpegel" className="staff-panel bar-load" aria-labelledby="load-title" data-level={level}>
+        <div><h2 id="load-title">Barpegel · geschätzt</h2>
+          <strong role="status">{board || error ? loadLabel : "Lädt …"}</strong>
+        </div>
+        <div className="load-meter" aria-hidden="true">{[1,2,3,4,5].map(step =>
+          <i key={step} data-active={step <= [0,1,3,5][level]}/>)}</div>
+      </section>
 
       <section id="abendumsatz" className="staff-panel staff-turnover" aria-labelledby="turnover-title">
         <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={16}/> SumUp</span>

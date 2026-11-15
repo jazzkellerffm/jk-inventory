@@ -29,7 +29,7 @@
 .staff-kicker { margin: 0 0 6px; color: var(--muted); font-size: 10px; }
 .staff-heading h1, .staff-login h1 { margin: 0; font-family: var(--staff-display), system-ui, sans-serif; font-size: clamp(44px, 6vw, 72px); font-weight: 700; line-height: 1; }
 .staff-heading h1 span { color: #68847b; }
-.staff-stamp { text-align: right; line-height: 1.35; }
+.staff-stamp { display: grid; justify-items: end; gap: 6px; flex: none; text-align: right; line-height: 1.2; white-space: nowrap; }
 .staff-stamp span, .staff-stamp small { color: var(--muted); font-size: 12px; font-weight: 400; }
 .staff-stamp b { display: block; font-size: 21px; font-variant-numeric: tabular-nums; }
 .staff-grid, .staff-modules { display: grid; grid-template-columns: 1fr 1.08fr; gap: 16px; }
@@ -149,8 +149,8 @@
 }
 @media (max-width: 420px) {
   .staff-venue { display: none; }
-  .staff-stamp span { font-size: 10px; }
-  .staff-stamp b { font-size: 15px; }
+  .staff-stamp span { font-size: 12px; }
+  .staff-stamp b { font-size: 20px; }
   .staff-feed li, .staff-orders li { gap: 7px; }
 }
 
@@ -292,4 +292,7 @@
 .shift-line dd,.shift-line p { margin:0; }
 .shift-line dd { display:flex; flex-wrap:wrap; gap:4px; font-size:13px; }
 .shift-line dd span { padding:2px 8px; }
-@media(max-width:420px){.staff-heading { flex-wrap:wrap; row-gap:6px; }}
+@media (max-width: 420px) {
+  .staff-heading { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .staff-stamp { display: flex; align-items: baseline; gap: 10px; }
+}

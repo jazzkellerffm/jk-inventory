@@ -255,7 +255,7 @@
 .drinks-date { display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-size:14px; }
 .drinks-date select { padding:8px 12px; color:var(--paper); background:var(--cream); border:0; border-radius:999px; font:inherit; }
 
-.staff-turnover { background:#29463f; color:var(--cream); margin-bottom:16px; }
+.staff-turnover { background:#f4e3e3; color:var(--paper); margin-bottom:16px; }
 .staff-turnover .staff-eyebrow,.staff-turnover h2 { color:inherit; }
 .staff-turnover strong { display:block; font:700 clamp(34px,7vw,64px)/1.1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
 .staff-turnover p { margin:6px 0 0; }
@@ -283,3 +283,12 @@
 .perf-ring b { display:grid; place-items:center; border-radius:50%; width:72%; height:72%; background:white; font-size:21px; }
 .roster-day h4 { background:#f4e3e3; color:#28463f; }
 @media(max-width:550px){.perf-grid { grid-template-columns:1fr; }}
+
+.shift-line { margin:16px 0; padding:12px 4px; border-block:1px solid var(--line); }
+.shift-line h2 { margin:0 0 7px; font:700 16px/1.25 var(--staff-display),sans-serif; }
+.shift-line dl { display:flex; gap:8px 20px; flex-wrap:wrap; margin:0; }
+.shift-line dl div { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; }
+.shift-line dt,.shift-line p { color:var(--muted); font-size:13px; }
+.shift-line dd,.shift-line p { margin:0; }
+.shift-line dd { font-size:14px; }
+@media(max-width:420px){.staff-heading { flex-wrap:wrap; row-gap:6px; }}

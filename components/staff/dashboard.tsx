@@ -10,6 +10,7 @@ import { Performance } from "./performance";
 import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
 import { staffModules } from "./modules";
+import { ticketDay } from "@/lib/staff/ticket-weeks";
 import { Masthead } from "./masthead";
 
 const time = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" });
@@ -83,11 +84,13 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const status = example ? "Beispieldaten" : stale ? "Verbindung unterbrochen" : feed ? "Verbunden" : board ? "Einrichtung offen" : "Lädt …";
   const timestamps = [feed?.asOf, board?.drinks?.asOf].filter((at): at is string => !!at);
   const snapshot = timestamps.length ? new Date(Math.max(...timestamps.map(at => Date.parse(at)))) : undefined;
+  const rosterDay = ticketDay((example && snapshot ? snapshot.getTime() : Date.now()) / 1000);
+  const tonight = board?.shifts.filter(shift => shift.date === rosterDay) ?? [];
   const message = stale ? "SumUp ist gerade nicht erreichbar." : board?.feedState === "setup" ? "SumUp ist noch nicht verbunden." : "Zahlungen werden geladen …";
   return <div className="staff-shell">
     <Masthead signedIn={!example} demo={!!example}/>
     <main>
-      <div className="staff-heading"><div><p className="staff-kicker">SCHICHTÜBERSICHT</p><h1>An der Bar<span>.</span></h1></div>
+      <div className="staff-heading"><div><p className="staff-kicker">SCHICHTÜBERSICHT</p><h1>Bar-Monitor<span>.</span></h1></div>
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>
       <section aria-labelledby="activity" className="staff-activity staff-panel">
@@ -117,6 +120,12 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
             </li>)}</ol>}
           {feed && feed.payments.length > 4 && <button className="staff-more" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "Weniger anzeigen" : `Alle ${feed.payments.length} anzeigen`} <ChevronDown size={16}/></button>}
         </section>
+      {board && <section className="shift-line" aria-labelledby="tonight-team">
+        <h2 id="tonight-team">Team heute Abend</h2>
+        {board.scheduleError || error ? <p>Dienstplan derzeit nicht verfügbar.</p> : tonight.length ?
+          <dl>{tonight.map((shift,i)=><div key={i}><dt>{shift.role || "Team"}</dt><dd>{shift.names.join(" · ")}</dd></div>)}</dl>
+          : <p>Für heute ist keine Schicht eingetragen.</p>}
+      </section>}
       <NightDrinks {...tickets} example={!!example}/>
       <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
       <Bestsellers example={!!example}/>

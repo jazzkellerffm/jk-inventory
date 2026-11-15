@@ -6,6 +6,9 @@ import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, ReceiptText } 
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
 import { IncludedDrinks } from "./included-drinks";
 import { Bestsellers } from "./bestsellers";
+import { Performance } from "./performance";
+import { RosterPlanner } from "./roster-planner";
+import { weekDay } from "@/lib/staff/ticket-weeks";
 import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
 import { staffModules } from "./modules";
@@ -70,6 +73,14 @@ function ActivityChart({ feed }: { feed: BarFeed }) {
 }
 
 export function StaffDashboard({ example }: { example?: StaffBoard }) {
+  const [demoShifts,setDemoShifts]=useState(example?.shifts);
+  useEffect(()=>{
+    if(!example)return;
+    try {const saved=localStorage.getItem("jk-demo-roster-1");if(saved){
+      const rows=JSON.parse(saved);
+      if(Array.isArray(rows) && rows.every(s=>typeof s?.date==="string" && Array.isArray(s.names)))setDemoShifts(rows);
+    }} catch {}
+  },[example]);
   const tickets = useTicketFeed(!!example);
   const { board, error } = useBoard(example);
   const [showAll, setShowAll] = useState(false);
@@ -119,6 +130,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <NightDrinks {...tickets} example={!!example}/>
       <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
       <Bestsellers example={!!example}/>
+      <Performance feed={tickets.feed} example={!!example}/>
       <TicketSales {...tickets} example={!!example}/>
       <h2 className="staff-tools-title">Für die Schicht</h2>
       <div className="staff-modules">
@@ -128,9 +140,15 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           return "href" in module ?
             <Link key={id} className="staff-tile" href={module.href}>{label}<ArrowUpRight size={20}/></Link> :
             <details key={id} id={id} className="staff-tile-detail"><summary className="staff-tile">{label}<ChevronDown size={20}/></summary>
-              {module.render(board, error)}</details>;
+              {module.render(example && board ? {...board,shifts:demoShifts??example.shifts}:board, error)}</details>;
         })}
       </div>
+      <RosterPlanner demo={!!example} shifts={(example?demoShifts:board?.shifts)??[]} onPublish={(week,rows)=>{
+        if(example){
+          const next=[...(demoShifts??[]).filter(s=>weekDay(Date.parse(s.date+"T12:00:00Z")/1000,0)!==week),...rows].sort((a,b)=>a.date.localeCompare(b.date));
+          localStorage.setItem("jk-demo-roster-1",JSON.stringify(next));setDemoShifts(next);
+        }else window.dispatchEvent(new Event("online"));
+      }}/>
       {example && <Link className="staff-exit-demo" href="/staff">Zum Teamzugang <ArrowRight size={15}/></Link>}
     </main>
     <QuickMenu/>

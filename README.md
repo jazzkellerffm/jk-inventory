@@ -63,3 +63,16 @@ the connection, compare a recent QR Order & Pay sale and a manually entered
 item sale with their original receipts (time, items, quantities and amount).
 
 The Included Drinks panel shows the latest eight orders placed in the last hour, newest first, with table, drink quantities and open/served status. It refreshes with the board every 15 seconds. Staff view access requires the team password. Order fulfilment stays in the Included Drinks app.
+
+### Wochenplanung in Staff OS
+
+Für die gemeinsame Veröffentlichung pro Woche benötigt die Server-Umgebung
+`ROSTER_REDIS_URL` (Upstash-kompatible Redis REST URL),
+`ROSTER_REDIS_TOKEN` (Schreibzugriff) und `STAFF_PLANNER_KEY` (separater
+Planungsschlüssel). Der Teamzugang muss ebenfalls eingerichtet sein.
+Dienstplan → Wochenplan bearbeiten: Woche laden, Namen zuordnen und
+„Woche veröffentlichen“ wählen. Entwürfe bleiben bis zur Veröffentlichung
+im offenen Editor. Parallel geänderte Wochen müssen neu geladen werden.
+Vorhandene Wochen aus `STAFF_SHIFTS_JSON` bleiben lesbar und werden einzeln
+durch veröffentlichte Wochen ersetzt. Die Demo speichert veröffentlichte
+Beispielwochen ausschließlich im Browser.

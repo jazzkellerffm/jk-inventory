@@ -30,7 +30,7 @@ const example: StaffBoard = {
     { date: "2026-11-18", role: "Backstage", names: ["Joab"] },
     { date: "2026-11-18", role: "Service", names: ["Adriano"] },
     { date: "2026-11-18", role: "Door", names: ["Saven"] },
-    { date: "2026-11-19", role: "Bar", names: ["Adrian", "Joab"] },
+    { date: "2026-11-19", role: "Bar", names: ["Adri", "Joab"] },
     { date: "2026-11-19", role: "Service", names: ["Laura"] },
     { date: "2026-11-19", role: "Door", names: ["Ana"] },
   ],

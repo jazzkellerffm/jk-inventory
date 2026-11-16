@@ -1,11 +1,11 @@
 import "server-only";
 import {ticketDay, weekDay} from "./ticket-weeks";
-import { includedDrinks, packageSize, paidSupply, type Supply } from "./entitlements";
+import { ticketCategory, includedDrinks, packageSize, paidSupply, type Supply } from "./entitlements";
 
 type EventRow = { id: string; name: string; status: string; start: { unix: number; date: string } };
 type Ticket = { id: string; event_id: string; description: string; status: string; add_on_id?: string; created_at: number };
 export type TicketNight = { id: string; name: string; start: number; guests: number; recent: number; drinks: number; unknown: number };
-export type TicketFeed = { asOf: number; nights: TicketNight[]; monthlyTables: { vip: number; worldstar: number } };
+export type TicketFeed = { asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
 
 async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string) {
   const rows = new Map<string,T>();
@@ -28,7 +28,7 @@ async function collect(key: string): Promise<TicketFeed> {
   const now = Math.floor(Date.now()/1000);
   const start=weekDay(now,0), end=weekDay(now,28);
   const month = ticketDay(now).slice(0, 7);
-  const monthlyTables = { vip: 0, worldstar: 0 };
+  const monthlyCategories = { Club: 0, "Club Plus": 0, Premium: 0, VIP: 0, "Worldstar VIP": 0, "Weitere Tickets": 0 };
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
   const events = (await pages<EventRow>("events",{},auth))
     .filter(e => e.start?.date && (e.start.date.startsWith(month) || (e.start.date >= start && e.start.date < end)) && ["published","close_sales","sales_closed"].includes(e.status))
@@ -39,10 +39,7 @@ async function collect(key: string): Promise<TicketFeed> {
     let guests = 0, recent = 0, drinks = 0, unknown = 0;
     for (const ticket of tickets) {
       if (ticket.event_id !== event.id || ticket.status !== "valid" || ticket.add_on_id) continue;
-      if (event.start.date.startsWith(month) && /\bvip\b/i.test(ticket.description ?? "")) {
-        if (/world[\s-]*star/i.test(ticket.description)) monthlyTables.worldstar++;
-        else monthlyTables.vip++;
-      }
+      if (event.start.date.startsWith(month)) monthlyCategories[ticketCategory(ticket.description ?? "")]++;
       const size = packageSize(ticket.description ?? "");
       drinks += includedDrinks(ticket.description ?? "");
       if (!size) { unknown++; continue; }
@@ -51,7 +48,7 @@ async function collect(key: string): Promise<TicketFeed> {
     }
     if (event.start.date >= start && event.start.date < end) nights.push({id:event.id,name:event.name,start:event.start.unix,guests,recent,drinks,unknown});
   }
-  return {asOf:now,nights,monthlyTables};
+  return {asOf:now,nights,monthlyCategories,monthlyTables:{vip:monthlyCategories.VIP,worldstar:monthlyCategories["Worldstar VIP"]}};
 }
 
 let cached: { until:number; data:Promise<TicketFeed> } | undefined;

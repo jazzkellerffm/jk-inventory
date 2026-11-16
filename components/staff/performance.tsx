@@ -1,5 +1,6 @@
 "use client";
 import {useState} from "react";
+import { ticketCategories } from "@/lib/staff/entitlements";
 import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
 import type {TicketFeed} from "@/lib/staff/tickets";
 
@@ -16,6 +17,10 @@ export function Performance({feed,example}:{feed:TicketFeed|null;example:boolean
     .filter(night => night.start > now && night.guests > 0)
     .sort((a, b) => b.guests - a.guests || a.start - b.start)
     .slice(0, 10) ?? [];
+  const categories = ticketCategories.map(label => ({ label, count: feed?.monthlyCategories?.[label] ?? 0 }))
+    .filter(row => row.label !== "Weitere Tickets" || row.count > 0)
+    .sort((a,b) => b.count - a.count);
+  const highest = categories[0].count;
   const max=Math.max(1,...nights.map(n=>n.guests));
   const pct=total?Math.round(recent/total*100):0;
   return <details className="staff-panel perf-panel" id="performance"><summary>Venue Performance</summary>
@@ -33,6 +38,17 @@ export function Performance({feed,example}:{feed:TicketFeed|null;example:boolean
       </dl>
       <p className="mt-2 text-sm text-[var(--muted)]">Gebuchte Tische für Veranstaltungen in diesem Monat</p>
     </section>}
+    {feed?.monthlyCategories && <details className="mt-4 border-t border-[var(--line)] pt-4">
+      <summary>Ticketkategorien im Vergleich</summary>
+      <p className="text-sm text-[var(--muted)]">{new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric", timeZone:"Europe/Berlin"}).format(feed.asOf * 1000)} · Gebuchte Ticketpakete</p>
+      {highest ? <ol className="mt-3 space-y-3">{categories.map(({label,count}) =>
+        <li key={label}>
+          <div className="flex items-baseline justify-between gap-3"><b>{label}</b><b className="tabular-nums">{count}</b></div>
+          <div aria-hidden="true" className="mt-1 h-3 overflow-hidden rounded-full bg-[#f7eeeb]">
+            <div className="ticket-fill" style={{width:count / highest * 100 + "%"}}/>
+          </div>
+        </li>)}</ol> : <p>Noch keine gebuchten Ticketpakete für diesen Monat.</p>}
+    </details>}
     {feed && <details className="mt-4 border-t border-[var(--line)] pt-4">
       <summary>Top 10 kommende Events</summary>
       <p className="text-sm text-[var(--muted)]">Nach gebuchten Gästen · bis {eventDate.format(new Date(weekDay(now, 27) + "T12:00:00Z"))}</p>

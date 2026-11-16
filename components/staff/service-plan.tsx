@@ -3,16 +3,13 @@ import { useEffect, useState } from "react";
 import { Check, ClipboardList } from "lucide-react";
 import type { Booking, TicketNight } from "@/lib/staff/tickets";
 
-import { combine, includedSupply, packageSize, type Supply } from "@/lib/staff/entitlements";
+import { ticketCategory, combine, includedSupply, packageSize, type Supply } from "@/lib/staff/entitlements";
 
 const date = new Intl.DateTimeFormat("de-DE",{day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"});
 const categories = ["Club","Club Plus","Premium","VIP","Weitere Tickets"];
 function category(ticket:string) {
-  if (/vip/i.test(ticket)) return "VIP";
-  if (/premium/i.test(ticket)) return "Premium";
-  if (/club\s*(plus|\+)|standard\s*\+/i.test(ticket)) return "Club Plus";
-  if (/club|standard/i.test(ticket)) return "Club";
-  return "Weitere Tickets";
+  const label = ticketCategory(ticket);
+  return label === "Worldstar VIP" ? "VIP" : label;
 }
 
 function demoBookings(night:TicketNight):Booking[] {

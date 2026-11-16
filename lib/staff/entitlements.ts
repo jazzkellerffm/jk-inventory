@@ -1,3 +1,13 @@
+export const ticketCategories = ["Club", "Club Plus", "Premium", "VIP", "Worldstar VIP", "Weitere Tickets"] as const;
+
+export function ticketCategory(name: string): typeof ticketCategories[number] {
+  if (/vip/i.test(name)) return /world[\s-]*star/i.test(name) ? "Worldstar VIP" : "VIP";
+  if (/premium/i.test(name)) return "Premium";
+  if (/club\s*(plus|\+)|standard\s*\+/i.test(name)) return "Club Plus";
+  if (/club|standard/i.test(name)) return "Club";
+  return "Weitere Tickets";
+}
+
 export function packageSize(label: string) {
   const match = label.match(/\b(\d+)\s*(?:guests?|gäste|personen)\b/i)
     ?? label.match(/cr[eé]mant\s+(?:for|für)\s+(\d+)/i);

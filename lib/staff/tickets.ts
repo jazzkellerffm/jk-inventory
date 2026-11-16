@@ -3,10 +3,11 @@ import { serviceDate } from "./service-day";
 import {ticketDay, weekDay} from "./ticket-weeks";
 import { ticketCategory, includedDrinks, packageSize, paidSupply, type Supply } from "./entitlements";
 
-type EventRow = { id: string; name: string; status: string; start: { unix: number; date: string } };
+type EventRow = { id: string; name: string; status: string; unavailable?: boolean | string; unavailable_status?: string | null; start: { unix: number; date: string } };
 type Ticket = { id: string; event_id: string; description: string; status: string; add_on_id?: string; created_at: number };
-export type TicketNight = { id: string; name: string; start: number; guests: number; recent: number; drinks: number; unknown: number };
-export type TicketFeed = { foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
+export type TicketNight = { soldOut?: boolean; id: string; name: string; start: number; guests: number; recent: number; drinks: number; unknown: number };
+type NightCounts = { soldOut: number; busy: number; half: number; quiet: number; unclear: number };
+export type TicketFeed = { monthlyNights?: NightCounts; foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
 
 async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string) {
   const rows = new Map<string,T>();
@@ -31,9 +32,10 @@ async function collect(key: string, now: number, serviceDay: string): Promise<Ti
   const monthlyCategories = { Club: 0, "Club Plus": 0, Premium: 0, VIP: 0, "Worldstar VIP": 0, "Weitere Tickets": 0 };
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
   const events = (await pages<EventRow>("events",{},auth))
-    .filter(e => e.start?.date && (e.start.date === serviceDay || e.start.date.startsWith(month) || (e.start.date >= start && e.start.date < end)) && ["published","close_sales","sales_closed"].includes(e.status))
+    .filter(e => e.start?.date && (e.start.date.startsWith(serviceDay.slice(0, 7)) || e.start.date.startsWith(month) || (e.start.date >= start && e.start.date < end)) && ["published","close_sales","sales_closed"].includes(e.status))
     .sort((a,b)=>a.start.unix-b.start.unix);
   const nights = [];
+  const completed = new Map<string, {soldOut: boolean; guests: number; unknown: number}>();
   for (const event of events) {
     const tickets = await pages<Ticket>("issued_tickets",{event_id:event.id,status:"valid"},auth);
     let guests = 0, recent = 0, drinks = 0, unknown = 0;
@@ -46,7 +48,16 @@ async function collect(key: string, now: number, serviceDay: string): Promise<Ti
       guests += Number(size);
       if (ticket.created_at >= now - 86400) recent += Number(size);
     }
-    if (event.start.date >= start && event.start.date < end) nights.push({id:event.id,name:event.name,start:event.start.unix,guests,recent,drinks,unknown});
+    const soldOut = (event.unavailable === true || event.unavailable === "true")
+      && event.unavailable_status?.trim().toLowerCase() === "sold out";
+    if (event.start.date.startsWith(serviceDay.slice(0, 7)) && event.start.date < serviceDay) {
+      const night = completed.get(event.start.date) ?? { soldOut: true, guests: 0, unknown: 0 };
+      night.soldOut &&= soldOut;
+      night.guests += guests;
+      night.unknown += unknown;
+      completed.set(event.start.date, night);
+    }
+    if (event.start.date >= start && event.start.date < end) nights.push({soldOut,id:event.id,name:event.name,start:event.start.unix,guests,recent,drinks,unknown});
   }
   let foodPreorders: number | null = 0;
   try {
@@ -61,7 +72,15 @@ async function collect(key: string, now: number, serviceDay: string): Promise<Ti
   } catch {
     foodPreorders = null;
   }
-  return {asOf:now,nights,foodPreorders,monthlyCategories,monthlyTables:{vip:monthlyCategories.VIP,worldstar:monthlyCategories["Worldstar VIP"]}};
+  const monthlyNights: NightCounts = { soldOut: 0, busy: 0, half: 0, quiet: 0, unclear: 0 };
+  for (const night of completed.values()) {
+    if (night.soldOut) monthlyNights.soldOut++;
+    else if (night.guests >= 45) monthlyNights.busy++;
+    else if (night.unknown) monthlyNights.unclear++;
+    else if (night.guests >= 25) monthlyNights.half++;
+    else monthlyNights.quiet++;
+  }
+  return {asOf:now,nights,monthlyNights,foodPreorders,monthlyCategories,monthlyTables:{vip:monthlyCategories.VIP,worldstar:monthlyCategories["Worldstar VIP"]}};
 }
 
 let cached: { day:string; until:number; data:Promise<TicketFeed> } | undefined;

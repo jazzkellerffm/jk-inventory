@@ -67,3 +67,9 @@ Umgebungsvariablen für lokale Entwicklung in `.env.local`, auf Vercel in der ge
 **Prüfung nach Änderungen:** Zuerst die Demo auf dem Handy öffnen. Beide Testtöne hören, Sprungziele antippen, Umsatzfelder aufdecken und wieder verdecken lassen. Teamkacheln mit dem Dienstplan vergleichen. Anschließend im geschützten Teamzugang einen bekannten Beleg, eine Included-Drinks-Bestellung mit Tisch und eine Ticket-Tailor-Buchung mit Add-on vergleichen. Testdaten und Live-Daten getrennt beurteilen.
 
 **Pflege:** Eine Planänderung in der JSON-Datei speichern, committen und deployen. Bei neuen Drink- oder Ticketbezeichnungen die Erkennungsregeln prüfen. Nach Änderungen an Betriebslogik oder Datenquellen diese Datei auf `main` fortschreiben und die Kopie in Dropbox unter `/JKOS/DOCUMENTATION/CONTEXT/JK-Staff-OS.md` aktualisieren. Dort ergänzen `JKOS-Service-and-Door.md` und `JK Booking - Apply v1 & Rose UI Pattern.md` den fachlichen und gestalterischen Kontext.
+
+## Ausverkauf und Monatsauswertung
+
+Für einen ausverkauften Einzeltermin in Ticket Tailor „unavailable“ aktivieren und als Status „Sold out“ setzen. JKOS zeigt dann neben dem Datum die champagnerfarbene Pille. Eine Gästeschwelle löst sie nicht aus.
+
+Venue Performance zählt abgeschlossene Geschäftstage im laufenden Monat, jeweils einmal pro Veranstaltungsdatum. Ein Abend zählt als Sold out, wenn alle berücksichtigten Termine des Abends so markiert sind. Die übrigen Abende werden nach gebuchten Gästen eingeteilt: ab 45 gut besucht, 25–44 etwa halb voll, bis 24 ruhig. Unklare Paketgrößen werden bei uneindeutiger Einstufung separat ausgewiesen. Grundlage sind aktuelle Ticketdaten, keine historischen Status-Snapshots oder Check-ins.

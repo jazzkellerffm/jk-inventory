@@ -12,8 +12,8 @@ import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
 
 const date = new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"});
 const clock = new Intl.DateTimeFormat("de-DE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Berlin"});
-const demo: TicketFeed = {foodPreorders:2,asOf:1794859200,monthlyCategories:{Club:54,"Club Plus":38,Premium:21,VIP:8,"Worldstar VIP":2,"Weitere Tickets":0},monthlyTables:{vip:8,worldstar:2},nights:Array.from({length:4},(_,week)=>["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
-  id:String(week*5+i),name,start:1795028400+(week*7+i)*86400,guests:[26,18,42,52,60][i],recent:[4,2,8,5,0][i],drinks:[12,6,18,24,20][i],unknown:0,
+const demo: TicketFeed = {monthlyNights:{soldOut:2,busy:4,half:3,quiet:1,unclear:0},foodPreorders:2,asOf:1794859200,monthlyCategories:{Club:54,"Club Plus":38,Premium:21,VIP:8,"Worldstar VIP":2,"Weitere Tickets":0},monthlyTables:{vip:8,worldstar:2},nights:Array.from({length:4},(_,week)=>["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
+  soldOut:week===0 && i===4,id:String(week*5+i),name,start:1795028400+(week*7+i)*86400,guests:[26,18,42,52,60][i],recent:[4,2,8,5,0][i],drinks:[12,6,18,24,20][i],unknown:0,
 }))).flat()};
 
 export function useTicketFeed(example:boolean) {
@@ -86,7 +86,7 @@ export function TicketSales({example,feed,state,refreshing}:Props) {
     {state === "unavailable" && <p role="status">Ticket Tailor ist gerade nicht erreichbar.</p>}
     {!feed && state === "loading" ? <TicketLoader label="Ticketverkauf wird geladen"/> : nights.length ? <>
       <ul className="ticket-chart">{nights.map(n => <li key={n.id} className="ticket-night">
-        <div className="ticket-event"><b>{date.format(n.start * 1000)}</b><span>{n.name}</span></div>
+        <div className="ticket-event"><b>{date.format(n.start * 1000)}{n.soldOut && <small className="sold-out-pill">Sold out</small>}</b><span>{n.name}</span></div>
         <div className="ticket-track" aria-hidden="true">
           <div className="ticket-fill" style={{width:100 * n.guests / scale + "%"}}>
             <i style={{width:(n.guests ? 100 * n.recent / n.guests : 0) + "%"}}/>

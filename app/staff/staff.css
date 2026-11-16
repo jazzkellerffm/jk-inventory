@@ -361,3 +361,5 @@
 .ticket-loader::before { content:""; width:2.75rem; height:.4rem; border-radius:999px; background:linear-gradient(90deg,#aac6b6,#f0cfc9,#aac6b6); background-size:200% 100%; animation:ticket-loading 1.6s ease-in-out infinite alternate; }
 @keyframes ticket-loading { to { background-position:100% 0; } }
 @media (prefers-reduced-motion:reduce) { .ticket-loader::before { animation:none; } }
+
+.sold-out-pill { display:inline-block; vertical-align:middle; margin-inline-start:.5rem; padding:.15rem .45rem; border-radius:999px; background:#f2e8ce; color:#29443d; font-size:.68rem; line-height:1.2; white-space:nowrap; }

@@ -1,4 +1,5 @@
 "use client";
+import { serviceDate } from "@/lib/staff/service-day";
 import {useState} from "react";
 import { ticketCategories } from "@/lib/staff/entitlements";
 import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
@@ -33,6 +34,21 @@ export function Performance({feed,example}:{feed:TicketFeed|null;example:boolean
     <div className="perf-grid"><section><h3>Gebuchte Gäste</h3><strong>{nights.some(n=>n.unknown)?"≥ ":""}{total}</strong>
       <div className="perf-bars">{nights.map(n=><div key={n.id} title={n.name}><b>{n.guests}</b><i style={{height:Math.max(2,n.guests/max*78)}}/><small>{new Intl.DateTimeFormat("de-DE",{timeZone:"Europe/Berlin",weekday:"short",day:"numeric"}).format(n.start*1000)}</small></div>)}</div></section>
       <section><h3>Neu in 24 Stunden</h3><div className="perf-ring" style={{background:`conic-gradient(var(--accent) ${pct}%, #dbe8df 0)`}}><b>{pct}%</b></div><p>{recent} von {total} gebuchten Gästen</p></section></div>}
+    {feed?.monthlyNights && <section className="mt-4 border-t border-[var(--line)] pt-4">
+      <h3 className="font-bold">Abende im {new Intl.DateTimeFormat("de-DE", {month:"long"}).format(new Date(serviceDate(feed.asOf*1000)+"T12:00:00Z"))}</h3>
+      <p className="text-sm text-[var(--muted)]">Abgeschlossene Abende · gebuchte Gäste</p>
+      <dl className="mt-2 grid grid-cols-2 gap-2">
+        {([
+          ["Sold out", "Ticket Tailor", feed.monthlyNights.soldOut, "bg-[#f2e8ce]"],
+          ["Gut besucht", "Ab 45 Gästen", feed.monthlyNights.busy, "bg-[#dbe8df]"],
+          ["Etwa halb voll", "25–44 Gäste", feed.monthlyNights.half, "bg-[#f4e3e3]"],
+          ["Ruhig", "Bis 24 Gäste", feed.monthlyNights.quiet, "bg-[#ededeb]"],
+        ] as const).map(([label, hint, count, tone]) => <div key={label} className={tone+" rounded-xl px-3 py-2"}>
+          <dt>{label}</dt><dd className="text-2xl font-bold">{count}</dd><small>{hint}</small>
+        </div>)}
+      </dl>
+      {feed.monthlyNights.unclear > 0 && <small>Gästezahl ungeklärt · {feed.monthlyNights.unclear}</small>}
+    </section>}
     {feed?.monthlyTables && <section className="mt-4 border-t border-[var(--line)] pt-4">
       <h3 className="font-bold">VIP-Tische · {new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric", timeZone:"Europe/Berlin"}).format(feed.asOf * 1000)}</h3>
       <dl className="mt-2 grid grid-cols-2 gap-2">

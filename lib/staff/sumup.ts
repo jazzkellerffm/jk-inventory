@@ -132,13 +132,27 @@ export function readBarFeed(merchant: string, token: string) {
   return value;
 }
 
+function rankedSummary(summary?: string): ReceiptItem[] {
+  if (!summary) return [];
+  const items: ReceiptItem[] = [];
+  for (const part of summary.split(",")) {
+    const match = /^(?:(\d+)\s*[x×]\s*)?(mini dream|bowl of crisps|goldstein mule|nachos con salsa)$/i.exec(part.trim());
+    if (!match) return [];
+    const quantity = Number(match[1] ?? 1);
+    if (!Number.isSafeInteger(quantity) || quantity < 1) return [];
+    items.push({name:match[2], quantity});
+  }
+  return items;
+}
+
 async function rankSales(merchant:string,token:string,start:number,now:number):Promise<BestsellerFeed> {
   const sales = await history(merchant,token,start,now);
   const totals = new Map<string,{name:string;quantity:number}>();
   let incomplete=0;
   for (let i=0;i<sales.length;i+=8) {
     const receipts=await Promise.all(sales.slice(i,i+8).map(p=>receiptItems(merchant,p,token)));
-    for (const items of receipts) {
+    for (const [offset, receipt] of receipts.entries()) {
+      const items = receipt.length ? receipt : rankedSummary(sales[i + offset].summary);
       if (!items.length || items.some(item=>item.quantity===null)) incomplete++;
       for (const {name,quantity} of items) {
         if (quantity===null) continue;

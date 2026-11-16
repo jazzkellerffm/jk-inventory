@@ -7,5 +7,9 @@ export async function GET() {
   const merchant=process.env.SUMUP_MERCHANT_CODE, key=process.env.SUMUP_API_KEY;
   if (!merchant || !key) return Response.json({state:"setup"},{headers});
   try { return Response.json({feed:await readBestsellers(merchant,key)},{headers}); }
-  catch { return Response.json({}, {status:503,headers}); }
+  catch (error) {
+    const reason = error instanceof Error ? error.message : "";
+    console.warn("Bestseller feed unavailable", /^SumUp HTTP \d{3}$/.test(reason) ? reason : "History request failed");
+    return Response.json({}, {status:503,headers});
+  }
 }

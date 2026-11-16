@@ -82,7 +82,7 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
     }
     setNotice(item);
     clearTimeout(dismiss.current);
-    dismiss.current = setTimeout(()=>setNotice(null),4000);
+    dismiss.current = setTimeout(()=>setNotice(null),20_000);
   }, []);
 
   const queue = useCallback((item: Notice) => {
@@ -108,7 +108,7 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
       if (!document.hidden && (mode === "both" || mode === n.kind)) queue(n);
     }
     if (board?.drinksState === "ready") for (const order of board.drinks?.orders ?? []) {
-      if (order.status === "open") accept("included/"+order.id,order.at,{kind:"drink",label:describe(order.items)+" · Tisch "+order.table,target:"included-title"});
+      if (order.status === "open") accept("included/"+order.id,order.at,{kind:"drink",label:describe(order.items)+(order.table?.trim() ? " · Tisch "+order.table.trim() : " · Included Drinks"),target:"included-title"});
     }
     if (board?.feedState === "ready") for (const pay of board.feed?.payments ?? []) {
       const drinks = pay.items.filter(item=>isDrink(item.name));

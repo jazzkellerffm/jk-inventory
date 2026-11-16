@@ -222,20 +222,29 @@
 .staff-quick a:hover,.staff-quick a:focus-visible { background:#849b8926; }
 @media(prefers-reduced-motion:reduce) { .staff-quick { transition:none; } }
 
-.roster-period,.roster-day h4,.roster-day dl>div { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.roster-period { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .roster-period { margin:18px 0 12px; }
 .roster-period h3 { margin:0; font:700 23px/1.1 var(--staff-display),sans-serif; }
 .roster-period button { border:1px solid var(--line); border-radius:50%; background:white; padding:6px; }
 .roster-period button:disabled { opacity:.35; }
-.roster-day { margin-top:16px; border:1px solid var(--line); border-radius:16px; overflow:hidden; background:white; }
-.roster-day h4 { margin:0; padding:12px 14px; background:#29463f; color:var(--cream); font:700 19px/1.2 var(--staff-display),sans-serif; }
-.roster-day time { font-size:14px; }
-.roster-day dl { margin:0; padding:0 12px; }
-.roster-day dl>div { min-height:42px; padding:7px 0; }
-.roster-day dl>div+div { border-top:1px solid var(--line); }
-.roster-day dd { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px; margin:0; }
-.roster-day dd span,.shift-line dd span { padding:4px 9px; border-radius:20px; background:#f3e7e3; font-weight:600; }
-.roster-day dd span[data-match="true"] { background:var(--accent); color:white; }
+.staff-schedule-body select { min-height:44px; max-width:75%; border-radius:999px; padding-inline:12px; }
+.roster-day { margin-top:22px; }
+.roster-day + .roster-day { border-top:1px solid var(--line); padding-top:18px; }
+.roster-day h4 { margin:0 0 10px; }
+.roster-day time { display:flex; align-items:center; gap:12px; }
+.roster-date-number { font:700 40px/1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; color:var(--accent); }
+.roster-date-copy { display:grid; gap:2px; font:700 17px/1.2 var(--staff-display),sans-serif; }
+.roster-date-copy small { font:400 12px/1.2 var(--font-poly),sans-serif; }
+.roster-day dl { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+.roster-role { min-width:0; padding:12px 10px; border-radius:14px; background:#f4e3e3; display:flex; flex-direction:column; gap:10px; }
+.roster-role dt { display:flex; align-items:baseline; gap:5px; color:#674e52; font-size:13px; line-height:1.25; overflow-wrap:anywhere; }
+.roster-role dt svg { flex:none; align-self:flex-start; }
+.roster-role dd { margin:0; }
+.roster-role dd small { margin-bottom:5px; }
+.roster-names { display:flex; flex-wrap:wrap; gap:4px; }
+.roster-name { max-width:100%; overflow-wrap:anywhere; padding:4px 8px; border-radius:999px; background:#fff9f6; font:700 15px/1.2 var(--staff-display),sans-serif; }
+.roster-name[data-match="true"] { background:var(--accent); color:white; }
+.shift-line dd span { padding:4px 9px; border-radius:20px; background:#f3e7e3; font-weight:600; }
 
 .door-guests { margin-top:18px; }
 .door-guests section { margin-top:14px; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
@@ -299,7 +308,6 @@
 .perf-bars i { background:#42675a; border-radius:6px 6px 2px 2px; }
 .perf-ring { display:grid; place-items:center; height:90px; width:90px; border-radius:50%; }
 .perf-ring b { display:grid; place-items:center; border-radius:50%; width:72%; height:72%; background:white; font-size:21px; }
-.roster-day h4 { background:#f4e3e3; color:#28463f; }
 @media(max-width:550px){.perf-grid { grid-template-columns:1fr; }}
 
 .shift-line { margin:16px 0; padding:12px 4px; border-block:1px solid var(--line); }

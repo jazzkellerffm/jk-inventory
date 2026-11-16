@@ -49,7 +49,7 @@ async function collect(key: string, now: number, serviceDay: string): Promise<Ti
       if (ticket.created_at >= now - 86400) recent += Number(size);
     }
     const soldOut = (event.unavailable === true || event.unavailable === "true")
-      && event.unavailable_status?.trim().toLowerCase() === "sold out";
+      && ["sold out", "fully booked"].includes(event.unavailable_status?.trim().toLowerCase() ?? "");
     if (event.start.date.startsWith(serviceDay.slice(0, 7)) && event.start.date < serviceDay) {
       const night = completed.get(event.start.date) ?? { soldOut: true, guests: 0, unknown: 0 };
       night.soldOut &&= soldOut;

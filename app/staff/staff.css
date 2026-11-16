@@ -316,7 +316,7 @@
 }
 
 .food-panel { background:#faf0e5; margin-block:16px; }
-.food-panel .cocktail-tiles li { background:#efd7be; }
+.food-panel .cocktail-tiles li { background:#f8d3bc; }
 .food-total { margin:8px 0 16px; }
 .food-total strong { font-size:1.65rem; }
 .food-share { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }

@@ -10,13 +10,16 @@ const eventDate = new Intl.DateTimeFormat("de-DE", {
 
 export function Performance({feed,example}:{feed:TicketFeed|null;example:boolean}){
   const [week,setWeek]=useState(0);
+  const [eventLimit, setEventLimit] = useState(5);
   const now=feed?.asOf??Date.now()/1000;
   const nights=feed?.nights.filter(n=>ticketDay(n.start)>=weekDay(now,week*7) && ticketDay(n.start)<weekDay(now,week*7+7))??[];
   const total=nights.reduce((a,n)=>a+n.guests,0), recent=nights.reduce((a,n)=>a+n.recent,0);
   const ranked = feed?.nights
     .filter(night => night.start > now && night.guests > 0)
     .sort((a, b) => b.guests - a.guests || a.start - b.start)
-    .slice(0, 10) ?? [];
+    .slice(0, 15) ?? [];
+  const limits = [5, 10, 15].filter(limit => limit === 5 || ranked.length > limit - 5);
+  const visibleLimit = Math.min(eventLimit, limits[limits.length - 1]);
   const categories = ticketCategories.map(label => ({ label, count: feed?.monthlyCategories?.[label] ?? 0 }))
     .filter(row => row.label !== "Weitere Tickets" || row.count > 0)
     .sort((a,b) => b.count - a.count);
@@ -50,10 +53,13 @@ export function Performance({feed,example}:{feed:TicketFeed|null;example:boolean
         </li>)}</ol> : <p>Noch keine gebuchten Ticketpakete für diesen Monat.</p>}
     </details>}
     {feed && <details className="mt-4 border-t border-[var(--line)] pt-4">
-      <summary>Top 10 kommende Events</summary>
+      <summary>Kommende Events im Vergleich</summary>
+      {limits.length > 1 && <div className="service-switch" role="group" aria-label="Anzahl kommender Events">
+        {limits.map(limit => <button key={limit} type="button" aria-pressed={visibleLimit === limit} onClick={() => setEventLimit(limit)}>Top {limit}</button>)}
+      </div>}
       <p className="text-sm text-[var(--muted)]">Nach gebuchten Gästen · bis {eventDate.format(new Date(weekDay(now, 27) + "T12:00:00Z"))}</p>
       {ranked.length ? <ol className="mt-2 divide-y divide-[var(--line)]">
-        {ranked.map((night, index) => <li key={night.id} className="grid grid-cols-[2ch_1fr_auto] items-center gap-3 py-2">
+        {ranked.slice(0, visibleLimit).map((night, index) => <li key={night.id} className="grid grid-cols-[2ch_1fr_auto] items-center gap-3 py-2">
           <span className="text-[var(--muted)]">{index + 1}.</span>
           <div><b>{night.name}</b><small className="block text-[var(--muted)]">{eventDate.format(night.start * 1000)}</small></div>
           <b className="whitespace-nowrap">{night.unknown > 0 ? "≥ " : ""}{night.guests} {night.guests === 1 ? "Gast" : "Gäste"}</b>

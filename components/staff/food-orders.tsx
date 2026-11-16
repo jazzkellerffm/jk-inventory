@@ -5,7 +5,7 @@ import type { FoodFeed } from "@/lib/staff/food";
 
 const euro = new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"});
 const time = new Intl.DateTimeFormat("de-DE",{timeZone:"Europe/Berlin",hour:"2-digit",minute:"2-digit"});
-const demo: FoodFeed = {totalCents:4500, uncategorized:false, orders:[
+const demo: FoodFeed = {recentPortions:2, recentHummus:2, recentIncomplete:false, totalCents:4500, uncategorized:false, orders:[
   {id:"one",at:"2026-11-18T20:54:00Z",description:"2 × Hummus-Platte",cents:3000},
   {id:"two",at:"2026-11-18T20:41:00Z",description:"1 × Hummus-Platte",cents:1500},
 ]};
@@ -42,11 +42,21 @@ export function FoodOrders({example, eveningCents, preorders}:{
   },[example]);
   const share = feed && !message && eveningCents && eveningCents > 0 && feed.totalCents <= eveningCents
     ? 100 * feed.totalCents / eveningCents : null;
+  const busyKitchen = feed && (feed.recentHummus >= 2 || feed.recentPortions >= 3);
+  const kitchenLevel = !feed || message ? "unknown" : busyKitchen ? "busy"
+    : feed.recentIncomplete ? "unknown" : feed.recentPortions ? "active" : "quiet";
+  const kitchenLabels = {unknown:"Daten fehlen", busy:"Viel los", active:"Neue Bestellung", quiet:"Ruhig"};
   return <section id="food-orders" className="staff-panel food-panel" aria-labelledby="food-title">
     <div className="staff-section-head"><span className="staff-eyebrow"><Utensils size={16}/> SumUp · Bar Snacks</span>
       {example && <small>Beispieldaten</small>}</div>
     <h2 id="food-title">Food Orders</h2>
     {feed && <>
+      <div className="kitchen-load" data-level={kitchenLevel}>
+        <div className="food-share"><span>Küchenpegel · geschätzt</span>
+          <strong role="status">{kitchenLabels[kitchenLevel]}</strong></div>
+        <div className="load-meter" aria-hidden="true"/>
+        {kitchenLevel !== "unknown" && <small>{feed.recentPortions} {feed.recentPortions === 1 ? "Portion" : "Portionen"} in 10 Min.</small>}
+      </div>
       <div className="food-total"><strong>{euro.format(feed.totalCents / 100)}</strong> seit 06:00 Uhr</div>
       <div className="food-share"><span>Anteil am SumUp-Abendumsatz</span>
         <b>{share === null ? "–" : share.toLocaleString("de-DE",{maximumFractionDigits:1}) + " %"}</b></div>

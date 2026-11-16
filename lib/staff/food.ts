@@ -6,7 +6,7 @@ type Sale = {
   items: {name: string; quantity: number; categories?: {name: string}[]; price: {total_gross_amount_final: number}}[];
 };
 export type FoodOrder = {id: string; at: string; description: string; cents: number};
-export type FoodFeed = {orders: FoodOrder[]; totalCents: number; uncategorized: boolean};
+export type FoodFeed = {recentPortions: number; recentHummus: number; recentIncomplete: boolean; orders: FoodOrder[]; totalCents: number; uncategorized: boolean};
 
 export async function readFood(merchant: string, key: string): Promise<FoodFeed> {
   const now = Date.now();
@@ -15,6 +15,9 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
   const orders: FoodOrder[] = [];
   const seen = new Set<string>();
   const tokens = new Set<string>();
+  let recentPortions = 0;
+  let recentHummus = 0;
+  let recentIncomplete = false;
   let cursor: string | undefined;
   let uncategorized = false;
   do {
@@ -36,6 +39,16 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
         if (sale.currency.code !== "EUR") continue;
         const snacks = sale.items.filter(item => item.categories?.some(c => c.name.trim().toLowerCase() === "bar snacks"));
         if (sale.items.some(item => !item.categories?.length)) uncategorized = true;
+        const paidAt = Date.parse(sale.closed_at);
+        if (paidAt > now - 10 * 60_000 && paidAt <= now) {
+          if (sale.items.some(item => !item.categories?.length)) recentIncomplete = true;
+          for (const snack of snacks) {
+            recentPortions += snack.quantity;
+            if (/h[ou]mm?[ou]s/i.test(snack.name)) recentHummus += snack.quantity;
+          }
+        } else if (!Number.isFinite(paidAt)) {
+          recentIncomplete = true;
+        }
         if (!snacks.length) continue;
         const amount = snacks.reduce((sum,item) => sum + item.price.total_gross_amount_final, 0);
         if (!Number.isSafeInteger(amount)) throw new Error("Missing line amount");
@@ -48,5 +61,5 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
     if (cursor) tokens.add(cursor);
   } while (cursor);
   orders.sort((a,b)=>Date.parse(b.at)-Date.parse(a.at));
-  return {totalCents:orders.reduce((sum,order)=>sum+order.cents,0), orders:orders.slice(0,5), uncategorized};
+  return {recentPortions, recentHummus, recentIncomplete, totalCents:orders.reduce((sum,order)=>sum+order.cents,0), orders:orders.slice(0,5), uncategorized};
 }

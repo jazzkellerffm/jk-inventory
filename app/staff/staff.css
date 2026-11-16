@@ -282,7 +282,7 @@
 .door-guests header strong { padding:2.5px 11px 5.5px; border-radius:999px; background:#28463f; color:#fffef9; font:700 16px/1.25 var(--staff-display),sans-serif; }
 .door-guests header span { color:var(--paper); background:var(--cream); border-radius:999px; padding:4px 10px; }
 .booking-name { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
-.checkin-pill { display:inline-flex; align-items:center; gap:3px; border-radius:999px; padding:1px 6px; border:1px solid currentColor; background:transparent; color:#a6cbb7; font-size:12px; line-height:1.25; white-space:nowrap; }
+.checkin-pill { display:inline-flex; align-items:center; gap:3px; border-radius:999px; padding:1px 6px; border:1px solid currentColor; background:transparent; color:#48745f; font-size:12px; line-height:1.25; white-space:nowrap; }
 .checkin-pill svg { width:11px; height:11px; }
 .checkin-total,.ticket-week-range { font-size:14px; color:var(--muted); }
 .week-switch button { padding-inline:clamp(6px,2vw,16px); }
@@ -317,6 +317,11 @@
 
 .food-panel { background:#faf0e5; margin-block:16px; }
 .food-panel .cocktail-tiles li { background:#f8d3bc; }
+@media (max-width:620px) {
+  .food-panel .cocktail-tiles { grid-template-rows:auto; }
+  .food-panel .cocktail-tiles li:nth-child(3) { grid-area:2 / 1; }
+  .food-panel .cocktail-tiles li:nth-child(4) { grid-area:2 / 2; }
+}
 .food-total { margin:8px 0 16px; }
 .food-total strong { font-size:1.65rem; }
 .food-share { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }

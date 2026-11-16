@@ -7,7 +7,8 @@ type EventRow = { id: string; name: string; status: string; unavailable?: boolea
 type Ticket = { id: string; event_id: string; description: string; status: string; add_on_id?: string; created_at: number };
 export type TicketNight = { soldOut?: boolean; id: string; name: string; start: number; guests: number; recent: number; drinks: number; unknown: number };
 type NightCounts = { soldOut: number; busy: number; half: number; quiet: number; unclear: number };
-export type TicketFeed = { monthlyNights?: NightCounts; foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
+export type BookingAlert = { id: string; at: number; label: string; eventId?: string; eventDate?: string; eventName?: string };
+export type TicketFeed = { bookingAlerts?: BookingAlert[]; monthlyNights?: NightCounts; foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
 
 async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string) {
   const rows = new Map<string,T>();
@@ -34,6 +35,7 @@ async function collect(key: string, now: number, serviceDay: string): Promise<Ti
   const events = (await pages<EventRow>("events",{},auth))
     .filter(e => e.start?.date && (e.start.date.startsWith(serviceDay.slice(0, 7)) || e.start.date.startsWith(month) || (e.start.date >= start && e.start.date < end)) && ["published","close_sales","sales_closed"].includes(e.status))
     .sort((a,b)=>a.start.unix-b.start.unix);
+  const bookingAlerts = await recentBookings(auth, now).catch(() => undefined);
   const nights = [];
   const completed = new Map<string, {soldOut: boolean; guests: number; unknown: number}>();
   for (const event of events) {
@@ -80,7 +82,7 @@ async function collect(key: string, now: number, serviceDay: string): Promise<Ti
     else if (night.guests >= 25) monthlyNights.half++;
     else monthlyNights.quiet++;
   }
-  return {asOf:now,nights,monthlyNights,foodPreorders,monthlyCategories,monthlyTables:{vip:monthlyCategories.VIP,worldstar:monthlyCategories["Worldstar VIP"]}};
+  return {asOf:now,bookingAlerts,nights,monthlyNights,foodPreorders,monthlyCategories,monthlyTables:{vip:monthlyCategories.VIP,worldstar:monthlyCategories["Worldstar VIP"]}};
 }
 
 let cached: { day:string; until:number; data:Promise<TicketFeed> } | undefined;
@@ -95,10 +97,11 @@ export function readTicketFeed(key:string) {
 }
 
 type ServiceOrder = {
+  created_at: number;
   id: string;
   status: string;
   buyer_details?: { name?: string; first_name?: string; last_name?: string };
-  line_items: { type: string; description: string; quantity: number; event_summary?: { event_id: string } | null }[];
+  line_items: { type: string; description: string; quantity: number; event_summary?: { event_id: string; name?: string; start_date?: string } | null }[];
 };
 export type Booking = {
   id: string; name: string; tickets: string[]; extras: Supply[]; checkedIn: boolean;
@@ -133,4 +136,19 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
     ).map(line => paidSupply(line.description,line.quantity));
   }
   return [...bookings.values()].sort((a,b)=>a.name.localeCompare(b.name,"de"));
+}
+
+async function recentBookings(auth: string, now: number): Promise<BookingAlert[]> {
+  const orders = await pages<ServiceOrder>("orders", {created_at_gte: String(now - 600)}, auth);
+  const alerts: BookingAlert[] = [];
+  for (const order of orders) {
+    if (!["completed", "paid"].includes(order.status)) continue;
+    const items = order.line_items.filter(line => line.type === "ticket" && line.quantity > 0);
+    if (!items.length) continue;
+    const event = items[0].event_summary;
+    const label = items.map(line => (line.quantity > 1 ? line.quantity + " × " : "") + (line.description || "Ticket")).join(" · ");
+    alerts.push({id: order.id, at: order.created_at, label, eventId: event?.event_id,
+      eventDate: event?.start_date?.slice(0, 10), eventName: event?.name});
+  }
+  return alerts.sort((a, b) => a.at - b.at);
 }

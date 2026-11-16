@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, ReceiptText } from "lucide-react";
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
 import { IncludedDrinks } from "./included-drinks";
+import type { BookingAlert } from "@/lib/staff/tickets";
+import { weekDay } from "@/lib/staff/ticket-weeks";
 import { OrderAlerts } from "./order-alerts";
 import type { FoodOrder } from "@/lib/staff/food";
 import { MaskedRevenue } from "./masked-revenue";
@@ -78,6 +80,15 @@ function ActivityChart({ feed }: { feed: BarFeed }) {
 
 export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const tickets = useTicketFeed(!!example);
+  const [salesWeek, setSalesWeek] = useState(0);
+  const [selectedBooking, setSelectedBooking] = useState<BookingAlert>();
+  function openBooking(booking: BookingAlert) {
+    const now = tickets.feed?.asOf ?? Date.now() / 1000;
+    const day = booking.eventDate;
+    const week = [0, 1, 2, 3].find(index => day && day >= weekDay(now, index * 7) && day < weekDay(now, index * 7 + 7));
+    if (week !== undefined) setSalesWeek(week);
+    setSelectedBooking(booking);
+  }
   const { board, error } = useBoard(example);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>();
   const [showAll, setShowAll] = useState(false);
@@ -109,7 +120,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <div id="bar-monitor" className="staff-heading"><div><h1>Bar-Monitor<span>.</span></h1></div>
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>
-      <OrderAlerts board={board} food={foodOrders} demo={!!example}/>
+      <OrderAlerts bookings={tickets.feed?.bookingAlerts} onBooking={openBooking} board={board} food={foodOrders} demo={!!example}/>
       <section aria-labelledby="activity" className="staff-activity staff-panel">
           <div className="staff-section-head"><span className="staff-eyebrow"><Activity size={17}/> SumUp</span><span className={`staff-status ${stale ? "staff-warn" : ""}`} role="status"><i/>{status}</span></div>
           <h2 id="activity">Baraktivität</h2>
@@ -166,7 +177,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
       <NightDrinks {...tickets} example={!!example} today={rosterDay}/>
       <Bestsellers example={!!example}/>
-      <TicketSales {...tickets} example={!!example}/>
+      <TicketSales week={salesWeek} setWeek={week => {setSalesWeek(week); setSelectedBooking(undefined);}} selectedBooking={selectedBooking} {...tickets} example={!!example}/>
       <h2 id="staff-tools" className="staff-tools-title">Tools</h2>
       <div className="staff-modules">
         {staffModules.map(module => {

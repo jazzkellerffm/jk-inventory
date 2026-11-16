@@ -6,10 +6,21 @@ import { isDrink } from "@/lib/staff/bar-workload";
 import type { StaffBoard, ReceiptItem } from "@/lib/staff/types";
 import type { FoodOrder } from "@/lib/staff/food";
 
-const modes = { off: "Aus", drink: "Drinks", food: "Essen", both: "Beides" };
+import type { BookingAlert } from "@/lib/staff/tickets";
+
+const modes = { off: "Aus", drink: "Drinks", food: "Essen", both: "Drinks + Essen", booking: "Buchungen", drinkBooking: "Drinks + Buchungen", foodBooking: "Essen + Buchungen", all: "Alle Hinweise" };
 type Mode = keyof typeof modes;
-type Notice = { kind: "drink" | "food"; label: string; target: string };
+type Notice = { kind: "drink" | "food" | "booking"; booking?: BookingAlert; label: string; target: string };
 const describe = (items: ReceiptItem[]) => items.map(i => (i.quantity ? i.quantity + " × " : "") + i.name).join(" · ");
+
+function enabled(mode: Mode, kind: Notice["kind"]) {
+  return mode === "all" || mode === kind || (mode === "both" && kind !== "booking")
+    || (mode === "drinkBooking" && kind !== "food") || (mode === "foodBooking" && kind !== "drink");
+}
+
+function bookingNotice(booking: BookingAlert): Notice {
+  return {kind: "booking", label: "Neue Buchung · " + booking.label, target: "ticket-title", booking};
+}
 
 function playbackMode(active: boolean) {
   const session = (navigator as Navigator & {audioSession?: {type: string}}).audioSession;
@@ -20,7 +31,7 @@ function playbackMode(active: boolean) {
 
 function chime(ctx: AudioContext, kind: Notice["kind"]) {
 
-  const notes = kind === "food" ? [660, 494] : [880];
+  const notes = kind === "booking" ? [523, 659, 784] : kind === "food" ? [660, 494] : [880];
   notes.forEach((frequency, index) => {
     const start = ctx.currentTime + index * 0.17;
     const osc = ctx.createOscillator(), gain = ctx.createGain();
@@ -35,7 +46,7 @@ function chime(ctx: AudioContext, kind: Notice["kind"]) {
   });
 }
 
-export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: FoodOrder[]; demo: boolean}) {
+export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?: BookingAlert[]; onBooking: (booking: BookingAlert) => void; board?: StaffBoard; food?: FoodOrder[]; demo: boolean}) {
   const [mode, setMode] = useState<Mode>("off");
   const [notice, setNotice] = useState<Notice | null>(null);
   const [audioFailed, setAudioFailed] = useState(false);
@@ -43,10 +54,12 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
   const since = useRef(Infinity);
   const seen = useRef(new Map<string, number>());
   const pending = useRef<Notice[]>([]);
+
+  const orderBatch = useRef<Notice[]>([]);
   const batch = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const dismiss = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const storageKey = "jkos-order-tones-" + (demo ? "demo" : "staff");
-  const [preferred, setPreferred] = useState<Mode>("both");
+  const [preferred, setPreferred] = useState<Mode>("all");
   useEffect(() => {
     try {
       const saved = localStorage.getItem(storageKey);
@@ -58,9 +71,11 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
   function activate(value: Mode) {
     since.current = Date.now();
     pending.current = [];
+    orderBatch.current = [];
     clearTimeout(batch.current);
-    clearTimeout(dismiss.current);
     batch.current = undefined;
+    clearTimeout(dismiss.current);
+    dismiss.current = undefined;
     setNotice(null);
     setMode(value);
     setAudioFailed(false);
@@ -74,39 +89,54 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
     } catch { setAudioFailed(true); }
   }
 
-  const present = useCallback((item: Notice) => {
+  const advance = useCallback(function next() {
+    clearTimeout(dismiss.current);
+    dismiss.current = undefined;
+    if (document.hidden) pending.current = [];
+    const item = pending.current.shift();
+    setNotice(item ?? null);
+    if (!item) return;
     const audio = ctx.current;
     if (audio) {
       void audio.resume().catch(() => setAudioFailed(true));
       chime(audio, item.kind);
     }
-    setNotice(item);
-    clearTimeout(dismiss.current);
-    dismiss.current = setTimeout(()=>setNotice(null),20_000);
+    dismiss.current = setTimeout(next, item.kind === "booking" ? 5000 : 20000);
   }, []);
 
   const queue = useCallback((item: Notice) => {
     pending.current.push(item);
+    if (dismiss.current === undefined) advance();
+  }, [advance]);
+
+  const queueOrder = useCallback((item: Notice) => {
+    orderBatch.current.push(item);
     if (batch.current !== undefined) return;
     batch.current = setTimeout(() => {
       batch.current = undefined;
-      const list = pending.current.splice(0);
+      const list = orderBatch.current.splice(0);
       if (document.hidden || !list.length) return;
-      const first = list.find(n=>n.kind==="food") ?? list[0];
-      present(list.length === 1 ? first : {...first,label:list.length+" neue Bestellhinweise"});
+      const first = list.find(n => n.kind === "food") ?? list[0];
+      queue(list.length === 1 ? first : {...first,label:list.length+" neue Bestellhinweise"});
     },350);
-  }, [present]);
+  },[queue]);
 
   useEffect(() => {
     if (mode === "off" || demo) return;
     const now = Date.now();
-    const cutoff = now - 2 * 60_000;
+    const cutoff = now - 10 * 60_000;
     for (const [id, at] of seen.current) if (at < cutoff) seen.current.delete(id);
     function accept(id: string, at: string, n: Notice) {
       const timestamp = Date.parse(at);
-      if (!(timestamp >= Math.max(since.current, cutoff)) || seen.current.has(id)) return;
+      if (!(timestamp >= Math.max(since.current, n.kind === "booking" ? cutoff : now - 120_000)) || seen.current.has(id)) return;
       seen.current.set(id,timestamp);
-      if (!document.hidden && (mode === "both" || mode === n.kind)) queue(n);
+      if (!document.hidden && enabled(mode, n.kind)) {
+        if (n.kind === "booking") queue(n);
+        else queueOrder(n);
+      }
+    }
+    for (const booking of bookings ?? []) {
+      accept("booking/" + booking.id, new Date(booking.at * 1000).toISOString(), bookingNotice(booking));
     }
     if (board?.drinksState === "ready") for (const order of board.drinks?.orders ?? []) {
       if (order.status === "open") accept("included/"+order.id,order.at,{kind:"drink",label:describe(order.items)+(order.table?.trim() ? " · Tisch "+order.table.trim() : " · Included Drinks"),target:"included-title"});
@@ -117,16 +147,19 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
       if (drinks.length) accept("sumup/"+pay.id,pay.at,{kind:"drink",label:describe(drinks)+" · SumUp",target:"payments"});
     }
     for (const order of food ?? []) accept("food/"+order.id,order.at,{kind:"food",label:order.description+" · SumUp",target:"food-orders"});
-  }, [mode,demo,board,food,queue]);
+  }, [mode,demo,board,food,bookings,queue,queueOrder]);
 
   return <aside className="staff-alert-controls" aria-label="Bestellhinweise">
     <button type="button" aria-pressed={mode !== "off"} onClick={()=>activate(mode==="off" ? preferred : "off")}><Bell size={15}/> {mode==="off" ? "Hinweise aktivieren" : "Hinweise an"}</button>
     {mode!=="off" && <select aria-label="Bestellhinweise für" value={mode} onChange={e=>activate(e.target.value as Mode)}>
-      {(["drink","food","both"] as const).map(m=><option key={m} value={m}>{modes[m]}</option>)}
+      {(["drink","food","both","booking","drinkBooking","foodBooking","all"] as const).map(m=><option key={m} value={m}>{modes[m]}</option>)}
     </select>}
-    {demo && mode!=="off" && (["drink","food"] as const).filter(k=>mode==="both" || mode===k).map(k=>
-      <button key={k} onClick={()=>present(k==="drink" ? {kind:k,label:"2 × Basil Bliss · Tisch 12",target:"included-title"} : {kind:k,label:"2 × Hummus-Platte · SumUp",target:"food-orders"})}>{k==="drink" ? "Drink testen" : "Essen testen"}</button>)}
+    {demo && mode!=="off" && (["drink","food"] as const).filter(k=>enabled(mode,k)).map(k=>
+      <button key={k} onClick={()=>queue(k==="drink" ? {kind:k,label:"2 × Basil Bliss · Tisch 12",target:"included-title"} : {kind:k,label:"2 × Hummus-Platte · SumUp",target:"food-orders"})}>{k==="drink" ? "Drink testen" : "Essen testen"}</button>)}
+    {mode !== "off" && enabled(mode,"booking") && <button type="button" onClick={()=>queue(bookingNotice({
+      id:"test", at:Date.now()/1000, label:"Premium – 2 Guests · Test", eventName:"Testbuchung"
+    }))}>Buchung testen</button>}
     {audioFailed && <small role="status">Ton nicht verfügbar. Hinweise erscheinen oben.</small>}
-    <div role="status" aria-live="polite">{notice && <a className="staff-order-banner" data-kind={notice.kind} href={"#"+notice.target} onClick={()=>setNotice(null)}>{notice.label}</a>}</div>
+    <div role="status" aria-live="polite">{notice && <a className="staff-order-banner" data-kind={notice.kind} href={"#"+notice.target} onClick={()=>{if (notice.booking) onBooking(notice.booking); advance();}}>{notice.label}</a>}</div>
   </aside>;
 }

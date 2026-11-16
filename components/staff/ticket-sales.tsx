@@ -7,6 +7,7 @@ import { ServicePlan } from "./service-plan";
 import { Ticket } from "lucide-react";
 import type { TicketFeed } from "@/lib/staff/tickets";
 
+import { ticketCategory, packageSize, includedDrinks } from "@/lib/staff/entitlements";
 import { serviceDate } from "@/lib/staff/service-day";
 import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
 
@@ -104,10 +105,21 @@ export function TicketSales({example,feed,state,refreshing,week,setWeek}:Props &
       </div>
       {feed.bookingDay?.latest ? <div className="mt-3 border-t border-black/10 pt-3">
         <small>Letzte Buchung · {date.format(feed.bookingDay.latest.at * 1000)} · {clock.format(feed.bookingDay.latest.at * 1000)} Uhr</small>
-        {feed.bookingDay.latest.lines.map((line, i) => <div key={i} className="mt-2">
-          <b className="inline-block rounded-2xl bg-white/75 px-3 py-1 text-sm">{line.ticket}</b>
-          <div className="mt-1 text-sm">{[line.event, line.date && date.format(new Date(line.date + "T12:00:00Z"))].filter(Boolean).join(" · ") || "Konzertangabe fehlt"}</div>
-        </div>)}
+        {feed.bookingDay.latest.lines.map((line, i) => {
+          const category = ticketCategory(line.ticket);
+          const quantity = Number(line.ticket.match(/^(\d+) × /)?.[1] ?? 1);
+          const guests = packageSize(line.ticket) * quantity;
+          const drinks = includedDrinks(line.ticket) * quantity;
+          const title = category === "Weitere Tickets" ? line.ticket : (quantity > 1 ? quantity + " × " : "") + category;
+          const details = [guests && (guests === 1 ? "1 Gast" : guests + " Gäste"), drinks && (drinks === 1 ? "1 Drink" : drinks + " Drinks")].filter(Boolean).join(" · ");
+          return <div key={i} className="mt-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <b className="text-xl leading-tight">{title}</b>
+              {details && <span className="rounded-full bg-white/75 px-2 py-0.5 text-xs font-semibold">{details}</span>}
+            </div>
+            <div className="mt-1.5 text-sm leading-snug">{[line.date && date.format(new Date(line.date + "T12:00:00Z")), line.event].filter(Boolean).join(" · ") || "Konzertangabe fehlt"}</div>
+          </div>;
+        })}
       </div> : <small>{feed.bookingDay ? "Noch keine Ticketbuchung." : "Buchungen derzeit nicht abrufbar."}</small>}
     </div>}
   </section>

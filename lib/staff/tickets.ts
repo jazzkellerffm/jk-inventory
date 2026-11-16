@@ -11,7 +11,7 @@ export type BookingAlert = { id: string; at: number; label: string; eventId?: st
 type BookingLine = { ticket: string; event?: string; date?: string };
 export type TicketFeed = { bookingDay?: { count: number; latest?: { at: number; lines: BookingLine[] } }; bookingAlerts?: BookingAlert[]; monthlyNights?: NightCounts; foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
 
-async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string, finished?: (rows: T[]) => boolean) {
+async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string) {
   const rows = new Map<string,T>();
   const query = new URLSearchParams({ ...filters, limit: "100" });
   while (true) {
@@ -21,7 +21,7 @@ async function pages<T extends { id: string }>(resource: string, filters: Record
     if (!response.ok) throw new Error("Ticket Tailor unavailable");
     const page: {data:T[]; links:{next:string|null}} = await response.json();
     for (const row of page.data) rows.set(row.id,row);
-    if (!page.links.next || finished?.(page.data)) return [...rows.values()];
+    if (!page.links.next) return [...rows.values()];
     const cursor = new URL(page.links.next, "https://api.tickettailor.com").searchParams.get("starting_after");
     if (!cursor || query.get("starting_after") === cursor) throw new Error("Incomplete ticket page");
     query.set("starting_after",cursor);
@@ -98,7 +98,7 @@ export function readTicketFeed(key:string) {
 }
 
 type ServiceOrder = {
-  created_at: number;
+  created_at: number | string;
   id: string;
   status: string;
   buyer_details?: { name?: string; first_name?: string; last_name?: string };
@@ -144,13 +144,25 @@ async function recentBookings(auth: string, now: number) {
   const cutoff = Math.min(start, now - 600);
   const isBooking = (order: ServiceOrder) => ["completed", "paid"].includes(order.status)
     && order.line_items.some(line => line.type === "ticket" && line.quantity > 0);
-  let found = false;
-  // Orders arrive newest first. Continue past the cutoff only to find the last booking.
-  const orders = await pages<ServiceOrder>("orders", {}, auth, page => {
-    found ||= page.some(isBooking);
-    return found && page.some(order => order.created_at < cutoff);
-  });
-  const bookings = orders.filter(isBooking).sort((a, b) => a.created_at - b.created_at);
+  let from = cutoff;
+  let until = now;
+  let span = 86400;
+  let bookings: (ServiceOrder & { at: number })[] = [];
+  while (true) {
+    const orders = await pages<ServiceOrder>("orders", {
+      created_at_gte: String(from), created_at_lte: String(until),
+    }, auth);
+    bookings = orders.filter(isBooking).map(order => {
+      const value = Number(order.created_at);
+      const at = Number.isFinite(value) ? value : Date.parse(String(order.created_at)) / 1000;
+      return { ...order, at };
+    }).filter(order => order.at >= from && order.at <= until)
+      .sort((a, b) => a.at - b.at || a.id.localeCompare(b.id));
+    if (bookings.length || from === 0) break;
+    until = from - 1;
+    from = Math.max(0, from - span);
+    span *= 2;
+  }
   const bookingAlerts: BookingAlert[] = [];
   let latest: { at: number; lines: BookingLine[] } | undefined;
   for (const order of bookings) {
@@ -159,11 +171,11 @@ async function recentBookings(auth: string, now: number) {
       ticket: (line.quantity > 1 ? line.quantity + " × " : "") + (line.description || "Ticket"),
       event: line.event_summary?.name, date: line.event_summary?.start_date?.slice(0, 10),
     }));
-    latest = { at: order.created_at, lines };
-    if (order.created_at >= now - 600) {
-      bookingAlerts.push({id: order.id, at: order.created_at, label: lines.map(line => line.ticket).join(" · "),
+    latest = { at: order.at, lines };
+    if (order.at >= now - 600) {
+      bookingAlerts.push({id: order.id, at: order.at, label: lines.map(line => line.ticket).join(" · "),
         eventId: items[0].event_summary?.event_id, eventDate: lines[0].date, eventName: lines[0].event});
     }
   }
-  return {bookingAlerts, bookingDay: {count: bookings.filter(order => order.created_at >= start).length, latest}};
+  return {bookingAlerts, bookingDay: {count: bookings.filter(order => order.at >= start).length, latest}};
 }

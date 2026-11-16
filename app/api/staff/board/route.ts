@@ -7,11 +7,17 @@ import type { StaffBoard } from "@/lib/staff/types";
 export const dynamic = "force-dynamic";
 
 async function readPayments(): Promise<Pick<StaffBoard, "feed" | "feedState">> {
-  const merchant = process.env.SUMUP_MERCHANT_CODE;
-  const token = process.env.SUMUP_API_KEY;
+  const merchant = process.env.SUMUP_MERCHANT_CODE?.trim();
+  const token = process.env.SUMUP_API_KEY?.trim();
   if (!merchant || !token) return { feed: null, feedState: "setup" };
   try { return { feed: await readBarFeed(merchant, token), feedState: "ready" }; }
-  catch { return { feed: null, feedState: "unavailable" }; }
+  catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const reason = /^SumUp HTTP \d{3}$/.test(message) ? message :
+      error instanceof Error && error.name === "TimeoutError" ? "timeout" : "request failed";
+    console.warn("Staff bar feed:", reason);
+    return { feed: null, feedState: "unavailable" };
+  }
 }
 
 export async function GET() {

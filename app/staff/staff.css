@@ -97,7 +97,6 @@
 .staff-tile-detail .staff-tile { border: none; list-style: none; }
 .staff-tile-detail summary::-webkit-details-marker { display: none; }
 .staff-tile-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; background: #dce6e1; color: #28463f; }
-.staff-tile-detail .staff-tile-icon { color: #614f37; background: var(--cream); }
 .staff-tile-copy { flex: 1; }
 .staff-tile-copy b { display: block; font-size: 18px; font-weight: 400; }
 .staff-tile-copy small { color: var(--muted); font-size: 12px; }

@@ -146,12 +146,12 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           {!feed?.payments.length ? <p className="staff-placeholder">{!feed ? message : "In der letzten Stunde gab es keine bezahlten Verkäufe."}</p> :
             <ol>{feed.payments.slice(0, showAll ? 8 : 4).map(payment => <li key={payment.id}>
               <time dateTime={payment.at}>{time.format(new Date(payment.at))}</time>
-              <div>{payment.items.length ? payment.items.map((item, index) => <span key={index}>{item.quantity !== null && <em>{item.quantity} × </em>}{item.name}</span>) : <span>Artikel nicht verfügbar</span>}</div>
+              <div>{payment.items.length ? payment.items.map((item, index) => <span key={index}>{item.quantity !== null && <em>{item.quantity} × </em>}{item.name}</span>) : <span>{payment.summary || "Artikel nicht verfügbar"}</span>}</div>
               <strong>{money(payment.amount, payment.currency)}</strong>
             </li>)}</ol>}
           {feed && feed.payments.length > 4 && <button className="staff-more" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "Weniger anzeigen" : `Alle ${feed.payments.length} anzeigen`} <ChevronDown size={16}/></button>}
         </section>
-      <FoodOrders onOrders={setFoodOrders} example={!!example} eveningCents={paid?.eveningCents}
+      <FoodOrders payments={paid?.payments} onOrders={setFoodOrders} example={!!example} eveningCents={paid?.eveningCents}
         preorders={tickets.state === "unavailable" ? null : tickets.feed?.foodPreorders}/>
       {board && <section className="shift-line" aria-labelledby="tonight-team">
         <div className="staff-section-head"><h2 id="tonight-team">Team heute Abend</h2>

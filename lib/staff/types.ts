@@ -1,5 +1,5 @@
 export type ReceiptItem = { name: string; quantity: number | null };
-export type Payment = { id: string; at: string; amount: number; currency: string; items: ReceiptItem[] };
+export type Payment = { id: string; at: string; amount: number; currency: string; summary?: string; items: ReceiptItem[] };
 export type BarFeed = {
   asOf: string;
   recentCount: number;

@@ -11,6 +11,7 @@ let lastFeed: { key: string; start: number; until: number; value: Promise<BarFee
 type Transaction = {
   transaction_id?: string;
   transaction_code?: string;
+  product_summary?: string;
   type?: string;
   status?: string;
   timestamp: string;
@@ -79,7 +80,8 @@ async function history(merchant: string, token: string, since: number, now: numb
       if (!id || row.type !== "PAYMENT" || row.status !== "SUCCESSFUL" ||
           !Number.isFinite(time) || time < since || time >= now ||
           !Number.isFinite(row.amount) || !/^[A-Z]{3}$/.test(row.currency)) continue;
-      payments.set(id, { id, at: row.timestamp, amount: row.amount, currency: row.currency, items: [] });
+      payments.set(id, { id, at: row.timestamp, amount: row.amount, currency: row.currency,
+        summary: typeof row.product_summary === "string" ? row.product_summary.trim() : undefined, items: [] });
     }
     const next = page.links?.find((link: { rel: string }) => link.rel === "next");
     cursor = next ? new URL(next.href, api + path).searchParams.toString() : "";

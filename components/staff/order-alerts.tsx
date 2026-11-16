@@ -113,6 +113,7 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
     }
     if (board?.feedState === "ready") for (const pay of board.feed?.payments ?? []) {
       const drinks = pay.items.filter(item=>isDrink(item.name));
+      if (!pay.items.length && pay.summary && /^mini dream$/i.test(pay.summary)) drinks.push({name:pay.summary,quantity:null});
       if (drinks.length) accept("sumup/"+pay.id,pay.at,{kind:"drink",label:describe(drinks)+" · SumUp",target:"payments"});
     }
     for (const order of food ?? []) accept("food/"+order.id,order.at,{kind:"food",label:order.description+" · SumUp",target:"food-orders"});

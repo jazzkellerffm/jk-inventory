@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Utensils } from "lucide-react";
 import type { FoodFeed } from "@/lib/staff/food";
 
+import type { Payment } from "@/lib/staff/types";
+
 const euro = new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"});
 const time = new Intl.DateTimeFormat("de-DE",{timeZone:"Europe/Berlin",hour:"2-digit",minute:"2-digit"});
 const demo: FoodFeed = {recentPortions:2, recentHummus:2, recentIncomplete:false, totalCents:4500, uncategorized:false, orders:[
@@ -11,7 +13,8 @@ const demo: FoodFeed = {recentPortions:2, recentHummus:2, recentIncomplete:false
   {id:"two",at:"2026-11-18T20:41:00Z",description:"1 × Hummus-Platte",cents:1500},
 ]};
 
-export function FoodOrders({example, eveningCents, preorders, onOrders}:{
+export function FoodOrders({example, eveningCents, preorders, onOrders, payments}:{
+  payments?: Payment[];
   onOrders:(orders: FoodFeed["orders"])=>void; example:boolean; eveningCents?:number; preorders?:number|null;
 }) {
   const [feed,setFeed] = useState<FoodFeed|null>(example ? demo : null);
@@ -42,6 +45,13 @@ export function FoodOrders({example, eveningCents, preorders, onOrders}:{
     document.addEventListener("visibilitychange",refresh);
     return ()=>{ controller.abort(); clearInterval(timer); document.removeEventListener("visibilitychange",refresh); };
   },[example,onOrders]);
+  const paymentSnacks = (payments ?? []).flatMap(payment => {
+    const labels = payment.items.length
+      ? payment.items.map(item => item.name)
+      : (payment.summary ?? "").split(/,\s*/);
+    const snacks = labels.filter(label => /^(?:\d+\s*[x×]\s*)?(?:bowl of crisps|nachos con salsa)$/i.test(label.trim()));
+    return snacks.length ? [{id:payment.id, at:payment.at, label:snacks.join(" · ")}] : [];
+  });
   const share = feed && !message && eveningCents && eveningCents > 0 && feed.totalCents <= eveningCents
     ? 100 * feed.totalCents / eveningCents : null;
   const busyKitchen = feed && (feed.recentHummus >= 2 || feed.recentPortions >= 3);
@@ -71,6 +81,11 @@ export function FoodOrders({example, eveningCents, preorders, onOrders}:{
       {feed.uncategorized && <small>Positionen ohne Kategorie sind ausgenommen.</small>}
     </>}
     {!example && message && <p role="status">{message}</p>}
+    {!feed && message === "Food Orders derzeit nicht abrufbar." && paymentSnacks.length > 0 &&
+      <ul className="cocktail-tiles" aria-label="Snacks aus letzten Zahlungen">
+        {paymentSnacks.map(snack => <li key={snack.id}><b>{snack.label}</b>
+          <small>{time.format(new Date(snack.at))} · SumUp-Zahlung</small></li>)}
+      </ul>}
     <div className="food-preorders"><small>Ticket Tailor · Vorbestellungen für diesen Abend</small>
       <b>{preorders == null ? "Vorbestellungen derzeit nicht verfügbar" : preorders + " × Hummus-Platte"}</b></div>
   </section>;

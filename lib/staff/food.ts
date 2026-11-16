@@ -26,13 +26,19 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
     const response = await fetch(base + "/search", {method:"POST", headers, cache:"no-store", signal:AbortSignal.timeout(6000),
       body: JSON.stringify({start_date:new Date(Math.min(start, recentStart)).toISOString(), end_date:new Date(now).toISOString(),
         payment_statuses:["PAID"], pagination_limit:25, pagination_token:cursor})});
-    if (!response.ok) throw new Error("SumUp sales unavailable");
+    if (!response.ok) {
+      console.warn("SumUp food sales search HTTP", response.status);
+      throw new Error("SumUp sales unavailable");
+    }
     const page: {items:{id:string}[]; pagination_token?:string} = await response.json();
     const ids = page.items.map(row => row.id).filter(id => !seen.has(id));
     for (let i=0; i<ids.length; i+=5) {
       const sales = await Promise.all(ids.slice(i,i+5).map(async id => {
         const res = await fetch(base + "/" + encodeURIComponent(id), {headers, next:{revalidate:60}, signal:AbortSignal.timeout(6000)});
-        if (!res.ok) throw new Error("SumUp sale unavailable");
+        if (!res.ok) {
+          console.warn("SumUp food sale detail HTTP", res.status);
+          throw new Error("SumUp sale unavailable");
+        }
         return await res.json() as Sale;
       }));
       for (const sale of sales) {

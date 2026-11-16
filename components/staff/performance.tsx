@@ -9,6 +9,21 @@ const eventDate = new Intl.DateTimeFormat("de-DE", {
   timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "2-digit",
 });
 
+function MonthlyBars({rows, extra = 0}: {rows: [string, string, number, string][]; extra?: number}) {
+  const total = rows.reduce((sum, [, , count]) => sum + count, extra);
+  return <dl className="mt-3 space-y-3">
+    {rows.map(([label, hint, count, tone]) => <div key={label} className="grid grid-cols-[1fr_auto] items-baseline gap-x-2 gap-y-1">
+      <dt className="flex flex-wrap items-baseline gap-x-2">
+        <b>{label}</b>{hint && <small className="text-[var(--muted)]">{hint}</small>}
+      </dt>
+      <dd className="font-bold tabular-nums">{count}</dd>
+      <div aria-hidden="true" className="col-span-2 h-2 overflow-hidden rounded-full bg-black/[0.035]">
+        <div className={tone + " h-full rounded-full"} style={{width: (total ? 100 * count / total : 0) + "%"}}/>
+      </div>
+    </div>)}
+  </dl>;
+}
+
 export function Performance({feed,example}:{feed:TicketFeed|null;example:boolean}){
   const [week,setWeek]=useState(0);
   const [eventLimit, setEventLimit] = useState(5);
@@ -37,24 +52,20 @@ export function Performance({feed,example}:{feed:TicketFeed|null;example:boolean
     {feed?.monthlyNights && <section className="mt-4 border-t border-[var(--line)] pt-4">
       <h3 className="font-bold">Abende im {new Intl.DateTimeFormat("de-DE", {month:"long"}).format(new Date(serviceDate(feed.asOf*1000)+"T12:00:00Z"))}</h3>
       <p className="text-sm text-[var(--muted)]">Abgeschlossene Abende · gebuchte Gäste</p>
-      <dl className="mt-2 grid grid-cols-2 gap-2">
-        {([
+      <MonthlyBars rows={[
           ["Sold out", "Ticket Tailor", feed.monthlyNights.soldOut, "bg-[#f2e8ce]"],
           ["Gut besucht", "Ab 45 Gästen", feed.monthlyNights.busy, "bg-[#dbe8df]"],
           ["Etwa halb voll", "25–44 Gäste", feed.monthlyNights.half, "bg-[#f4e3e3]"],
           ["Ruhig", "Bis 24 Gäste", feed.monthlyNights.quiet, "bg-[#ededeb]"],
-        ] as const).map(([label, hint, count, tone]) => <div key={label} className={tone+" rounded-xl px-3 py-2"}>
-          <dt>{label}</dt><dd className="text-2xl font-bold">{count}</dd><small>{hint}</small>
-        </div>)}
-      </dl>
+      ]} extra={feed.monthlyNights.unclear}/>
       {feed.monthlyNights.unclear > 0 && <small>Gästezahl ungeklärt · {feed.monthlyNights.unclear}</small>}
     </section>}
     {feed?.monthlyTables && <section className="mt-4 border-t border-[var(--line)] pt-4">
       <h3 className="font-bold">VIP-Tische · {new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric", timeZone:"Europe/Berlin"}).format(feed.asOf * 1000)}</h3>
-      <dl className="mt-2 grid grid-cols-2 gap-2">
-        <div className="rounded-xl bg-[#dbe8df] px-3 py-2"><dt>VIP</dt><dd className="text-2xl font-bold">{feed.monthlyTables.vip}</dd></div>
-        <div className="rounded-xl bg-[#f4e3e3] px-3 py-2"><dt>Worldstar VIP</dt><dd className="text-2xl font-bold">{feed.monthlyTables.worldstar}</dd></div>
-      </dl>
+      <MonthlyBars rows={[
+        ["VIP", "", feed.monthlyTables.vip, "bg-[#dbe8df]"],
+        ["Worldstar VIP", "", feed.monthlyTables.worldstar, "bg-[#f4e3e3]"],
+      ]}/>
       <p className="mt-2 text-sm text-[var(--muted)]">Gebuchte Tische für Veranstaltungen in diesem Monat</p>
     </section>}
     {feed?.monthlyCategories && <details className="mt-4 border-t border-[var(--line)] pt-4">

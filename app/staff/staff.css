@@ -5,6 +5,7 @@
   --accent: #28463f;
   --cream: #f3e9d2;
   --card: #fffef9;
+  --food-peach: #f8d3bc;
   min-height: 100dvh;
   color-scheme: light;
   letter-spacing: 0;
@@ -236,8 +237,11 @@
 .roster-date-copy { display:grid; gap:2px; font:700 17px/1.2 var(--staff-display),sans-serif; }
 .roster-date-copy small { font:400 12px/1.2 var(--font-poly),sans-serif; }
 .roster-day dl { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
-.roster-role { min-width:0; padding:12px 10px; border-radius:14px; background:#f4e3e3; display:flex; flex-direction:column; gap:10px; }
-.roster-role dt { display:flex; align-items:baseline; gap:5px; color:#674e52; font-size:13px; line-height:1.25; overflow-wrap:anywhere; }
+.roster-role { min-width:0; padding:12px 10px; border-radius:14px; background:#e9e8e4; display:flex; flex-direction:column; gap:10px; }
+.roster-role[data-station="bar"] { background:#f4e3e3; }
+.roster-role[data-station="service"] { background:#dcefe4; }
+.roster-role[data-station="backstage"] { background:var(--food-peach); }
+.roster-role dt { display:flex; align-items:baseline; gap:5px; color:var(--paper); font-size:13px; line-height:1.25; overflow-wrap:anywhere; }
 .roster-role dt svg { flex:none; align-self:flex-start; }
 .roster-role dd { margin:0; }
 .roster-role dd small { margin-bottom:5px; }
@@ -324,7 +328,7 @@
 }
 
 .food-panel { background:#faf0e5; margin-block:16px; }
-.food-panel .cocktail-tiles li { background:#f8d3bc; }
+.food-panel .cocktail-tiles li { background:var(--food-peach); }
 @media (max-width:620px) {
   .food-panel .cocktail-tiles { grid-template-rows:auto; }
   .food-panel .cocktail-tiles li:nth-child(3) { grid-area:2 / 1; }

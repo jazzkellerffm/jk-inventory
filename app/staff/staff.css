@@ -357,3 +357,8 @@
 .staff-alert-controls button[aria-pressed="true"] { background:var(--accent); color:white; }
 .staff-order-banner { position:fixed; z-index:80; top:calc(env(safe-area-inset-top,0px) + 12px); left:50%; transform:translateX(-50%); width:max-content; max-width:calc(100% - 24px); border-radius:16px; padding:12px 20px; background:#f4e3e3; color:#203830; box-shadow:0 4px 18px #20383028; font-weight:700; }
 .staff-order-banner[data-kind="food"] { background:var(--food-peach); }
+
+.ticket-loader { display:flex; align-items:center; gap:.65rem; padding:.8rem 0; font-size:.875rem; }
+.ticket-loader::before { content:""; width:2.75rem; height:.4rem; border-radius:999px; background:linear-gradient(90deg,#aac6b6,#f0cfc9,#aac6b6); background-size:200% 100%; animation:ticket-loading 1.6s ease-in-out infinite alternate; }
+@keyframes ticket-loading { to { background-position:100% 0; } }
+@media (prefers-reduced-motion:reduce) { .ticket-loader::before { animation:none; } }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TicketLoader } from "./ticket-loader";
 import { Performance } from "./performance";
 import { ServicePlan } from "./service-plan";
 import { Ticket } from "lucide-react";
@@ -17,6 +18,7 @@ const demo: TicketFeed = {foodPreorders:2,asOf:1794859200,monthlyCategories:{Clu
 
 export function useTicketFeed(example:boolean) {
   const [feed,setFeed] = useState<TicketFeed|null>(example ? demo : null);
+  const [refreshing,setRefreshing] = useState(false);
   const [state,setState] = useState("loading");
   useEffect(()=>{
     if (example) return;
@@ -25,6 +27,7 @@ export function useTicketFeed(example:boolean) {
     async function refresh() {
       if (busy || document.hidden) return;
       busy = true;
+      setRefreshing(true);
       try {
         const res = await fetch("/api/staff/tickets",{cache:"no-store",signal:controller.signal});
         if (res.status === 401) { window.location.replace("/staff"); return; }
@@ -32,19 +35,19 @@ export function useTicketFeed(example:boolean) {
         const result = await res.json();
         if (!controller.signal.aborted) { setFeed(result.feed ?? null); setState(result.state); }
       } catch { if (!controller.signal.aborted) setState("unavailable"); }
-      finally { busy = false; }
+      finally { busy = false; if (!controller.signal.aborted) setRefreshing(false); }
     }
     void refresh();
     const timer = setInterval(refresh,60000);
     document.addEventListener("visibilitychange",refresh);
     return ()=>{controller.abort();clearInterval(timer);document.removeEventListener("visibilitychange",refresh);};
   },[example]);
-  return {feed,state};
+  return {feed,state,refreshing};
 }
 
 type Props = ReturnType<typeof useTicketFeed> & {example:boolean};
 
-export function NightDrinks({example,feed,state,today}:Props & {today: string}) {
+export function NightDrinks({example,feed,state,refreshing,today}:Props & {today: string}) {
   const [selection,setSelection] = useState("");
   const upcoming = (feed?.nights ?? []).filter(n=>ticketDay(n.start)>=today);
   const days = [...new Set(upcoming.map(n=>ticketDay(n.start)))];
@@ -53,19 +56,19 @@ export function NightDrinks({example,feed,state,today}:Props & {today: string}) 
   const period = selected===today ? "Heute Abend" : selected && selected===days[0] ? "Nächster Abend" : "Vorschau";
   return <section className="staff-panel service-drinks" aria-labelledby="night-drinks">
     <div className="staff-section-head"><span className="staff-eyebrow">{period} · Ticket Tailor</span>
-      <small>{example ? "Beispieldaten" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : ""}</small></div>
+      <small>{example ? "Beispieldaten" : refreshing && feed ? "Wird aktualisiert …" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : ""}</small></div>
     <h2 id="night-drinks">Included Drinks</h2>
     {days.length>1 && <label className="drinks-date">Abend auswählen
       <select value={selected} onChange={e=>setSelection(e.target.value)}>{days.map(key=>
         <option key={key} value={key}>{date.format(new Date(key+"T12:00:00Z"))}</option>)}</select></label>}
     {events.length>0 && <p>{days.length===1 && date.format(events[0].start*1000)+" · "}{events.map(n=>n.name).join(" · ")}</p>}
-    <strong>{events.length ? events.reduce((sum,n)=>sum+n.drinks,0) : "–"}</strong>
-    <p>{events.length ? "Mit Club Plus und Premium gebuchte Drinks" : feed ? "Keine kommenden Termine." : state==="setup" ? "Ticket Tailor ist noch nicht verbunden." : state==="loading" ? "Termine werden geladen …" : ""}</p>
+    {!feed && state==="loading" ? <TicketLoader label="Termine werden geladen"/> : <><strong>{events.length ? events.reduce((sum,n)=>sum+n.drinks,0) : "–"}</strong>
+    <p>{events.length ? "Mit Club Plus und Premium gebuchte Drinks" : feed ? "Keine kommenden Termine." : state==="setup" ? "Ticket Tailor ist noch nicht verbunden." : ""}</p></>}
     {state === "unavailable" && <small>Aktualisierung fehlgeschlagen.</small>}
   </section>;
 }
 
-export function TicketSales({example,feed,state}:Props) {
+export function TicketSales({example,feed,state,refreshing}:Props) {
   const [week,setWeek]=useState(0);
   const asOf=feed?.asOf ?? Math.floor(Date.now()/1000);
   const start=weekDay(asOf,week*7), end=weekDay(asOf,week*7+7);
@@ -75,13 +78,13 @@ export function TicketSales({example,feed,state}:Props) {
   const scale = Math.max(60,...(feed?.nights.map(n=>n.guests) ?? []));
   return <><section className="staff-panel ticket-sales" aria-labelledby="ticket-title">
     <div className="staff-section-head"><span className="staff-eyebrow"><Ticket size={16}/> Ticket Tailor</span>
-      <span className="staff-period">{example ? "Beispieldaten" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : "Vorverkauf"}</span></div>
+      <span className="staff-period">{example ? "Beispieldaten" : refreshing && feed ? "Wird aktualisiert …" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : "Vorverkauf"}</span></div>
     <h2 id="ticket-title">Gebuchte Gäste</h2>
     <div className="service-switch week-switch" role="group" aria-label="Verkaufswoche">{[0,1,2,3].map(i=>
       <button key={i} type="button" aria-pressed={week===i} onClick={()=>setWeek(i)}>{i===0 ? "Aktuell" : "Woche "+(i+1)}</button>)}</div>
     <p className="ticket-week-range">{date.format(new Date(start+"T12:00:00Z"))} – {date.format(new Date(weekDay(asOf,week*7+6)+"T12:00:00Z"))}</p>
     {state === "unavailable" && <p role="status">Ticket Tailor ist gerade nicht erreichbar.</p>}
-    {nights.length ? <>
+    {!feed && state === "loading" ? <TicketLoader label="Ticketverkauf wird geladen"/> : nights.length ? <>
       <ul className="ticket-chart">{nights.map(n => <li key={n.id} className="ticket-night">
         <div className="ticket-event"><b>{date.format(n.start * 1000)}</b><span>{n.name}</span></div>
         <div className="ticket-track" aria-hidden="true">
@@ -94,7 +97,7 @@ export function TicketSales({example,feed,state}:Props) {
       </li>)}</ul>
       <p className="ticket-legend"><i aria-hidden="true"/> Neu gebuchte Gäste in den letzten 24 Stunden</p>
     </> :
-      <p>{feed ? "Keine Veranstaltungen in dieser Woche." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : state === "loading" ? "Ticketverkauf wird geladen …" : ""}</p>}
+      <p>{feed ? "Keine Veranstaltungen in dieser Woche." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : ""}</p>}
   </section>
   <Performance feed={feed} example={example}/>
   <ServicePlan nights={feed?.nights ?? []} defaultId={upcoming[0]?.id} example={example}/></>;

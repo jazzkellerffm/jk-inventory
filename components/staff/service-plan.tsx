@@ -1,4 +1,5 @@
 "use client";
+import { TicketLoader } from "./ticket-loader";
 import { useEffect, useState } from "react";
 import { Check, ClipboardList } from "lucide-react";
 import type { Booking, TicketNight } from "@/lib/staff/tickets";
@@ -92,7 +93,7 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
       <button type="button" key={label} aria-pressed={view===label} onClick={()=>setView(label)}>{label}</button>)}</div>
     {rows && rows.length>0 && <p className="checkin-total">{rows.filter(row=>row.checkedIn).length} von {rows.length} Buchungen eingecheckt</p>}
     {error && <p role="status">Aktualisierung fehlgeschlagen.</p>}
-    {!rows && !error && <p>Buchungen werden geladen …</p>}
+    {!rows && !error && <TicketLoader label="Buchungen werden geladen"/>}
     {view === "Vorbestellungen" && supplies.length > 0 && <div className="service-prep">
       <h3>Für die Vorbereitung</h3><Pills items={supplies}/>
       {bottles > 0 && <small>{bottles} {bottles===1 ? "Flasche" : "Flaschen"} insgesamt bereitstellen</small>}</div>}

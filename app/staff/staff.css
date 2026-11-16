@@ -362,4 +362,4 @@
 @keyframes ticket-loading { to { background-position:100% 0; } }
 @media (prefers-reduced-motion:reduce) { .ticket-loader::before { animation:none; } }
 
-.sold-out-pill { display:inline-block; vertical-align:middle; transform:translateY(1px); margin-inline-start:.5rem; padding:calc(.15rem + 1px) .45rem calc(.15rem - 1px); border-radius:999px; background:#f2e8ce; color:#29443d; font-size:.68rem; line-height:1.2; white-space:nowrap; }
+.sold-out-pill { display:inline-block; vertical-align:middle; transform:translateY(1px); margin-inline-start:.5rem; padding:calc(.15rem + 1px) .45rem calc(.15rem - 1px); border-radius:999px; background:#d8c28d; color:#29443d; font-size:.68rem; line-height:1.2; white-space:nowrap; }

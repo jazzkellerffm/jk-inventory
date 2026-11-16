@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, Eye, EyeOff, ReceiptText } from "lucide-react";
+import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, ReceiptText } from "lucide-react";
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
 import { IncludedDrinks } from "./included-drinks";
 import { OrderAlerts } from "./order-alerts";
 import type { FoodOrder } from "@/lib/staff/food";
+import { MaskedRevenue } from "./masked-revenue";
 import { FoodOrders } from "./food-orders";
 import { Bestsellers } from "./bestsellers";
 import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
 import { staffModules } from "./modules";
-import { serviceDate, serviceStartLabel } from "@/lib/staff/service-day";
+import { serviceDate } from "@/lib/staff/service-day";
 import { StationCards } from "./station-cards";
 import { isCocktail } from "@/lib/staff/bar-workload";
 import { Masthead } from "./masthead";
@@ -80,19 +81,6 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const { board, error } = useBoard(example);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>();
   const [showAll, setShowAll] = useState(false);
-  const [showRevenue, setShowRevenue] = useState(false);
-  useEffect(() => {
-    if (!showRevenue) return;
-    const hide = () => setShowRevenue(false);
-    const timer = window.setTimeout(hide, 5000);
-    document.addEventListener("visibilitychange", hide);
-    window.addEventListener("pagehide", hide);
-    return () => {
-      window.clearTimeout(timer);
-      document.removeEventListener("visibilitychange", hide);
-      window.removeEventListener("pagehide", hide);
-    };
-  }, [showRevenue]);
   const feed = board?.feed;
   const lastFive = feed?.buckets.at(-1);
   const paid = !error && board?.feedState === "ready" ? feed : null;
@@ -148,18 +136,9 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           <small>{example ? "Beispieldaten" : feed ? "Stand "+time.format(new Date(feed.asOf))+" Uhr" : "Geschäftstag"}</small></div>
         <h2 id="turnover-title">Abendumsatz</h2>
         {typeof feed?.eveningCents === "number" ? (
-          <button type="button" onClick={() => setShowRevenue(!showRevenue)}
-            aria-label={showRevenue ? "Abendumsatz " + money(feed.eveningCents / 100, "EUR") + " verbergen" : "Abendumsatz anzeigen"}
-            className="inline-flex min-h-11 items-center gap-3 text-left">
-            {showRevenue ? (
-              <strong key="amount" aria-hidden="true">{money(feed.eveningCents / 100, "EUR")}</strong>
-            ) : (
-              <strong key="mask" aria-hidden="true" className="select-none tracking-widest opacity-60">••••</strong>
-            )}
-            {showRevenue ? <EyeOff size={18} aria-hidden="true"/> : <Eye size={18} aria-hidden="true"/>}
-          </button>
+          <MaskedRevenue label="Abendumsatz" cents={feed.eveningCents}/>
         ) : <strong>–</strong>}
-        <p>{stale ? "Aktualisierung fehlgeschlagen." : `Erfolgreiche Zahlungen · seit ${serviceStartLabel} Uhr`}</p>
+        <p>{stale ? "Aktualisierung fehlgeschlagen." : "Erfolgreiche Zahlungen"}</p>
       </section>
         <section className="staff-feed staff-panel" aria-labelledby="payments">
           <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={17}/> SumUp</span><span className="staff-period">Letzte Stunde</span></div>

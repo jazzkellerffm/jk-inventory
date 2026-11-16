@@ -1,5 +1,5 @@
 "use client";
-import { serviceStartLabel } from "@/lib/staff/service-day";
+import { MaskedRevenue } from "./masked-revenue";
 import { useEffect, useState } from "react";
 import { Utensils } from "lucide-react";
 import type { FoodFeed } from "@/lib/staff/food";
@@ -59,7 +59,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders}:{
         <div className="load-meter" aria-hidden="true"/>
         {kitchenLevel !== "unknown" && <small>{feed.recentPortions} {feed.recentPortions === 1 ? "Portion" : "Portionen"} in 10 Min.</small>}
       </div>
-      <div className="food-total"><strong>{euro.format(feed.totalCents / 100)}</strong> seit {serviceStartLabel} Uhr</div>
+      <div className="food-total"><MaskedRevenue label="Snack-Umsatz" cents={feed.totalCents} dots={String(Math.floor(Math.abs(feed.totalCents) / 100)).length}/></div>
       <div className="food-share"><span>Anteil am SumUp-Abendumsatz</span>
         <b>{share === null ? "–" : share.toLocaleString("de-DE",{maximumFractionDigits:1}) + " %"}</b></div>
       <div className="food-meter" aria-hidden="true"><i style={{width:(share ?? 0) + "%"}}/></div>

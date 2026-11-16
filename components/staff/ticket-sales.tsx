@@ -12,7 +12,7 @@ import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
 
 const date = new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"});
 const clock = new Intl.DateTimeFormat("de-DE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Berlin"});
-const demo: TicketFeed = {monthlyNights:{soldOut:2,busy:4,half:3,quiet:1,unclear:0},foodPreorders:2,asOf:1794859200,monthlyCategories:{Club:54,"Club Plus":38,Premium:21,VIP:8,"Worldstar VIP":2,"Weitere Tickets":0},monthlyTables:{vip:8,worldstar:2},nights:Array.from({length:4},(_,week)=>["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
+const demo: TicketFeed = {bookingDay:{count:6,latest:{at:1794859140,lines:[{ticket:"Worldstar VIP · 2 Gäste",event:"Saturday Trio",date:"2026-11-21"}]}},monthlyNights:{soldOut:2,busy:4,half:3,quiet:1,unclear:0},foodPreorders:2,asOf:1794859200,monthlyCategories:{Club:54,"Club Plus":38,Premium:21,VIP:8,"Worldstar VIP":2,"Weitere Tickets":0},monthlyTables:{vip:8,worldstar:2},nights:Array.from({length:4},(_,week)=>["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
   soldOut:week===0 && i===4,id:String(week*5+i),name,start:1795028400+(week*7+i)*86400,guests:[26,18,42,52,60][i],recent:[4,2,8,5,0][i],drinks:[12,6,18,24,20][i],unknown:0,
 }))).flat()};
 
@@ -97,6 +97,19 @@ export function TicketSales({example,feed,state,refreshing,week,setWeek}:Props &
       <p className="ticket-legend"><i aria-hidden="true"/> Neu gebuchte Gäste in den letzten 24 Stunden</p>
     </> :
       <p>{feed ? "Keine Veranstaltungen in dieser Woche." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : ""}</p>}
+    {feed && <div className="mt-4 rounded-2xl bg-[#f4e3e3] p-4 text-[#223a32]">
+      <div className="flex items-center justify-between gap-3">
+        <b>Buchungen heute</b>
+        <strong className="text-2xl tabular-nums">{feed.bookingDay?.count ?? "–"}</strong>
+      </div>
+      {feed.bookingDay?.latest ? <div className="mt-3 border-t border-black/10 pt-3">
+        <small>Letzte Buchung · {date.format(feed.bookingDay.latest.at * 1000)} · {clock.format(feed.bookingDay.latest.at * 1000)} Uhr</small>
+        {feed.bookingDay.latest.lines.map((line, i) => <div key={i} className="mt-2">
+          <b className="inline-block rounded-2xl bg-white/75 px-3 py-1 text-sm">{line.ticket}</b>
+          <div className="mt-1 text-sm">{[line.event, line.date && date.format(new Date(line.date + "T12:00:00Z"))].filter(Boolean).join(" · ") || "Konzertangabe fehlt"}</div>
+        </div>)}
+      </div> : <small>{feed.bookingDay ? "Noch keine Ticketbuchung." : "Buchungen derzeit nicht abrufbar."}</small>}
+    </div>}
   </section>
   <Performance feed={feed} example={example}/>
   <ServicePlan nights={feed?.nights ?? []} defaultId={upcoming[0]?.id} example={example}/></>;

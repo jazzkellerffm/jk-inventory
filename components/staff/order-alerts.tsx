@@ -100,10 +100,11 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
   useEffect(() => {
     if (mode === "off" || demo) return;
     const now = Date.now();
-    for (const [id, at] of seen.current) if (at < now - 60000) seen.current.delete(id);
+    const cutoff = now - 2 * 60_000;
+    for (const [id, at] of seen.current) if (at < cutoff) seen.current.delete(id);
     function accept(id: string, at: string, n: Notice) {
       const timestamp = Date.parse(at);
-      if (!(timestamp >= Math.max(since.current, now - 60000)) || seen.current.has(id)) return;
+      if (!(timestamp >= Math.max(since.current, cutoff)) || seen.current.has(id)) return;
       seen.current.set(id,timestamp);
       if (!document.hidden && (mode === "both" || mode === n.kind)) queue(n);
     }

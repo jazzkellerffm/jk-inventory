@@ -95,7 +95,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const effort = (paid?.paidEffort ?? 0) + (open?.openEffort ?? 0);
   const complete = paid && open && !paid.missingReceiptDetails;
   const level = effort >= 5 ? 3 : effort >= 3 ? 2 : complete ? 1 : 0;
-  const loadLabel = ["Daten fehlen", "Ruhig", "Zieht an", "Viel los"][level];
+  const loadLabel = [paid?.missingReceiptDetails ? "SumUp-Artikeldetails fehlen" : "Daten fehlen", "Ruhig", "Zieht an", "Viel los"][level];
   const stale = error || board?.feedState === "unavailable";
   const status = example ? "Beispieldaten" : stale ? "Verbindung unterbrochen" : feed ? "Verbunden" : board ? "Einrichtung offen" : "Lädt …";
   const timestamps = [feed?.asOf, board?.drinks?.asOf].filter((at): at is string => !!at);

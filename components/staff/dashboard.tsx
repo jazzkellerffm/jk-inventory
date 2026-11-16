@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, Eye, EyeOff, ReceiptText } from "lucide-react";
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
 import { IncludedDrinks } from "./included-drinks";
+import { OrderAlerts } from "./order-alerts";
+import type { FoodOrder } from "@/lib/staff/food";
 import { FoodOrders } from "./food-orders";
 import { Bestsellers } from "./bestsellers";
 import { QuickMenu } from "./quick-menu";
@@ -76,6 +78,7 @@ function ActivityChart({ feed }: { feed: BarFeed }) {
 export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const tickets = useTicketFeed(!!example);
   const { board, error } = useBoard(example);
+  const [foodOrders, setFoodOrders] = useState<FoodOrder[]>();
   const [showAll, setShowAll] = useState(false);
   const [showRevenue, setShowRevenue] = useState(false);
   useEffect(() => {
@@ -118,6 +121,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <div className="staff-heading"><div><h1>Bar-Monitor<span>.</span></h1></div>
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>
+      <OrderAlerts board={board} food={foodOrders} demo={!!example}/>
       <section aria-labelledby="activity" className="staff-activity staff-panel">
           <div className="staff-section-head"><span className="staff-eyebrow"><Activity size={17}/> SumUp</span><span className={`staff-status ${stale ? "staff-warn" : ""}`} role="status"><i/>{status}</span></div>
           <h2 id="activity">Baraktivität</h2>
@@ -168,7 +172,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
             </li>)}</ol>}
           {feed && feed.payments.length > 4 && <button className="staff-more" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "Weniger anzeigen" : `Alle ${feed.payments.length} anzeigen`} <ChevronDown size={16}/></button>}
         </section>
-      <FoodOrders example={!!example} eveningCents={paid?.eveningCents}
+      <FoodOrders onOrders={setFoodOrders} example={!!example} eveningCents={paid?.eveningCents}
         preorders={tickets.state === "unavailable" ? null : tickets.feed?.foodPreorders}/>
       {board && <section className="shift-line" aria-labelledby="tonight-team">
         <h2 id="tonight-team">Team heute Abend</h2>

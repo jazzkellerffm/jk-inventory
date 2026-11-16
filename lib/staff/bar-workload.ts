@@ -17,3 +17,7 @@ export function prepWeight(name: string) {
   if (simple.test(label)) return 0.125;
   return 0.5;
 }
+
+export function isDrink(name: string) {
+  return isCocktail(name) || simple.test(normalizeName(name));
+}

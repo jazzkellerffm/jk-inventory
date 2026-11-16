@@ -347,3 +347,9 @@
 .kitchen-load[data-level="quiet"] .load-meter::before { width:8%; background:#819c89; }
 .kitchen-load[data-level="active"] .load-meter::before { width:50%; background:#ce945f; }
 .kitchen-load[data-level="busy"] .load-meter::before { width:100%; background:linear-gradient(90deg,#d79d70,#ac6245); }
+
+.staff-alert-controls { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 12px; }
+.staff-alert-controls button,.staff-alert-controls select { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:5px 12px; border-radius:999px; border:1px solid var(--line); font-size:13px; }
+.staff-alert-controls button[aria-pressed="true"] { background:var(--accent); color:white; }
+.staff-order-banner { position:fixed; z-index:80; top:calc(env(safe-area-inset-top,0px) + 12px); left:50%; transform:translateX(-50%); width:max-content; max-width:calc(100% - 24px); border-radius:16px; padding:12px 20px; background:#f4e3e3; color:#203830; box-shadow:0 4px 18px #20383028; font-weight:700; }
+.staff-order-banner[data-kind="food"] { background:var(--food-peach); }

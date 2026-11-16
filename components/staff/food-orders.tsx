@@ -11,8 +11,8 @@ const demo: FoodFeed = {recentPortions:2, recentHummus:2, recentIncomplete:false
   {id:"two",at:"2026-11-18T20:41:00Z",description:"1 × Hummus-Platte",cents:1500},
 ]};
 
-export function FoodOrders({example, eveningCents, preorders}:{
-  example:boolean; eveningCents?:number; preorders?:number|null;
+export function FoodOrders({example, eveningCents, preorders, onOrders}:{
+  onOrders:(orders: FoodFeed["orders"])=>void; example:boolean; eveningCents?:number; preorders?:number|null;
 }) {
   const [feed,setFeed] = useState<FoodFeed|null>(example ? demo : null);
   const [message,setMessage] = useState(example ? "" : "Bestellungen werden geladen …");
@@ -30,6 +30,7 @@ export function FoodOrders({example, eveningCents, preorders}:{
         const data = await res.json();
         if (!controller.signal.aborted) {
           setFeed(data.feed ?? null);
+          if (data.feed) onOrders(data.feed.orders);
           setMessage(data.state === "setup" ? "SumUp ist noch nicht verbunden." : "");
         }
       } catch {
@@ -37,10 +38,10 @@ export function FoodOrders({example, eveningCents, preorders}:{
       } finally { busy = false; }
     }
     void refresh();
-    const timer = setInterval(refresh,60000);
+    const timer = setInterval(refresh,15000);
     document.addEventListener("visibilitychange",refresh);
     return ()=>{ controller.abort(); clearInterval(timer); document.removeEventListener("visibilitychange",refresh); };
-  },[example]);
+  },[example,onOrders]);
   const share = feed && !message && eveningCents && eveningCents > 0 && feed.totalCents <= eveningCents
     ? 100 * feed.totalCents / eveningCents : null;
   const busyKitchen = feed && (feed.recentHummus >= 2 || feed.recentPortions >= 3);

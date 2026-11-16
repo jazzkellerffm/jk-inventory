@@ -4,19 +4,19 @@ Stand 16. November 2026. JK Staff OS ist der mobile Arbeitsbildschirm für Bar, 
 
 ## In fünf Minuten wieder einsteigen
 
-1. Das Projekt liegt im Repository `jazzkellerffm/jk-inventory`, Branch `feature/jk-staff-os`. Der geprüfte App-Stand ist `49c8df372415f53fc61730a417d24b555dd022f8`. Für neue Änderungen zuerst den aktuellen Branch prüfen. [Branch](https://github.com/jazzkellerffm/jk-inventory/tree/feature/jk-staff-os) · [Referenzstand](https://github.com/jazzkellerffm/jk-inventory/commit/49c8df372415f53fc61730a417d24b555dd022f8)
-2. Auf Philipps Mac ist der vorbereitete Projektordner `~/Documents/JKOS/jk-staff-os`. Im Terminal dieses Ordners zuerst `git status -sb` und `git remote -v` prüfen. Dann `git switch feature/jk-staff-os` und `git pull --ff-only`. Eigene lokale Änderungen vorher sichten und sichern.
+1. Produktion läuft vom Branch `main` im Repository `jazzkellerffm/jk-inventory`. Der am 16. November 2026 veröffentlichte App-Referenzstand ist [`509cf49`](https://github.com/jazzkellerffm/jk-inventory/commit/509cf49169201d81e6c4026d3118cdd97e64d9f0). Für die weitere Arbeit den aktuellen Stand von `main` laden.
+2. Auf Philipps Mac ist der vorbereitete Projektordner `~/Documents/JKOS/jk-staff-os`. Im Terminal dieses Ordners zuerst `git status -sb` und `git remote -v` prüfen. Dann `git switch main` und `git pull --ff-only`. Eigene lokale Änderungen vorher sichten und sichern.
 3. Für eine frische Arbeitskopie in einem freien Zielordner den folgenden Block verwenden. Eine bestehende Arbeitskopie kann direkt mit `npm ci` und `npm run dev` starten.
 
 ```sh
-git clone --branch feature/jk-staff-os https://github.com/jazzkellerffm/jk-inventory.git jk-staff-os
+git clone --branch main https://github.com/jazzkellerffm/jk-inventory.git jk-staff-os
 cd jk-staff-os
 npm ci
 npm run dev
 ```
 
 4. Am vom Terminal gemeldeten Port **/staff/demo** öffnen. Die Startseite **/** zeigt das Inventory, der Paketname beim Start lautet ebenfalls jk-inventory. **/staff** ist der Teamzugang zu den Live-Daten. Für die Demo genügen die eingebauten Beispieldaten.
-5. Vor der Veröffentlichung `npm run build` ausführen. In Vercel gehören Branch-Vorschauen zum Projekt `jk-inventory` im Team `jazzkellerffms-projects`. Commit und Status READY prüfen. Dieser Stand wurde als Preview veröffentlicht. Für externe Demo-Tests bei aktivem Vercel-Schutz einen Freigabelink zum aktuellen Deployment mit Pfad `/staff/demo` verwenden. Ein früherer Freigabelink zeigt die frühere Version und kann ablaufen.
+5. Vor der Veröffentlichung `npm run build` ausführen. Das Vercel-Projekt `jk-inventory` gehört zum Team `jazzkellerffms-projects`. Beim Production-Deployment Commit und Status READY prüfen. [Teamzugang](https://jk-inventory.vercel.app/staff) · [Demo](https://jk-inventory.vercel.app/staff/demo). Der Branch `feature/jk-staff-os` diente der Vorschau. Branchgebundene Preview-Variablen und Production-Variablen werden separat gepflegt.
 
 ## Aufbau und Datenquellen
 
@@ -46,7 +46,11 @@ Ein Club-Ticket für vier ist ein Ticketpaket und zählt vier Gäste. Unklare Pa
 
 „Gebuchte Gäste“ zeigt die Abende wochenweise. „Venue Performance“ ist die aufklappbare Auswertung mit Wochenvergleich, Buchungen der letzten 24 Stunden, monatlichen VIP-/Worldstar-Tischen, Ticketpaketen nach Kategorie und kommenden Events nach Gästezahl (Top 5/10/15 je nach Datenlage). Davon getrennt zeigen die SumUp-Bestseller die verkaufte Stückzahl des Betriebsabends (Top 3/5/10).
 
-Mobile first im Rosé-Payout-Look des JK Booking Guide. Dunkelgrün für Baraktivität und aktive Switcher, Rosé für Abendumsatz, Apricot für Food Orders. Stationsfarben im Dienstplan und in der Schnellansicht gemeinsam pflegen: Bar rosé, Backstage apricot, Service pastellgrün, Door grau. Die untere Navigation führt zu Bar, Drinks, Food, Service und Tools. Drinks springt zu den Bestellungen, Food zum Snackpegel und Service öffnet Service & Door. Unter Tools liegen Inventory und Dienstplan. „Team heute Abend“ verlinkt direkt zum Dienstplan. Zentrale Styles liegen in `app/staff/staff.css`.
+Mobile first im Rosé-Payout-Look des JK Booking Guide. Dunkelgrün für Baraktivität und aktive Switcher, Rosé für Abendumsatz, Apricot für Food Orders. Stationsfarben im Dienstplan und in der Schnellansicht gemeinsam pflegen: Bar rosé, Backstage apricot, Service pastellgrün, Door grau. Die untere Navigation führt zu Bar, Drinks, Food, Service und Tools. Drinks springt zu den Bestellungen, Food zum Snackpegel und Service öffnet Service & Door. Unter Tools liegen Inventory und Dienstplan. „Team heute Abend“ verlinkt direkt zum Dienstplan. Inventory und Dienstplan verwenden denselben hellen Salbeihintergrund mit dunkelgrünem Icon. Zwischen „Drink-Bestellungen“ und der Ticket-Tailor-Vorschau „Included Drinks“ liegen 16 px. Zentrale Styles liegen in `app/staff/staff.css`.
+
+### Ladeverhalten bei Ticket Tailor
+
+Beim ersten Abruf erscheint ein schmaler Ladebalken in Salbei und Rosé mit Text für Termine, Ticketverkauf oder Buchungen. Mit reduzierter Bewegung bleibt er statisch. „Included Drinks“ und „Gebuchte Gäste“ behalten bei Folgeabrufen ihre Werte und zeigen „Wird aktualisiert …“. Die geöffnete Gästeliste und die Vorbestellungen behalten beim Nachladen desselben Abends ihre Einträge. Ticketdaten werden bei sichtbarer Seite alle 60 Sekunden und bei Rückkehr zur Seite abgerufen. Für die Prüfung den geschützten Teamzugang verwenden. Die Demo nutzt Beispieldaten direkt. Zuständig sind `components/staff/ticket-loader.tsx`, `ticket-sales.tsx`, `service-plan.tsx` und `app/staff/staff.css`.
 
 ## Betrieb und Funktionsprüfung
 
@@ -62,4 +66,4 @@ Umgebungsvariablen für lokale Entwicklung in `.env.local`, auf Vercel in der ge
 
 **Prüfung nach Änderungen:** Zuerst die Demo auf dem Handy öffnen. Beide Testtöne hören, Sprungziele antippen, Umsatzfelder aufdecken und wieder verdecken lassen. Teamkacheln mit dem Dienstplan vergleichen. Anschließend im geschützten Teamzugang einen bekannten Beleg, eine Included-Drinks-Bestellung mit Tisch und eine Ticket-Tailor-Buchung mit Add-on vergleichen. Testdaten und Live-Daten getrennt beurteilen.
 
-**Pflege:** Eine Planänderung in der JSON-Datei speichern, committen und deployen. Bei neuen Drink- oder Ticketbezeichnungen die Erkennungsregeln prüfen. Nach Änderungen an Betriebslogik oder Datenquellen diese Datei auf dem Staff-Branch fortschreiben und die Kopie in Dropbox unter `/JKOS/DOCUMENTATION/CONTEXT/JK-Staff-OS.md` aktualisieren. Dort ergänzen `JKOS-Service-and-Door.md` und `JK Booking - Apply v1 & Rose UI Pattern.md` den fachlichen und gestalterischen Kontext.
+**Pflege:** Eine Planänderung in der JSON-Datei speichern, committen und deployen. Bei neuen Drink- oder Ticketbezeichnungen die Erkennungsregeln prüfen. Nach Änderungen an Betriebslogik oder Datenquellen diese Datei auf `main` fortschreiben und die Kopie in Dropbox unter `/JKOS/DOCUMENTATION/CONTEXT/JK-Staff-OS.md` aktualisieren. Dort ergänzen `JKOS-Service-and-Door.md` und `JK Booking - Apply v1 & Rose UI Pattern.md` den fachlichen und gestalterischen Kontext.

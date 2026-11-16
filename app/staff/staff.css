@@ -314,3 +314,14 @@
   .staff-heading { flex-direction: column; align-items: flex-start; gap: 10px; }
   .staff-stamp { display: flex; align-items: baseline; gap: 10px; }
 }
+
+.food-panel { background:#faf0e5; margin-bottom:16px; }
+.food-panel .cocktail-tiles li { background:#efd7be; }
+.food-total { margin:8px 0 16px; }
+.food-total strong { font-size:1.65rem; }
+.food-share { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.food-share b { white-space:nowrap; }
+.food-meter { height:12px; background:#efdecc; border-radius:999px; overflow:hidden; margin-top:6px; }
+.food-meter i { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#dfad81,#b8794e); }
+.food-preorders { margin-top:14px; padding-top:10px; border-top:1px solid #dfcbb8; }
+.food-preorders small,.food-preorders b { display:block; }

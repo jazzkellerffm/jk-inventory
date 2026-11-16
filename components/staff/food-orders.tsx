@@ -10,9 +10,11 @@ const demo: FoodFeed = {totalCents:4500, uncategorized:false, orders:[
   {id:"two",at:"2026-11-18T20:41:00Z",description:"1 × Hummus-Platte",cents:1500},
 ]};
 
-export function FoodOrders({example}:{example:boolean}) {
+export function FoodOrders({example, eveningCents, preorders}:{
+  example:boolean; eveningCents?:number; preorders?:number|null;
+}) {
   const [feed,setFeed] = useState<FoodFeed|null>(example ? demo : null);
-  const [message,setMessage] = useState("Bestellungen werden geladen …");
+  const [message,setMessage] = useState(example ? "" : "Bestellungen werden geladen …");
   useEffect(()=>{
     if (example) return;
     const controller = new AbortController();
@@ -38,18 +40,26 @@ export function FoodOrders({example}:{example:boolean}) {
     document.addEventListener("visibilitychange",refresh);
     return ()=>{ controller.abort(); clearInterval(timer); document.removeEventListener("visibilitychange",refresh); };
   },[example]);
-  return <section id="food-orders" className="staff-panel staff-feed" style={{background:"#f7e8d8",marginBottom:16}}>
+  const share = feed && !message && eveningCents && eveningCents > 0 && feed.totalCents <= eveningCents
+    ? 100 * feed.totalCents / eveningCents : null;
+  return <section id="food-orders" className="staff-panel food-panel" aria-labelledby="food-title">
     <div className="staff-section-head"><span className="staff-eyebrow"><Utensils size={16}/> SumUp · Bar Snacks</span>
       {example && <small>Beispieldaten</small>}</div>
-    <h2>Food Orders</h2>
+    <h2 id="food-title">Food Orders</h2>
     {feed && <>
-      <p><b className="text-3xl tabular-nums">{euro.format(feed.totalCents/100)}</b> seit 06:00 Uhr</p>
-      {feed.orders.length > 0 ? <ol>{feed.orders.map(order=><li key={order.id}>
-        <time dateTime={order.at}>{time.format(Date.parse(order.at))}</time><div>{order.description}</div>
-        <strong>{euro.format(order.cents/100)}</strong>
-      </li>)}</ol> : <p>Keine Verkäufe mit der Kategorie „Bar Snacks“.</p>}
+      <div className="food-total"><strong>{euro.format(feed.totalCents / 100)}</strong> seit 06:00 Uhr</div>
+      <div className="food-share"><span>Anteil am SumUp-Abendumsatz</span>
+        <b>{share === null ? "–" : share.toLocaleString("de-DE",{maximumFractionDigits:1}) + " %"}</b></div>
+      <div className="food-meter" aria-hidden="true"><i style={{width:(share ?? 0) + "%"}}/></div>
+      {feed.orders.length ? <ul className="cocktail-tiles" tabIndex={0} aria-label="Letzte Essensbestellungen">
+        {feed.orders.map(order => <li key={order.id}><b>{order.description}</b>
+          <small><time dateTime={order.at}>{time.format(new Date(order.at))}</time> · {euro.format(order.cents / 100)}</small>
+        </li>)}
+      </ul> : <p>Heute noch keine Bar Snacks verkauft.</p>}
       {feed.uncategorized && <small>Positionen ohne Kategorie sind ausgenommen.</small>}
     </>}
     {!example && message && <p role="status">{message}</p>}
+    <div className="food-preorders"><small>Ticket Tailor · Vorbestellungen für diesen Abend</small>
+      <b>{preorders == null ? "Vorbestellungen derzeit nicht verfügbar" : preorders + " × Hummus-Platte"}</b></div>
   </section>;
 }

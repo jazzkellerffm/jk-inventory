@@ -167,7 +167,8 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
             </li>)}</ol>}
           {feed && feed.payments.length > 4 && <button className="staff-more" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "Weniger anzeigen" : `Alle ${feed.payments.length} anzeigen`} <ChevronDown size={16}/></button>}
         </section>
-      <FoodOrders example={!!example}/>
+      <FoodOrders example={!!example} eveningCents={paid?.eveningCents}
+        preorders={tickets.state === "unavailable" ? null : tickets.feed?.foodPreorders}/>
       {board && <section className="shift-line" aria-labelledby="tonight-team">
         <h2 id="tonight-team">Team heute Abend</h2>
         {board.scheduleError || error ? <p>Dienstplan derzeit nicht verfügbar.</p> : tonight.length ?

@@ -1,4 +1,5 @@
 "use client";
+import { serviceStartLabel } from "@/lib/staff/service-day";
 import { useEffect, useState } from "react";
 import { Utensils } from "lucide-react";
 import type { FoodFeed } from "@/lib/staff/food";
@@ -57,7 +58,7 @@ export function FoodOrders({example, eveningCents, preorders}:{
         <div className="load-meter" aria-hidden="true"/>
         {kitchenLevel !== "unknown" && <small>{feed.recentPortions} {feed.recentPortions === 1 ? "Portion" : "Portionen"} in 10 Min.</small>}
       </div>
-      <div className="food-total"><strong>{euro.format(feed.totalCents / 100)}</strong> seit 06:00 Uhr</div>
+      <div className="food-total"><strong>{euro.format(feed.totalCents / 100)}</strong> seit {serviceStartLabel} Uhr</div>
       <div className="food-share"><span>Anteil am SumUp-Abendumsatz</span>
         <b>{share === null ? "–" : share.toLocaleString("de-DE",{maximumFractionDigits:1}) + " %"}</b></div>
       <div className="food-meter" aria-hidden="true"><i style={{width:(share ?? 0) + "%"}}/></div>

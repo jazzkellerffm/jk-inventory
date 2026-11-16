@@ -10,7 +10,8 @@ import { Bestsellers } from "./bestsellers";
 import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
 import { staffModules } from "./modules";
-import { ticketDay } from "@/lib/staff/ticket-weeks";
+import { serviceDate, serviceStartLabel } from "@/lib/staff/service-day";
+import { StationCards } from "./station-cards";
 import { isCocktail } from "@/lib/staff/bar-workload";
 import { Masthead } from "./masthead";
 
@@ -108,7 +109,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const status = example ? "Beispieldaten" : stale ? "Verbindung unterbrochen" : feed ? "Verbunden" : board ? "Einrichtung offen" : "Lädt …";
   const timestamps = [feed?.asOf, board?.drinks?.asOf].filter((at): at is string => !!at);
   const snapshot = timestamps.length ? new Date(Math.max(...timestamps.map(at => Date.parse(at)))) : undefined;
-  const rosterDay = ticketDay((example && snapshot ? snapshot.getTime() : Date.now()) / 1000);
+  const rosterDay = serviceDate(example && snapshot ? snapshot.getTime() : Date.now());
   const tonight = board?.shifts.filter(shift => shift.date === rosterDay) ?? [];
   const message = stale ? "SumUp ist gerade nicht erreichbar." : board?.feedState === "setup" ? "SumUp ist noch nicht verbunden." : "Zahlungen werden geladen …";
   return <div className="staff-shell">
@@ -154,7 +155,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
             {showRevenue ? <EyeOff size={18} aria-hidden="true"/> : <Eye size={18} aria-hidden="true"/>}
           </button>
         ) : <strong>–</strong>}
-        <p>{stale ? "Aktualisierung fehlgeschlagen." : "Erfolgreiche Zahlungen · seit 06:00 Uhr"}</p>
+        <p>{stale ? "Aktualisierung fehlgeschlagen." : `Erfolgreiche Zahlungen · seit ${serviceStartLabel} Uhr`}</p>
       </section>
         <section className="staff-feed staff-panel" aria-labelledby="payments">
           <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={17}/> SumUp</span><span className="staff-period">Letzte Stunde</span></div>
@@ -172,10 +173,10 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       {board && <section className="shift-line" aria-labelledby="tonight-team">
         <h2 id="tonight-team">Team heute Abend</h2>
         {board.scheduleError || error ? <p>Dienstplan derzeit nicht verfügbar.</p> : tonight.length ?
-          <dl>{tonight.map((shift,i)=><div key={i}><dt>{shift.role || "Team"}</dt><dd>{shift.names.map((name,index)=><span key={index}>{name}</span>)}</dd></div>)}</dl>
+          <StationCards shifts={tonight}/>
           : <p>Für heute ist keine Schicht eingetragen.</p>}
       </section>}
-      <NightDrinks {...tickets} example={!!example}/>
+      <NightDrinks {...tickets} example={!!example} today={rosterDay}/>
       <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
       <Bestsellers example={!!example}/>
       <TicketSales {...tickets} example={!!example}/>

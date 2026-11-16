@@ -236,7 +236,7 @@
 .roster-date-number { font:700 40px/1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; color:var(--accent); }
 .roster-date-copy { display:grid; gap:2px; font:700 17px/1.2 var(--staff-display),sans-serif; }
 .roster-date-copy small { font:400 12px/1.2 var(--font-poly),sans-serif; }
-.roster-day dl { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+.station-cards { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
 .roster-role { min-width:0; padding:12px 10px; border-radius:14px; background:#e9e8e4; display:flex; flex-direction:column; gap:10px; }
 .roster-role[data-station="bar"] { background:#f4e3e3; }
 .roster-role[data-station="service"] { background:#dcefe4; }
@@ -248,7 +248,6 @@
 .roster-names { display:flex; flex-wrap:wrap; gap:4px; }
 .roster-name { max-width:100%; overflow-wrap:anywhere; padding:4px 8px; border-radius:999px; background:#fff9f6; font:700 15px/1.2 var(--staff-display),sans-serif; }
 .roster-name[data-match="true"] { background:var(--accent); color:white; }
-.shift-line dd span { padding:4px 9px; border-radius:20px; background:#f3e7e3; font-weight:600; }
 
 .door-guests { margin-top:18px; }
 .door-guests section { margin-top:14px; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
@@ -315,13 +314,11 @@
 @media(max-width:550px){.perf-grid { grid-template-columns:1fr; }}
 
 .shift-line { margin:16px 0; padding:12px 4px; border-block:1px solid var(--line); }
+.shift-line p { margin:0; color:var(--muted); font-size:13px; }
+.shift-line .roster-role { padding:8px 10px; gap:6px; }
+.shift-line .roster-name { font-size:13px; padding:3px 8px; }
+@media (min-width:640px) { .shift-line .station-cards { grid-template-columns:repeat(4,minmax(0,1fr)); } }
 .shift-line h2 { margin:0 0 7px; font:700 16px/1.25 var(--staff-display),sans-serif; }
-.shift-line dl { display:flex; gap:8px 20px; flex-wrap:wrap; margin:0; }
-.shift-line dl div { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; }
-.shift-line dt,.shift-line p { color:var(--muted); font-size:13px; }
-.shift-line dd,.shift-line p { margin:0; }
-.shift-line dd { display:flex; flex-wrap:wrap; gap:4px; font-size:13px; }
-.shift-line dd span { padding:2px 8px; }
 @media (max-width: 420px) {
   .staff-heading { flex-direction: column; align-items: flex-start; gap: 10px; }
   .staff-stamp { display: flex; align-items: baseline; gap: 10px; }

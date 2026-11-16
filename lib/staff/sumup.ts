@@ -1,11 +1,12 @@
 import "server-only";
+import { serviceStart } from "./service-day";
 import { prepWeight } from "./bar-workload";
 import type { BarFeed, Payment, ReceiptItem, BestsellerFeed } from "./types";
 
 const minute = 60_000;
 const api = "https://api.sumup.com";
 const receiptCache = new Map<string, { until: number; items: ReceiptItem[] }>();
-let lastFeed: { key: string; until: number; value: Promise<BarFeed> } | undefined;
+let lastFeed: { key: string; start: number; until: number; value: Promise<BarFeed> } | undefined;
 
 type Transaction = {
   transaction_id?: string;
@@ -76,9 +77,8 @@ async function history(merchant: string, token: string, since: number, now: numb
   return [...payments.values()].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 }
 
-async function collect(merchant: string, token: string, now: number): Promise<BarFeed> {
+async function collect(merchant: string, token: string, now: number, start: number): Promise<BarFeed> {
   const since = now - 60 * minute;
-  const start = serviceStart(now);
   const historyRows = await history(merchant,token,Math.min(since,start),now);
   const sorted = historyRows.filter(payment => Date.parse(payment.at) >= since);
   const eveningCents = historyRows.reduce((sum,payment) =>
@@ -112,20 +112,12 @@ async function collect(merchant: string, token: string, now: number): Promise<Ba
 
 export function readBarFeed(merchant: string, token: string) {
   const now = Date.now();
-  if (lastFeed?.key === merchant && now < lastFeed.until) return lastFeed.value;
-  const value = collect(merchant, token, now);
-  lastFeed = { key: merchant, until: now + 12_000, value };
+  const start = serviceStart(now);
+  if (lastFeed?.key === merchant && lastFeed.start === start && now < lastFeed.until) return lastFeed.value;
+  const value = collect(merchant, token, now, start);
+  lastFeed = { key: merchant, start, until: now + 12_000, value };
   value.catch(() => { if (lastFeed?.value === value) lastFeed = undefined; });
   return value;
-}
-
-const berlinDate = new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Berlin"});
-const berlinHour = new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Berlin",hour:"2-digit",hourCycle:"h23"});
-
-export function serviceStart(now:number) {
-  const day = new Date(berlinDate.format(now)+"T06:00:00Z");
-  if (Number(berlinHour.format(now))<6) day.setUTCDate(day.getUTCDate()-1);
-  return day.getTime()-(Number(berlinHour.format(day))-6)*60*minute;
 }
 
 async function rankSales(merchant:string,token:string,start:number,now:number):Promise<BestsellerFeed> {

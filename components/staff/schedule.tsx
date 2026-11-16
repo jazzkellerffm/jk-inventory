@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, DoorOpen, HandPlatter, Martini, UsersRound, Utensils } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Shift } from "@/lib/staff/types";
+
+import { StationCards } from "./station-cards";
 
 type View = "Woche" | "Monat";
 const formatter = (options: Intl.DateTimeFormatOptions) =>
@@ -11,19 +13,6 @@ const dayMonth = formatter({day:"numeric",month:"short"});
 const weekday = formatter({weekday:"long"});
 const monthYear = formatter({month:"long",year:"numeric"});
 const atNoon = (date:string) => new Date(date+"T12:00:00Z");
-
-const stations = [
-  { key: "bar", Icon: Martini },
-  { key: "backstage", Icon: Utensils },
-  { key: "service", Icon: HandPlatter },
-  { key: "door", Icon: DoorOpen },
-];
-const teamStation = { key: "team", Icon: UsersRound };
-
-function stationFor(role = "") {
-  const label = role.trim().toLowerCase();
-  return stations.find(station => label.startsWith(station.key)) ?? teamStation;
-}
 
 function period(date:string, view:View) {
   if (view==="Monat") return date.slice(0,7)+"-01";
@@ -76,18 +65,7 @@ export function Schedule({ shifts, invalid, loading }: { shifts: Shift[]; invali
           <span className="roster-date-number">{day.getUTCDate()}</span>
           <span className="roster-date-copy"><span>{weekday.format(day)}</span><small>{monthYear.format(day)}</small></span>
         </time></h4>
-        <dl>{visible.filter(shift => shift.date === date).map((shift, index) => {
-          const { key: station, Icon } = stationFor(shift.role);
-          return <div key={index} className="roster-role" data-station={station}>
-            <dt><Icon size={15} aria-hidden="true"/><span>{shift.role || "Team"}</span></dt>
-            <dd>
-              {shift.start && <small>{shift.start} Uhr</small>}
-              <span className="roster-names">{shift.names.map(person =>
-                <span className="roster-name" key={person} data-match={person === activeName}>{person}</span>
-              )}</span>
-            </dd>
-          </div>;
-        })}</dl>
+        <StationCards shifts={visible.filter(shift => shift.date === date)} activeName={activeName}/>
       </section>;
     })}
   </div>;

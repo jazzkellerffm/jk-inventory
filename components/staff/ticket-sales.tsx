@@ -6,6 +6,7 @@ import { ServicePlan } from "./service-plan";
 import { Ticket } from "lucide-react";
 import type { TicketFeed } from "@/lib/staff/tickets";
 
+import { serviceDate } from "@/lib/staff/service-day";
 import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
 
 const date = new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"});
@@ -43,14 +44,12 @@ export function useTicketFeed(example:boolean) {
 
 type Props = ReturnType<typeof useTicketFeed> & {example:boolean};
 
-export function NightDrinks({example,feed,state}:Props) {
-  const berlinDay = new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Berlin"});
+export function NightDrinks({example,feed,state,today}:Props & {today: string}) {
   const [selection,setSelection] = useState("");
-  const today = berlinDay.format(example ? demo.asOf * 1000 : Date.now());
-  const upcoming = (feed?.nights ?? []).filter(n=>berlinDay.format(n.start*1000)>=today);
-  const days = [...new Set(upcoming.map(n=>berlinDay.format(n.start*1000)))];
+  const upcoming = (feed?.nights ?? []).filter(n=>ticketDay(n.start)>=today);
+  const days = [...new Set(upcoming.map(n=>ticketDay(n.start)))];
   const selected = days.includes(selection) ? selection : days[0];
-  const events = upcoming.filter(n=>berlinDay.format(n.start*1000)===selected);
+  const events = upcoming.filter(n=>ticketDay(n.start)===selected);
   const period = selected===today ? "Heute Abend" : selected && selected===days[0] ? "Nächster Abend" : "Vorschau";
   return <section className="staff-panel service-drinks" aria-labelledby="night-drinks">
     <div className="staff-section-head"><span className="staff-eyebrow">{period} · Ticket Tailor</span>
@@ -71,7 +70,7 @@ export function TicketSales({example,feed,state}:Props) {
   const asOf=feed?.asOf ?? Math.floor(Date.now()/1000);
   const start=weekDay(asOf,week*7), end=weekDay(asOf,week*7+7);
   const nights=(feed?.nights ?? []).filter(n=>ticketDay(n.start)>=start && ticketDay(n.start)<end);
-  const today=ticketDay(asOf);
+  const today=serviceDate(asOf*1000);
   const upcoming=(feed?.nights ?? []).filter(n=>ticketDay(n.start)>=today);
   const scale = Math.max(60,...(feed?.nights.map(n=>n.guests) ?? []));
   return <><section className="staff-panel ticket-sales" aria-labelledby="ticket-title">

@@ -1,5 +1,6 @@
 "use client";
 
+import { serviceStartLabel } from "@/lib/staff/service-day";
 import { useEffect, useState } from "react";
 import { ChartBar } from "lucide-react";
 import type { BestsellerFeed } from "@/lib/staff/types";
@@ -51,6 +52,6 @@ export function Bestsellers({example}:{example:boolean}) {
     {feed && !feed.products.length && !feed.incomplete && <p>Noch keine Artikel verkauft.</p>}
     {!example && message && <p role="status">{message}</p>}
     {!!feed?.incomplete && <p>{feed.incomplete} Beleg(e) ohne vollständige Artikeldaten.</p>}
-    <small>Verkaufte Stückzahl · Geschäftstag ab 06:00 Uhr</small>
+    <small>Verkaufte Stückzahl · Geschäftstag ab {serviceStartLabel} Uhr</small>
   </section>;
 }

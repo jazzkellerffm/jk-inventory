@@ -1,5 +1,5 @@
 import "server-only";
-import { serviceStart } from "./sumup";
+import { serviceDate } from "./service-day";
 import {ticketDay, weekDay} from "./ticket-weeks";
 import { ticketCategory, includedDrinks, packageSize, paidSupply, type Supply } from "./entitlements";
 
@@ -25,10 +25,8 @@ async function pages<T extends { id: string }>(resource: string, filters: Record
   }
 }
 
-async function collect(key: string): Promise<TicketFeed> {
-  const now = Math.floor(Date.now()/1000);
+async function collect(key: string, now: number, serviceDay: string): Promise<TicketFeed> {
   const start=weekDay(now,0), end=weekDay(now,28);
-  const serviceDay = ticketDay(serviceStart(now * 1000) / 1000);
   const month = ticketDay(now).slice(0, 7);
   const monthlyCategories = { Club: 0, "Club Plus": 0, Premium: 0, VIP: 0, "Worldstar VIP": 0, "Weitere Tickets": 0 };
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
@@ -66,11 +64,13 @@ async function collect(key: string): Promise<TicketFeed> {
   return {asOf:now,nights,foodPreorders,monthlyCategories,monthlyTables:{vip:monthlyCategories.VIP,worldstar:monthlyCategories["Worldstar VIP"]}};
 }
 
-let cached: { until:number; data:Promise<TicketFeed> } | undefined;
+let cached: { day:string; until:number; data:Promise<TicketFeed> } | undefined;
 export function readTicketFeed(key:string) {
-  if (cached && cached.until > Date.now()) return cached.data;
-  const data = collect(key);
-  cached = { until:Date.now()+60000,data };
+  const now = Date.now();
+  const day = serviceDate(now);
+  if (cached?.day === day && cached.until > now) return cached.data;
+  const data = collect(key, Math.floor(now / 1000), day);
+  cached = { day, until:now+60000,data };
   data.catch(()=>{ if(cached?.data === data) cached = undefined; });
   return data;
 }

@@ -1,5 +1,5 @@
 import "server-only";
-import { serviceStart } from "./sumup";
+import { serviceStart } from "./service-day";
 
 type Sale = {
   id: string; closed_at: string; currency: {code: string; scale: number};
@@ -10,6 +10,8 @@ export type FoodFeed = {recentPortions: number; recentHummus: number; recentInco
 
 export async function readFood(merchant: string, key: string): Promise<FoodFeed> {
   const now = Date.now();
+  const start = serviceStart(now);
+  const recentStart = now - 10 * 60_000;
   const base = "https://api.sumup.com/v1.0/merchants/" + encodeURIComponent(merchant) + "/sales";
   const headers = {Authorization: "Bearer " + key, "Content-Type": "application/json"};
   const orders: FoodOrder[] = [];
@@ -22,7 +24,7 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
   let uncategorized = false;
   do {
     const response = await fetch(base + "/search", {method:"POST", headers, cache:"no-store", signal:AbortSignal.timeout(6000),
-      body: JSON.stringify({start_date:new Date(serviceStart(now)).toISOString(), end_date:new Date(now).toISOString(),
+      body: JSON.stringify({start_date:new Date(Math.min(start, recentStart)).toISOString(), end_date:new Date(now).toISOString(),
         payment_statuses:["PAID"], pagination_limit:25, pagination_token:cursor})});
     if (!response.ok) throw new Error("SumUp sales unavailable");
     const page: {items:{id:string}[]; pagination_token?:string} = await response.json();
@@ -38,17 +40,18 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
         seen.add(sale.id);
         if (sale.currency.code !== "EUR") continue;
         const snacks = sale.items.filter(item => item.categories?.some(c => c.name.trim().toLowerCase() === "bar snacks"));
-        if (sale.items.some(item => !item.categories?.length)) uncategorized = true;
+        const missingCategory = sale.items.some(item => !item.categories?.length);
         const paidAt = Date.parse(sale.closed_at);
-        if (paidAt > now - 10 * 60_000 && paidAt <= now) {
-          if (sale.items.some(item => !item.categories?.length)) recentIncomplete = true;
+        if (!Number.isFinite(paidAt)) throw new Error("Missing sale timestamp");
+        if (paidAt > recentStart && paidAt <= now) {
+          if (missingCategory) recentIncomplete = true;
           for (const snack of snacks) {
             recentPortions += snack.quantity;
             if (/h[ou]mm?[ou]s/i.test(snack.name)) recentHummus += snack.quantity;
           }
-        } else if (!Number.isFinite(paidAt)) {
-          recentIncomplete = true;
         }
+        if (paidAt < start || paidAt > now) continue;
+        if (missingCategory) uncategorized = true;
         if (!snacks.length) continue;
         const amount = snacks.reduce((sum,item) => sum + item.price.total_gross_amount_final, 0);
         if (!Number.isSafeInteger(amount)) throw new Error("Missing line amount");

@@ -8,7 +8,7 @@ type StaffModule = { id: string; title: string; hint: string; icon: LucideIcon }
 );
 
 export const staffModules: StaffModule[] = [
-  { id: "inventory", title: "Inventory", hint: "Bestände prüfen", icon: Boxes, href: "/" },
+  { id: "inventory", title: "Inventory", hint: "Bestände prüfen", icon: Boxes, href: "/inventory" },
   {
     id: "schedule", title: "Dienstplan", hint: "Schichten & Team", icon: CalendarDays,
     render: (board, error) => <Schedule shifts={board?.shifts ?? []}

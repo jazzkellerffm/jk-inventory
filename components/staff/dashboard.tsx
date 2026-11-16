@@ -106,7 +106,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   return <div className="staff-shell">
     <Masthead signedIn={!example} demo={!!example}/>
     <main>
-      <div className="staff-heading"><div><h1>Bar-Monitor<span>.</span></h1></div>
+      <div id="bar-monitor" className="staff-heading"><div><h1>Bar-Monitor<span>.</span></h1></div>
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>
       <OrderAlerts board={board} food={foodOrders} demo={!!example}/>
@@ -154,16 +154,20 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <FoodOrders onOrders={setFoodOrders} example={!!example} eveningCents={paid?.eveningCents}
         preorders={tickets.state === "unavailable" ? null : tickets.feed?.foodPreorders}/>
       {board && <section className="shift-line" aria-labelledby="tonight-team">
-        <h2 id="tonight-team">Team heute Abend</h2>
+        <div className="staff-section-head"><h2 id="tonight-team">Team heute Abend</h2>
+          <a className="staff-roster-link" href="#schedule" onClick={() => {
+            const schedule = document.querySelector<HTMLDetailsElement>("#schedule");
+            if (schedule) schedule.open = true;
+          }}>Zum Dienstplan <ArrowRight size={14} aria-hidden="true"/></a></div>
         {board.scheduleError || error ? <p>Dienstplan derzeit nicht verfügbar.</p> : tonight.length ?
           <StationCards shifts={tonight}/>
           : <p>Für heute ist keine Schicht eingetragen.</p>}
       </section>}
-      <NightDrinks {...tickets} example={!!example} today={rosterDay}/>
       <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
+      <NightDrinks {...tickets} example={!!example} today={rosterDay}/>
       <Bestsellers example={!!example}/>
       <TicketSales {...tickets} example={!!example}/>
-      <h2 className="staff-tools-title">Für die Schicht</h2>
+      <h2 id="staff-tools" className="staff-tools-title">Tools</h2>
       <div className="staff-modules">
         {staffModules.map(module => {
           const { id, title, hint, icon: Icon } = module;

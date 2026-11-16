@@ -11,7 +11,7 @@ export function IncludedDrinks({ feed, state }: { feed?: DrinkFeed | null; state
   const emptyMessage = unavailable ? "Bestellungen können gerade nicht geladen werden." :
     state === "setup" ? "Das Included Drinks Menü ist noch nicht verbunden." :
     state === "ready" ? "In der letzten Stunde sind keine Bestellungen eingegangen." : "Bestellungen werden geladen …";
-  return <section className="staff-panel staff-orders" aria-labelledby="included-title">
+  return <section id="drink-orders" className="staff-panel staff-orders" aria-labelledby="included-title">
     <div className="staff-section-head"><span className="staff-eyebrow"><Martini size={16}/> Included Drinks</span>
       <span className="staff-period">Letzte Stunde</span></div>
     <h2 id="included-title">Drink-Bestellungen</h2>

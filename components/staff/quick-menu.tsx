@@ -1,17 +1,18 @@
 "use client";
 
-import Link from "next/link";
-import { Activity, Boxes, ClipboardList, Martini } from "lucide-react";
+import { Activity, LayoutGrid, ClipboardList, Martini, Utensils } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const destinations = [
-  { href:"#activity", label:"Bar", icon:Activity },
-  { href:"#night-drinks", label:"Drinks", icon:Martini },
+  { href:"#bar-monitor", label:"Bar", icon:Activity },
+  { href:"#drink-orders", label:"Drinks", icon:Martini },
+  { href:"#food-orders", label:"Food", icon:Utensils },
   { href:"#service-door", label:"Service", icon:ClipboardList },
-  { href:"/", label:"Inventory", icon:Boxes },
+  { href:"#staff-tools", label:"Tools", icon:LayoutGrid },
 ];
 
 export function QuickMenu() {
+  const [active, setActive] = useState("#bar-monitor");
   const [hidden,setHidden] = useState(false);
   const [dark,setDark] = useState(false);
   useEffect(()=>{
@@ -25,6 +26,17 @@ export function QuickMenu() {
         setHidden(y>32 && y>last);
         last=y;
       }
+      let current = "#bar-monitor";
+      let nearest = -Infinity;
+      for (const { href } of destinations) {
+        const top = document.querySelector(href)?.getBoundingClientRect().top;
+        if (top !== undefined && top <= 32 && top >= nearest) {
+          nearest = top;
+          current = href;
+        }
+      }
+      if (y + window.innerHeight >= document.documentElement.scrollHeight - 2) current = "#staff-tools";
+      setActive(current);
       const layer=document.elementsFromPoint(window.innerWidth/2,window.innerHeight-44)
         .find(el=>el.closest("main"));
       setDark(!!layer?.closest(".staff-activity,.service-drinks"));
@@ -45,10 +57,10 @@ export function QuickMenu() {
     };
   },[]);
   return <nav aria-label="Schnellzugriff" className="staff-quick" data-hidden={hidden} data-dark={dark}>
-    {destinations.map(({href,label,icon:Icon})=><Link key={href} href={href}
+    {destinations.map(({href,label,icon:Icon})=><a key={href} href={href} aria-current={active === href ? "location" : undefined}
       onClick={()=>{if(href==="#service-door"){
         const plan=document.querySelector<HTMLDetailsElement>(href);
         if(plan) plan.open=true;
-      }}}><Icon size={20} aria-hidden="true"/>{label}</Link>)}
+      }}}><Icon size={20} aria-hidden="true"/>{label}</a>)}
   </nav>;
 }

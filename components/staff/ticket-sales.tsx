@@ -5,7 +5,7 @@ import { TicketLoader } from "./ticket-loader";
 import { Performance } from "./performance";
 import { ServicePlan } from "./service-plan";
 import { Ticket } from "lucide-react";
-import type { BookingAlert, TicketFeed } from "@/lib/staff/tickets";
+import type { TicketFeed } from "@/lib/staff/tickets";
 
 import { serviceDate } from "@/lib/staff/service-day";
 import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
@@ -68,7 +68,7 @@ export function NightDrinks({example,feed,state,refreshing,today}:Props & {today
   </section>;
 }
 
-export function TicketSales({example,feed,state,refreshing,week,setWeek,selectedBooking}:Props & {week: number; setWeek: (week: number) => void; selectedBooking?: BookingAlert}) {
+export function TicketSales({example,feed,state,refreshing,week,setWeek}:Props & {week: number; setWeek: (week: number) => void}) {
   const asOf=feed?.asOf ?? Math.floor(Date.now()/1000);
   const start=weekDay(asOf,week*7), end=weekDay(asOf,week*7+7);
   const nights=(feed?.nights ?? []).filter(n=>ticketDay(n.start)>=start && ticketDay(n.start)<end);
@@ -79,7 +79,6 @@ export function TicketSales({example,feed,state,refreshing,week,setWeek,selected
     <div className="staff-section-head"><span className="staff-eyebrow"><Ticket size={16}/> Ticket Tailor</span>
       <span className="staff-period">{example ? "Beispieldaten" : refreshing && feed ? "Wird aktualisiert …" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : "Vorverkauf"}</span></div>
     <h2 id="ticket-title">Gebuchte Gäste</h2>
-    {selectedBooking && <p className="booking-detail"><b>{selectedBooking.label}</b><br/>{[selectedBooking.eventDate && date.format(new Date(selectedBooking.eventDate+"T12:00:00Z")),selectedBooking.eventName].filter(Boolean).join(" · ")}</p>}
     <div className="service-switch week-switch" role="group" aria-label="Verkaufswoche">{[0,1,2,3].map(i=>
       <button key={i} type="button" aria-pressed={week===i} onClick={()=>setWeek(i)}>{i===0 ? "Aktuell" : "Woche "+(i+1)}</button>)}</div>
     <p className="ticket-week-range">{date.format(new Date(start+"T12:00:00Z"))} – {date.format(new Date(weekDay(asOf,week*7+6)+"T12:00:00Z"))}</p>

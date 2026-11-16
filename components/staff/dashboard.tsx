@@ -81,13 +81,11 @@ function ActivityChart({ feed }: { feed: BarFeed }) {
 export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const tickets = useTicketFeed(!!example);
   const [salesWeek, setSalesWeek] = useState(0);
-  const [selectedBooking, setSelectedBooking] = useState<BookingAlert>();
   function openBooking(booking: BookingAlert) {
     const now = tickets.feed?.asOf ?? Date.now() / 1000;
     const day = booking.eventDate;
     const week = [0, 1, 2, 3].find(index => day && day >= weekDay(now, index * 7) && day < weekDay(now, index * 7 + 7));
     if (week !== undefined) setSalesWeek(week);
-    setSelectedBooking(booking);
   }
   const { board, error } = useBoard(example);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>();
@@ -177,7 +175,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
       <NightDrinks {...tickets} example={!!example} today={rosterDay}/>
       <Bestsellers example={!!example}/>
-      <TicketSales week={salesWeek} setWeek={week => {setSalesWeek(week); setSelectedBooking(undefined);}} selectedBooking={selectedBooking} {...tickets} example={!!example}/>
+      <TicketSales week={salesWeek} setWeek={setSalesWeek} {...tickets} example={!!example}/>
       <h2 id="staff-tools" className="staff-tools-title">Tools</h2>
       <div className="staff-modules">
         {staffModules.map(module => {

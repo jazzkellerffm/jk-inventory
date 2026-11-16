@@ -284,7 +284,8 @@
 .bar-load[data-level="2"] .load-meter::before { width:60%; }
 .bar-load[data-level="3"] .load-meter { background:#f5ebe7; }
 .bar-load[data-level="3"] .load-meter::before { width:100%; background:linear-gradient(90deg,#ebcbc4,#d6a39a); }
-.staff-feed + .service-drinks { margin-top:16px; }
+.staff-feed + .service-drinks,
+.staff-orders + .service-drinks { margin-top:16px; }
 .drinks-date { display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-size:14px; }
 .drinks-date select { padding:8px 12px; color:var(--paper); background:var(--cream); border:0; border-radius:999px; font:inherit; }
 

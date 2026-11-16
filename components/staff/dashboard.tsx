@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, Eye, EyeOff, ReceiptText } from "lucide-react";
 import type { BarFeed, StaffBoard } from "@/lib/staff/types";
 import { IncludedDrinks } from "./included-drinks";
+import { FoodOrders } from "./food-orders";
 import { Bestsellers } from "./bestsellers";
 import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
@@ -166,6 +167,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
             </li>)}</ol>}
           {feed && feed.payments.length > 4 && <button className="staff-more" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "Weniger anzeigen" : `Alle ${feed.payments.length} anzeigen`} <ChevronDown size={16}/></button>}
         </section>
+      <FoodOrders example={!!example}/>
       {board && <section className="shift-line" aria-labelledby="tonight-team">
         <h2 id="tonight-team">Team heute Abend</h2>
         {board.scheduleError || error ? <p>Dienstplan derzeit nicht verfügbar.</p> : tonight.length ?

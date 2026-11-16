@@ -122,7 +122,7 @@ export function readBarFeed(merchant: string, token: string) {
 const berlinDate = new Intl.DateTimeFormat("sv-SE",{timeZone:"Europe/Berlin"});
 const berlinHour = new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Berlin",hour:"2-digit",hourCycle:"h23"});
 
-function serviceStart(now:number) {
+export function serviceStart(now:number) {
   const day = new Date(berlinDate.format(now)+"T06:00:00Z");
   if (Number(berlinHour.format(now))<6) day.setUTCDate(day.getUTCDate()-1);
   return day.getTime()-(Number(berlinHour.format(day))-6)*60*minute;

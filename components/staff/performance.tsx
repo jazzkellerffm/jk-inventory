@@ -9,8 +9,23 @@ const eventDate = new Intl.DateTimeFormat("de-DE", {
   timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "2-digit",
 });
 
-function MonthlyBars({rows, extra = 0}: {rows: [string, string, number, string][]; extra?: number}) {
-  const total = rows.reduce((sum, [, , count]) => sum + count, extra);
+type ChartRow = [label: string, hint: string, count: number, tone: string];
+
+function NightColumns({rows}: {rows: ChartRow[]}) {
+  const max = Math.max(1, ...rows.map(row => row[2]));
+  return <dl className="mt-4 grid grid-cols-4 gap-2 text-center">
+    {rows.map(([label, hint, count, tone]) => <div key={label} className="flex min-w-0 flex-col">
+      <dt className="mt-1 text-xs leading-tight" title={hint}>{label}<span className="sr-only"> · {hint}</span></dt>
+      <dd className="order-first flex h-28 flex-col items-center justify-end border-b border-[var(--line)]">
+        <b className="mb-1 tabular-nums">{count}</b>
+        <div aria-hidden="true" className={tone + " w-full max-w-20 rounded-t-md"} style={{height: 80 * count / max}}/>
+      </dd>
+    </div>)}
+  </dl>;
+}
+
+function MonthlyBars({rows}: {rows: ChartRow[]}) {
+  const total = rows.reduce((sum, [, , count]) => sum + count, 0);
   return <dl className="mt-3 space-y-3">
     {rows.map(([label, hint, count, tone]) => <div key={label} className="grid grid-cols-[1fr_auto] items-baseline gap-x-2 gap-y-1">
       <dt className="flex flex-wrap items-baseline gap-x-2">
@@ -52,12 +67,12 @@ export function Performance({feed,example}:{feed:TicketFeed|null;example:boolean
     {feed?.monthlyNights && <section className="mt-4 border-t border-[var(--line)] pt-4">
       <h3 className="font-bold">Abende im {new Intl.DateTimeFormat("de-DE", {month:"long"}).format(new Date(serviceDate(feed.asOf*1000)+"T12:00:00Z"))}</h3>
       <p className="text-sm text-[var(--muted)]">Abgeschlossene Abende · gebuchte Gäste</p>
-      <MonthlyBars rows={[
+      <NightColumns rows={[
           ["Sold out", "Ticket Tailor", feed.monthlyNights.soldOut, "bg-[#f2e8ce]"],
           ["Gut besucht", "Ab 45 Gästen", feed.monthlyNights.busy, "bg-[#dbe8df]"],
-          ["Etwa halb voll", "25–44 Gäste", feed.monthlyNights.half, "bg-[#f4e3e3]"],
+          ["Halb voll", "25–44 Gäste", feed.monthlyNights.half, "bg-[#f4e3e3]"],
           ["Ruhig", "Bis 24 Gäste", feed.monthlyNights.quiet, "bg-[#ededeb]"],
-      ]} extra={feed.monthlyNights.unclear}/>
+       ]}/>
       {feed.monthlyNights.unclear > 0 && <small>Gästezahl ungeklärt · {feed.monthlyNights.unclear}</small>}
     </section>}
     {feed?.monthlyTables && <section className="mt-4 border-t border-[var(--line)] pt-4">

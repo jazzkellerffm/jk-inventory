@@ -11,8 +11,15 @@ type Mode = keyof typeof modes;
 type Notice = { kind: "drink" | "food"; label: string; target: string };
 const describe = (items: ReceiptItem[]) => items.map(i => (i.quantity ? i.quantity + " × " : "") + i.name).join(" · ");
 
+function playbackMode(active: boolean) {
+  const session = (navigator as Navigator & {audioSession?: {type: string}}).audioSession;
+  if (session) {
+    try { session.type = active ? "playback" : "auto"; } catch {}
+  }
+}
+
 function chime(ctx: AudioContext, kind: Notice["kind"]) {
-  if (ctx.state !== "running") return;
+
   const notes = kind === "food" ? [660, 494] : [880];
   notes.forEach((frequency, index) => {
     const start = ctx.currentTime + index * 0.17;
@@ -45,7 +52,7 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
       const saved = localStorage.getItem(storageKey);
       if (saved && Object.hasOwn(modes, saved)) setPreferred(saved as Mode);
     } catch {}
-    return () => { clearTimeout(batch.current); clearTimeout(dismiss.current); void ctx.current?.close().catch(()=>{}); };
+    return () => { clearTimeout(batch.current); clearTimeout(dismiss.current); if (ctx.current) { playbackMode(false); void ctx.current.close().catch(()=>{}); ctx.current = null; } };
   }, [storageKey]);
 
   function activate(value: Mode) {
@@ -57,6 +64,7 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
     setNotice(null);
     setMode(value);
     setAudioFailed(false);
+    playbackMode(value !== "off");
     if (value === "off") return;
     setPreferred(value);
     try { localStorage.setItem(storageKey,value); } catch {}
@@ -66,6 +74,17 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
     } catch { setAudioFailed(true); }
   }
 
+  const present = useCallback((item: Notice) => {
+    const audio = ctx.current;
+    if (audio) {
+      void audio.resume().catch(() => setAudioFailed(true));
+      chime(audio, item.kind);
+    }
+    setNotice(item);
+    clearTimeout(dismiss.current);
+    dismiss.current = setTimeout(()=>setNotice(null),4000);
+  }, []);
+
   const queue = useCallback((item: Notice) => {
     pending.current.push(item);
     if (batch.current !== undefined) return;
@@ -74,12 +93,9 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
       const list = pending.current.splice(0);
       if (document.hidden || !list.length) return;
       const first = list.find(n=>n.kind==="food") ?? list[0];
-      if (ctx.current) chime(ctx.current,first.kind);
-      setNotice(list.length === 1 ? first : {...first,label:list.length+" neue Bestellhinweise"});
-      clearTimeout(dismiss.current);
-      dismiss.current = setTimeout(()=>setNotice(null),4000);
+      present(list.length === 1 ? first : {...first,label:list.length+" neue Bestellhinweise"});
     },350);
-  }, []);
+  }, [present]);
 
   useEffect(() => {
     if (mode === "off" || demo) return;
@@ -107,7 +123,7 @@ export function OrderAlerts({board, food, demo}: {board?: StaffBoard; food?: Foo
       {(["drink","food","both"] as const).map(m=><option key={m} value={m}>{modes[m]}</option>)}
     </select>}
     {demo && mode!=="off" && (["drink","food"] as const).filter(k=>mode==="both" || mode===k).map(k=>
-      <button key={k} onClick={()=>queue(k==="drink" ? {kind:k,label:"2 × Basil Bliss · Tisch 12",target:"included-title"} : {kind:k,label:"2 × Hummus-Platte · SumUp",target:"food-orders"})}>{k==="drink" ? "Drink testen" : "Essen testen"}</button>)}
+      <button key={k} onClick={()=>present(k==="drink" ? {kind:k,label:"2 × Basil Bliss · Tisch 12",target:"included-title"} : {kind:k,label:"2 × Hummus-Platte · SumUp",target:"food-orders"})}>{k==="drink" ? "Drink testen" : "Essen testen"}</button>)}
     {audioFailed && <small role="status">Ton nicht verfügbar. Hinweise erscheinen oben.</small>}
     <div role="status" aria-live="polite">{notice && <a className="staff-order-banner" data-kind={notice.kind} href={"#"+notice.target} onClick={()=>setNotice(null)}>{notice.label}</a>}</div>
   </aside>;

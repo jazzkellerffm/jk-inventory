@@ -7,6 +7,20 @@ const gustavo = localFont({ src: "./fonts/Gustavo-Bold.woff2", weight: "700", va
 export const metadata: Metadata = {
   title: "JK Staff OS · Jazzkeller Frankfurt",
   description: "Bar, Inventory und Dienstplan für das Jazzkeller-Team",
+  openGraph: {
+    type: "website",
+    siteName: "JKOS",
+    locale: "de_DE",
+    title: "JKOS · Staff OS",
+    description: "Teamzugang für den Jazzkeller Frankfurt",
+    images: [{
+      url: "https://staff.jazzkeller.com/branding/jkos-staff-share.jpg",
+      width: 640,
+      height: 640,
+      type: "image/jpeg",
+      alt: "JKOS · Jazzkeller Frankfurt",
+    }],
+  },
   robots: { index: false, follow: false },
 };
 

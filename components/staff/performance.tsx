@@ -66,6 +66,7 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
     {state === "loading" || refreshing ? <TicketLoader label="Venue Performance wird geladen"/> :
       <p role="status">{state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : "Verkaufsdaten derzeit nicht verfügbar."}</p>}
   </details>;
+  const monthLabel = new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric", timeZone:"Europe/Berlin"}).format(feed.asOf * 1000);
   return <details className="staff-panel perf-panel" id="performance"><summary>Venue Performance</summary>
     <div className="service-switch week-switch" role="group" aria-label="Performance-Woche">{[0,1,2,3].map(i=><button key={i} type="button" aria-pressed={i===week} onClick={()=>setWeek(i)}>{i===0?"Aktuell":"Woche "+(i+1)}</button>)}</div>
     <p>{example?"Beispieldaten":"Ticket Tailor"} · {weekDay(now,week*7).split("-").reverse().join(".")}{refreshing && " · Wird aktualisiert …"}</p>
@@ -85,8 +86,20 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
        ]}/>
       {feed.monthlyNights.unclear > 0 && <small>Gästezahl ungeklärt · {feed.monthlyNights.unclear}</small>}
     </section>}
+    {feed.monthlyGuests && <section className="mt-4 flex items-baseline justify-between gap-3 border-t border-[var(--line)] pt-4">
+      <div>
+        <h3 className="font-poly-bulky">Gebuchte Gäste im Monat</h3>
+        <p className="text-sm text-[var(--muted)]">Alle Konzerttermine · {monthLabel}</p>
+        {feed.monthlyGuests.unknownPackages > 0 && <small className="text-[var(--muted)]">
+          {feed.monthlyGuests.unknownPackages === 1 ? "1 Ticketpaket ohne Gästezahl" : feed.monthlyGuests.unknownPackages + " Ticketpakete ohne Gästezahl"}
+        </small>}
+      </div>
+      <strong className="shrink-0 whitespace-nowrap font-poly-bulky text-3xl tabular-nums">
+        {feed.monthlyGuests.unknownPackages > 0 && "≥ "}{feed.monthlyGuests.count.toLocaleString("de-DE")}
+      </strong>
+    </section>}
     {feed?.monthlyTables && <section className="mt-4 border-t border-[var(--line)] pt-4">
-      <h3 className="font-bold">VIP-Tische · {new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric", timeZone:"Europe/Berlin"}).format(feed.asOf * 1000)}</h3>
+      <h3 className="font-bold">VIP-Tische · {monthLabel}</h3>
       <MonthlyBars rows={[
         ["VIP", "", feed.monthlyTables.vip, "bg-[#dbe8df]"],
         ["Worldstar VIP", "", feed.monthlyTables.worldstar, "bg-[#f4e3e3]"],
@@ -95,7 +108,7 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
     </section>}
     {feed?.monthlyCategories && <details className="mt-4 border-t border-[var(--line)] pt-4">
       <summary>Ticketkategorien im Vergleich</summary>
-      <p className="text-sm text-[var(--muted)]">{new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric", timeZone:"Europe/Berlin"}).format(feed.asOf * 1000)} · Gebuchte Ticketpakete</p>
+      <p className="text-sm text-[var(--muted)]">{monthLabel} · Gebuchte Ticketpakete</p>
       {highest ? <ol className="mt-3 space-y-3">{categories.map(({label,count}) =>
         <li key={label}>
           <div className="flex items-baseline justify-between gap-3"><b>{label}</b><b className="tabular-nums">{count}</b></div>

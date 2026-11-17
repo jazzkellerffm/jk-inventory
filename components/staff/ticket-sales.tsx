@@ -18,7 +18,7 @@ const demo: TicketFeed = {bookingDay:{count:6,recent:[
   {id:"demo-b",at:1794856200,lines:[{ticket:"Premium · 2 Gäste",event:"New York Jazz Bar",date:"2026-11-19"}]},
   {id:"demo-c",at:1794850500,lines:[{ticket:"Club · 1 Guest",event:"Jazz Jam Session",date:"2026-11-18"}]},
   {id:"demo-d",at:1794846900,lines:[{ticket:"Club Plus · 3 Gäste",event:"Friday Quartet",date:"2026-11-20"}]},
-]},monthlyNights:{soldOut:2,busy:4,half:3,quiet:1,unclear:0},foodPreorders:2,asOf:1794859200,monthlyCategories:{Club:54,"Club Plus":38,Premium:21,VIP:8,"Worldstar VIP":2,"Weitere Tickets":0},monthlyTables:{vip:8,worldstar:2},nights:Array.from({length:4},(_,week)=>["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
+]},monthlyGuests:{count:812,unknownPackages:0},monthlyNights:{soldOut:2,busy:4,half:3,quiet:1,unclear:0},foodPreorders:2,asOf:1794859200,monthlyCategories:{Club:164,"Club Plus":83,Premium:62,VIP:8,"Worldstar VIP":2,"Weitere Tickets":0},monthlyTables:{vip:8,worldstar:2},nights:Array.from({length:4},(_,week)=>["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
   soldOut:week===0 && i===4,id:String(week*5+i),name,start:1795028400+(week*7+i)*86400,guests:[26,18,42,52,60][i],recent:[4,2,8,5,0][i],drinks:[12,6,18,24,20][i],unknown:0,
 }))).flat()};
 

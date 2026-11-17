@@ -48,10 +48,10 @@ export function FormatPerformance({format,example=false}:{format:Format;example?
  return <div ref={root} className={styles.body}>
   <div className={styles.hero}>
    <Image className={styles.logo} src={format==="jam"?"/branding/jam-white.svg":"/branding/nyjb-white.svg"} width={format==="jam"?257:967} height={format==="jam"?227:967} alt={names[format]} unoptimized/>
-   <h2>{title}</h2><p>{format==="jam"?"Mittwochs im Jazzkeller":"Donnerstags im Jazzkeller"}</p>
+   <div><h2 aria-label={title}>Performance</h2><p>{format==="jam"?"Mittwochs im Jazzkeller":"Donnerstags im Jazzkeller"}</p></div>
   </div>
   <div className={styles.toolbar}><label>Monat<select value={month} disabled={example} onChange={e=>{setMonth(e.target.value);setMode("month");}}>{months.map(m=><option key={m.value} value={m.value}>{m.label}</option>)}</select></label><button type="button" onClick={()=>setRetry(x=>x+1)} disabled={loading||example}>{loading?"Aktualisiert …":"Aktualisieren"}</button></div>
-  <div className={styles.tabs} role="group" aria-label="Zeitraum auswählen">{([['month','Monat'],['last','Letzter Abend'],['next','Nächster Abend']] as const).map(([key,label])=><button type="button" key={key} aria-pressed={mode===key} onClick={()=>setMode(key)}>{label}</button>)}</div>
+  <div className={`service-switch ${styles.tabs}`} role="group" aria-label="Zeitraum auswählen">{([['month','Monat'],['last','Letzter Abend'],['next','Nächster Abend']] as const).map(([key,label])=><button type="button" key={key} aria-pressed={mode===key} onClick={()=>setMode(key)}>{label}</button>)}</div>
   {failed&&<p role="status">Daten gerade nicht erreichbar. {shown?"Letzter geladener Stand bleibt sichtbar.":"Bitte erneut versuchen."}</p>}
   {!shown&&!failed?<TicketLoader label="Abende und Buchungen werden geladen"/>:shown&&<>
    <p className={styles.scope}>{mode==="month"?`${rows.length} abgeschlossene Abende · Durchschnitt je Abend`:rows.length?date(rows[0].date)+(mode==="next"?" · Aktueller Buchungsstand":" · Abgeschlossen"):"In diesem Zeitraum ist noch kein Abend verfügbar."}</p>

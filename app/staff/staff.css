@@ -440,7 +440,7 @@
 .purchase-column i, .purchase-hours i { display:block; width:100%; background:#9eb7a6; border-radius:4px 4px 1px 1px; }
 .ticket-purchases i.peak { background:#42675a; }
 .purchase-hour-block { margin-top:14px; }
-.purchase-reset { padding:5px 10px; border-radius:99px; font-size:.78rem; }
+.purchase-reset { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:5px 10px; border-radius:99px; font-size:.78rem; }
 .purchase-hours { grid-template-columns:repeat(24,minmax(0,1fr)); align-items:end; height:48px; gap:3px; margin:8px 0 0; padding:0; list-style:none; border-bottom:1px solid var(--line); }
 .purchase-axis { display:grid; grid-template-columns:repeat(4,1fr) auto; color:var(--muted); font-size:.72rem; margin:3px 0 5px; }
 

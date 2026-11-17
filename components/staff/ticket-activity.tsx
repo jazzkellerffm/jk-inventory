@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Undo2 } from "lucide-react";
 import type { TicketActivity } from "@/lib/staff/ticket-activity";
 
 const weekday = new Intl.DateTimeFormat("de-DE", { weekday: "short", timeZone: "UTC" });
@@ -48,7 +49,7 @@ export function TicketPurchaseMonitor({ activity }: { activity?: TicketActivity 
         : bestDays.length + " Tage gleichauf · je " + packages(maxDay)}</p>
       <div id="purchase-hours" className="purchase-hour-block">
         <div className="purchase-head"><h4>Käufe nach Uhrzeit</h4>
-          {selected ? <button type="button" className="purchase-reset" onClick={() => setSelectedDate(null)}>Alle 7 Tage</button> : <small>Alle 7 Tage</small>}
+          {selected ? <button type="button" className="purchase-reset" onClick={() => setSelectedDate(null)}><Undo2 size={14} aria-hidden="true"/>Alle Tage anzeigen</button> : <small>Alle 7 Tage</small>}
         </div>
         {selected && <small>{clockScope}</small>}
         <ol className="purchase-hours" aria-label={"Verkaufte Ticketpakete je Stunde · " + clockScope}>

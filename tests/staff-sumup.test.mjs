@@ -181,3 +181,12 @@ test('Stale snapshots cannot certify a quiet bar', () => {
   assert.equal(isFreshSnapshot(undefined, now), false);
   assert.equal(barLoadLevel(0, 0, isFreshSnapshot(at(2), now)), 0);
 });
+
+test('A busy half-hour ago does not keep the current bar busy', async t => {
+  mockApi(t, { payments: [payment('old-rush', 30)], sales: [sale('old-rush-sale', ['old-rush'], [line('Mojito', 60)], 30)] });
+  const feed = await readBarFeed('old-rush', 'test');
+  assert.equal(feed.paidEffort, 0);
+  assert.equal(feed.missingReceiptDetails, false);
+  assert.equal(feed.buckets.at(-1), 0);
+  assert.equal(barLoadLevel(feed.paidEffort, 0, true), 1);
+});

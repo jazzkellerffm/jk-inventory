@@ -1,5 +1,7 @@
 "use client";
 
+import { TicketLoader } from "./ticket-loader";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Activity, ArrowRight, ArrowUpRight, ChevronDown, Clock3, ReceiptText } from "lucide-react";
@@ -28,6 +30,7 @@ const money = (amount: number, currency: string) => new Intl.NumberFormat("de-DE
 function useBoard(example?: StaffBoard) {
   const [board, setBoard] = useState<StaffBoard | undefined>(example);
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(!example);
   const [checkedAt, setCheckedAt] = useState(0);
   useEffect(() => {
     if (example) return;
@@ -37,6 +40,7 @@ function useBoard(example?: StaffBoard) {
       setCheckedAt(Date.now());
       if (document.hidden || busy) return;
       busy = true;
+      setLoading(true);
       try {
         const response = await fetch("/api/staff/board", { cache: "no-store", signal: controller.signal });
         if (response.status === 401) { window.location.replace("/staff"); return; }
@@ -50,7 +54,7 @@ function useBoard(example?: StaffBoard) {
         }));
         setError(false);
       } catch { if (!controller.signal.aborted) setError(true); }
-      finally { busy = false; }
+      finally { busy = false; if (!controller.signal.aborted) setLoading(false); }
     };
     void update();
     const timer = window.setInterval(update, 15_000);
@@ -63,7 +67,7 @@ function useBoard(example?: StaffBoard) {
       window.removeEventListener("online", update);
     };
   }, [example]);
-  return { board, error, checkedAt };
+  return { board, error, checkedAt, loading };
 }
 
 function ActivityChart({ feed }: { feed: BarFeed }) {
@@ -90,7 +94,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
     const week = [0, 1, 2, 3].find(index => day && day >= weekDay(now, index * 7) && day < weekDay(now, index * 7 + 7));
     if (week !== undefined) setSalesWeek(week);
   }
-  const { board, error, checkedAt } = useBoard(example);
+  const { board, error, checkedAt, loading } = useBoard(example);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>();
   const [showAll, setShowAll] = useState(false);
   const feed = board?.feed;
@@ -109,7 +113,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const level = barLoadLevel(paid?.paidEffort ?? 0, open?.openEffort ?? 0, !!complete);
   const loadLabel = [paid?.missingReceiptDetails ? "SumUp-Artikeldetails fehlen" : "Daten fehlen", "Ruhig", "Zieht an", "Viel los"][level];
   const stale = error || board?.feedState === "unavailable" || (!!feed && !fresh(feed.asOf));
-  const status = example ? "Beispieldaten" : stale ? "Verbindung unterbrochen" : feed ? "Verbunden" : board ? "Einrichtung offen" : "Lädt …";
+  const status = example ? "Beispieldaten" : stale ? "Verbindung unterbrochen" : loading && feed ? "Wird aktualisiert …" : feed ? "Verbunden" : board ? "Einrichtung offen" : "Lädt …";
   const timestamps = [feed?.asOf, board?.drinks?.asOf].filter((at): at is string => !!at);
   const snapshot = timestamps.length ? new Date(Math.max(...timestamps.map(at => Date.parse(at)))) : undefined;
   const rosterDay = serviceDate(example && snapshot ? snapshot.getTime() : checkedAt);
@@ -126,13 +130,13 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           <div className="staff-section-head"><span className="staff-eyebrow"><Activity size={17}/> SumUp</span><span className={`staff-status ${stale ? "staff-warn" : ""}`} role="status"><i/>{status}</span></div>
           <h2 id="activity">Baraktivität</h2>
           <div className="staff-metric"><strong>{lastFive ?? "–"}</strong><span>Zahlungen<br/>in 5 Minuten</span></div>
-          {feed ? <ActivityChart feed={feed}/> : <p className="staff-placeholder">{message}</p>}
+          {feed ? <ActivityChart feed={feed}/> : loading && !error && !board ? <TicketLoader label="Zahlungen werden geladen"/> : <p className="staff-placeholder">{message}</p>}
           <p className="staff-note"><Clock3 size={14}/>{stale && feed ? "Letzter Stand · " + time.format(new Date(feed.asOf)) + " Uhr" : example ? "Beispielabend · 60 Minuten" : "Aktualisierung alle 15 Sekunden"}</p>
         </section>
 
       <section id="barpegel" className="staff-panel bar-load" aria-labelledby="load-title" data-level={level}>
         <div><h2 id="load-title">Barpegel · geschätzt</h2>
-          <strong role="status">{board || error ? loadLabel : "Lädt …"}</strong>
+          {!board && !error ? <TicketLoader label="Barpegel wird geladen"/> : <strong role="status">{loadLabel}</strong>}
         </div>
         <div className="load-meter" aria-hidden="true"/>
         {cocktailTiles.length > 0 && <ul className="cocktail-tiles" tabIndex={0} aria-label="Letzte Cocktails, horizontal scrollbar">
@@ -149,13 +153,13 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
         <h2 id="turnover-title">Abendumsatz</h2>
         {typeof feed?.eveningCents === "number" ? (
           <MaskedRevenue label="Abendumsatz" cents={feed.eveningCents}/>
-        ) : <strong>–</strong>}
+        ) : !board && !error ? <TicketLoader label="Abendumsatz wird geladen"/> : <strong>–</strong>}
         <p>{stale ? "Aktualisierung fehlgeschlagen." : "Erfolgreiche Zahlungen"}</p>
       </section>
         <section id="bar-orders" className="staff-feed staff-panel" aria-labelledby="payments">
           <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={17}/> SumUp</span><span className="staff-period">Letzte Stunde</span></div>
           <h2 id="payments">Letzte Zahlungen</h2>
-          {!feed?.payments.length ? <p className="staff-placeholder">{!feed ? message : "In der letzten Stunde gab es keine bezahlten Verkäufe."}</p> :
+          {!feed && !board && !error ? <TicketLoader label="Zahlungen werden geladen"/> : !feed?.payments.length ? <p className="staff-placeholder">{!feed ? message : "In der letzten Stunde gab es keine bezahlten Verkäufe."}</p> :
             <ol>{feed.payments.slice(0, showAll ? 8 : 4).map(payment => <li key={payment.id}>
               <time dateTime={payment.at}>{time.format(new Date(payment.at))}</time>
               <div>{payment.items.length ? payment.items.map((item, index) => <span key={index}>{item.quantity !== null && <em>{item.quantity} × </em>}{item.name}</span>) : <span>{payment.summary || "Artikel nicht verfügbar"}</span>}</div>

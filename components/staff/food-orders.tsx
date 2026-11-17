@@ -1,4 +1,6 @@
 "use client";
+
+import { TicketLoader } from "./ticket-loader";
 import { MaskedRevenue } from "./masked-revenue";
 import { useEffect, useState } from "react";
 import { Utensils } from "lucide-react";
@@ -20,7 +22,8 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
   onOrders:(orders: FoodFeed["orders"])=>void; example:boolean; eveningCents?:number; preorders?:number|null;
 }) {
   const [feed,setFeed] = useState<FoodFeed|null>(example ? demo : null);
-  const [message,setMessage] = useState(example ? "" : "Bestellungen werden geladen …");
+  const [message,setMessage] = useState("");
+  const [loading,setLoading] = useState(!example);
   useEffect(()=>{
     if (example) return;
     const controller = new AbortController();
@@ -28,6 +31,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
     async function refresh() {
       if (busy || document.hidden) return;
       busy = true;
+      setLoading(true);
       try {
         const res = await fetch("/api/staff/food",{signal:controller.signal,cache:"no-store"});
         if (res.status === 401) { window.location.replace("/staff"); return; }
@@ -40,7 +44,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
         }
       } catch {
         if (!controller.signal.aborted) setMessage("Food Orders derzeit nicht abrufbar.");
-      } finally { busy = false; }
+      } finally { busy = false; if (!controller.signal.aborted) setLoading(false); }
     }
     void refresh();
     const timer = setInterval(refresh,15000);
@@ -62,8 +66,9 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
   const kitchenLabels = {unknown:"Daten fehlen", busy:"Viel los", active:"Neue Bestellung", quiet:"Ruhig"};
   return <section id="food-orders" className="staff-panel food-panel" aria-labelledby="food-title">
     <div className="staff-section-head"><span className="staff-eyebrow"><Utensils size={16}/> SumUp · Bar Snacks</span>
-      {example && <small>Beispieldaten</small>}</div>
+      {example ? <small>Beispieldaten</small> : loading && feed ? <small>Wird aktualisiert …</small> : null}</div>
     <h2 id="food-title">Food Orders</h2>
+    {!feed && loading && !message && <TicketLoader label="Bestellungen werden geladen"/>}
     {feed && <>
       <div className="kitchen-load" data-level={kitchenLevel}>
         <div className="food-share"><span>Küchenpegel · geschätzt</span>

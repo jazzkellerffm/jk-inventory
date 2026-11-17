@@ -90,3 +90,11 @@ Search-Ergebnisse sind nach Abschlussdatum sortiert. Der Leser stoppt am Beginn 
 **Prüfung mit echten Daten:** Der korrigierte Servercode wurde am 17. November in einer Vorschau mit den dort eingerichteten SumUp-Zugangsdaten ausgeführt. Bar-Artikelzuordnung sowie Abend- und Wochenbestseller bestanden den Vollständigkeitscheck. Der Monatsrückblick enthält noch unvollständige ältere Zahlungen; diese sind separat zu prüfen. Die manuelle Prüfung gibt nur Prüfergebnisse aus, keine Artikelnamen, Mengen, Umsätze oder Zahlungsreferenzen. Ein realer voller Betriebsabend bleibt für die praktische Kalibrierung des Pegels erforderlich.
 
 Referenz: https://developer.sumup.com/api/sales/search/ und https://developer.sumup.com/api/sales/get/
+
+## Wochenwahl und SumUp-Ladeanzeigen · 17. November 2026
+
+Die Wochenwahl heißt „Aktuell“, „+1 Wo.“, „+2 Wo.“ und „+3 Wo.“. Gemeint sind die aktuelle Kalenderwoche und die nächsten drei Montag–Sonntag-Zeiträume, keine Wochenzählung innerhalb eines Monats. Die Datumsspanne bleibt darunter sichtbar.
+
+Alle SumUp-Erstladeanzeigen (Baraktivität, Barpegel, Abendumsatz, letzte Zahlungen, Food Orders, Bestseller und Barumsatzvergleich) verwenden dieselbe `TicketLoader`-Komponente wie Ticket Tailor. Damit sind Salbei/Rosé, Animationsgeschwindigkeit und reduzierte Bewegung identisch. Folgeabrufe behalten vorhandene Daten und zeigen dezent „Wird aktualisiert …“. Fehlermeldungen bleiben während weiterer Abrufversuche sichtbar, bis eine erfolgreiche Antwort kommt. Beim Wechsel des Bestsellerzeitraums werden die alten Zahlen entfernt, damit sie nicht unter der neuen Überschrift stehen.
+
+SumUp umfasst sowohl QR Order & Pay als auch Terminalzahlungen und manuell eingegebene, später bezahlte Bestellungen. Es zählt der Zahlungszeitpunkt; der ursprüngliche Bestellzeitpunkt ist daraus nicht verlässlich ableitbar. Der Barpegel berücksichtigt nur die letzten fünf Minuten SumUp-Zahlungen sowie ausdrücklich offene Included Drinks der letzten Stunde. Ein früherer Ansturm hält den Pegel nicht hoch. Ohne aktuelle Zahlungen und ohne offene Included Drinks lautet er bei vollständigen frischen Daten „Ruhig“. 15 automatisierte Tests enthalten nun ausdrücklich den Fall mit 60 Cocktails vor einer halben Stunde und anschließend ruhigem aktuellen Zeitfenster.

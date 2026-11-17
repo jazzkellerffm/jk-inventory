@@ -98,7 +98,7 @@ export function TicketSales({example,feed,state,refreshing,week,setWeek}:Props &
       <span className="staff-period">{example ? "Beispieldaten" : refreshing && feed ? "Wird aktualisiert …" : feed ? "Stand "+clock.format(feed.asOf*1000)+" Uhr" : "Vorverkauf"}</span></div>
     <h2 id="ticket-title">Gebuchte Gäste</h2>
     <div className="service-switch week-switch" role="group" aria-label="Verkaufswoche">{[0,1,2,3].map(i=>
-      <button key={i} type="button" aria-pressed={week===i} onClick={()=>setWeek(i)}>{i===0 ? "Aktuell" : "Woche "+(i+1)}</button>)}</div>
+      <button key={i} type="button" aria-pressed={week===i} onClick={()=>setWeek(i)}>{i===0 ? "Aktuell" : "+"+i+" Wo."}</button>)}</div>
     <p className="ticket-week-range">{date.format(new Date(start+"T12:00:00Z"))} – {date.format(new Date(weekDay(asOf,week*7+6)+"T12:00:00Z"))}</p>
     {state === "unavailable" && <p role="status">Ticket Tailor ist gerade nicht erreichbar.</p>}
     {!feed && state === "loading" ? <TicketLoader label="Ticketverkauf wird geladen"/> : nights.length ? <>

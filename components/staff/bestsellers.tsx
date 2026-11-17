@@ -1,5 +1,7 @@
 "use client";
 
+import { TicketLoader } from "./ticket-loader";
+
 import { useEffect, useState } from "react";
 import { ChartBar } from "lucide-react";
 import { bestsellerStart, type BestsellerPeriod } from "@/lib/staff/bestseller-period";
@@ -26,9 +28,10 @@ export function Bestsellers({example}:{example:boolean}) {
   const [period,setPeriod]=useState<BestsellerPeriod>("evening");
   const [limit,setLimit]=useState(3);
   const [feed,setFeed]=useState<BestsellerFeed|null>(example ? demoFeed("evening") : null);
-  const [message,setMessage]=useState("Verkäufe werden geladen …");
+  const [message,setMessage]=useState("");
+  const [loading,setLoading]=useState(!example);
   useEffect(()=>{
-    setMessage("Verkäufe werden geladen …");
+    setMessage("");
     if(example) {setFeed(demoFeed(period));return;}
     setFeed(null);
     const controller=new AbortController();
@@ -36,6 +39,7 @@ export function Bestsellers({example}:{example:boolean}) {
     async function refresh(){
       if(busy || document.hidden) return;
       busy=true;
+      setLoading(true);
       try {
         const res=await fetch("/api/staff/bestsellers?period="+period,{cache:"no-store",signal:controller.signal});
         if(res.status===401){window.location.replace("/staff");return;}
@@ -46,7 +50,7 @@ export function Bestsellers({example}:{example:boolean}) {
           setMessage(data.state==="setup" ? "SumUp ist noch nicht verbunden." : "");
         }
       } catch {if(!controller.signal.aborted)setMessage("Aktualisierung fehlgeschlagen.");}
-      finally {busy=false;}
+      finally {busy=false;if(!controller.signal.aborted)setLoading(false);}
     }
     void refresh();
     const timer=setInterval(refresh,60000);
@@ -55,17 +59,18 @@ export function Bestsellers({example}:{example:boolean}) {
   },[example,period]);
   return <section id="bestseller" className="staff-panel staff-bestsellers">
     <div className="staff-section-head"><span className="staff-eyebrow"><ChartBar size={16}/> SumUp</span>
-      <small>{example ? "Beispieldaten" : feed ? "Stand "+clock.format(Date.parse(feed.asOf))+" Uhr" : ""}</small></div>
+      <small>{example ? "Beispieldaten" : loading && feed ? "Wird aktualisiert …" : feed ? "Stand "+clock.format(Date.parse(feed.asOf))+" Uhr" : ""}</small></div>
     <h2>{titles[period]}</h2>
     <div className="bestseller-controls">
       <select aria-label="Zeitraum der Bestseller" value={period} onChange={event=>{
         const next=event.target.value as BestsellerPeriod;
-        setFeed(example?demoFeed(next):null);setPeriod(next);
+        setFeed(example?demoFeed(next):null);setMessage("");setLoading(!example);setPeriod(next);
       }}>{periods.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select>
       <div className="service-switch" role="group" aria-label="Anzahl Bestseller">{[3,5,10].map(n=>
         <button key={n} type="button" aria-pressed={limit===n} onClick={()=>setLimit(n)}>Top {n}</button>)}</div>
     </div>
     <p className="bestseller-period">{feed ? dates.format(bestsellerStart(Date.parse(feed.asOf),period))+" – "+dates.format(Date.parse(feed.asOf)) : "Zeitraum wird geladen"}</p>
+    {!example && !feed && loading && !message && <TicketLoader label="Artikel werden geladen"/>}
     {feed && !feed.incomplete && <ol>{feed.products.slice(0,limit).map((p,i)=><li key={p.name}>
       <span>{i+1}</span><div><b>{p.name}</b><div className="best-track"><i style={{width:100*p.quantity/feed.products[0].quantity+"%"}}/></div></div><strong>{p.quantity} ×</strong>
     </li>)}</ol>}

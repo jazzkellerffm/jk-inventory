@@ -1,5 +1,7 @@
 "use client";
 
+import { TicketLoader } from "./ticket-loader";
+
 import { useEffect, useRef, useState } from "react";
 import { ReceiptText } from "lucide-react";
 import styles from "./bar-evenings.module.css";
@@ -20,15 +22,17 @@ async function fetchNights(signal: AbortSignal): Promise<{ nights: Night[] }> {
 export function BarEvenings({ example }: { example: boolean }) {
   const [nights, setNights] = useState<Night[] | null>(example ? demo : null);
   const [failed, setFailed] = useState(false);
+  const [loading, setLoading] = useState(!example);
   const [chosen, select] = useState("");
   const chart = useRef<HTMLDivElement>(null);
   const night = nights?.find(n => n.date === chosen) ?? nights?.at(-1);
   useEffect(() => {
     if (example) return;
     const abort = new AbortController();
-    const refresh = () => fetchNights(abort.signal)
+    const refresh = () => { setLoading(true); return fetchNights(abort.signal)
       .then(data => { setNights(data.nights); setFailed(false); })
-      .catch(() => { if (!abort.signal.aborted) setFailed(true); });
+      .catch(() => { if (!abort.signal.aborted) setFailed(true); })
+      .finally(() => { if (!abort.signal.aborted) setLoading(false); }); };
     void refresh();
     const timer = setInterval(refresh, 600000);
     return () => { abort.abort(); clearInterval(timer); };
@@ -38,9 +42,10 @@ export function BarEvenings({ example }: { example: boolean }) {
   }, [nights, chosen]);
   const peak = Math.max(1, ...(nights ?? []).map(n => n.cents));
   return <section id="bar-evenings" className={`staff-panel ${styles.panel}`} aria-labelledby="bar-evenings-title">
-    <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={16}/> SumUp</span><small>{example ? "Beispieldaten · 14 Tage" : "Letzte 14 Tage"}</small></div>
+    <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={16}/> SumUp</span><small>{example ? "Beispieldaten · 14 Tage" : loading && nights ? "Wird aktualisiert …" : "Letzte 14 Tage"}</small></div>
     <h2 id="bar-evenings-title">Barumsatz im Vergleich</h2>
-    {night && nights ? <>
+    {failed && nights && <p role="status">Aktualisierung fehlgeschlagen. Letzter geladener Stand.</p>}
+    {!nights && loading && !failed ? <TicketLoader label="Barabende werden geladen"/> : night && nights ? <>
       <div className={styles.summary} aria-live="polite"><b>{dateLabel.format(new Date(night.date))}</b><strong>{amount.format(night.cents / 100)}</strong></div>
       <div className={styles.chart} ref={chart} aria-label="Barabende auswählen">{nights.map(n =>
         <button type="button" key={n.date} aria-pressed={night.date === n.date} onClick={() => select(n.date)}

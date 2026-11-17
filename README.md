@@ -78,6 +78,6 @@ Pro Einsatz Datum, Rolle und Vornamen eintragen. Eine Startzeit ist optional.
 
 Datei in GitHub oder Cursor bearbeiten und die Änderung auf dem Branch der Staff-App
 speichern (Commit, bei Cursor zusätzlich Push). Nach dem Deployment sehen alle über
-denselben Staff-Link den Plan. Die Ansicht zeigt die aktuelle und kommende
-Wochen mit Einträgen. Die Demo hat eigene Beispieldaten. Bei leerer Datei
+denselben Staff-Link den Plan. Die Ansicht startet bei der aktuellen Woche und erlaubt den Rückblick auf alle
+erfassten Wochen und Monate. Einträge sind geplante Einsätze, keine Anwesenheitsnachweise. Die Demo hat eigene Beispieldaten. Bei leerer Datei
 liest die App einen gegebenenfalls vorhandenen Altplan aus `STAFF_SHIFTS_JSON`.

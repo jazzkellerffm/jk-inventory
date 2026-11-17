@@ -1,17 +1,17 @@
 [
   {
     "date": "2026-11-18",
-    "role": "Backstage",
+    "role": "Bar",
     "names": [
-      "Joab"
+      "Hamad",
+      "Adri"
     ]
   },
   {
     "date": "2026-11-18",
-    "role": "Bar",
+    "role": "Backstage",
     "names": [
-      "Adri",
-      "Hamad"
+      "Joab"
     ]
   },
   {
@@ -30,10 +30,10 @@
   },
   {
     "date": "2026-11-19",
-    "role": "Bar inkl. Backstage (vorläufig)",
+    "role": "Bar inkl. Backstage",
     "names": [
       "Joab",
-      "Hamad"
+      "Adri"
     ]
   },
   {
@@ -48,6 +48,167 @@
     "role": "Door",
     "names": [
       "Ana"
+    ]
+  },
+  {
+    "date": "2026-11-20",
+    "role": "Bar",
+    "names": [
+      "Hamad",
+      "Adri"
+    ]
+  },
+  {
+    "date": "2026-11-20",
+    "role": "Service",
+    "names": [
+      "Adriano"
+    ]
+  },
+  {
+    "date": "2026-11-20",
+    "role": "Backstage (vorläufig)",
+    "names": [
+      "Joab"
+    ]
+  },
+  {
+    "date": "2026-11-21",
+    "role": "Bar",
+    "names": [
+      "Hamad",
+      "Adri"
+    ]
+  },
+  {
+    "date": "2026-11-21",
+    "role": "Service",
+    "names": [
+      "Adriano"
+    ]
+  },
+  {
+    "date": "2026-11-21",
+    "role": "Backstage",
+    "names": [
+      "Joab"
+    ]
+  },
+  {
+    "date": "2026-11-22",
+    "role": "Bar",
+    "names": [
+      "Chelly",
+      "Adri"
+    ]
+  },
+  {
+    "date": "2026-11-22",
+    "role": "Service",
+    "names": [
+      "Adriano"
+    ]
+  },
+  {
+    "date": "2026-11-22",
+    "role": "Backstage",
+    "names": [
+      "Joab"
+    ]
+  },
+  {
+    "date": "2026-11-22",
+    "role": "Door",
+    "names": [
+      "Saven"
+    ]
+  },
+  {
+    "date": "2026-11-25",
+    "role": "Bar",
+    "names": [
+      "Hamad",
+      "Adri"
+    ]
+  },
+  {
+    "date": "2026-11-25",
+    "role": "Backstage",
+    "names": [
+      "Joab"
+    ]
+  },
+  {
+    "date": "2026-11-25",
+    "role": "Service",
+    "names": [
+      "Adriano"
+    ]
+  },
+  {
+    "date": "2026-11-25",
+    "role": "Door",
+    "names": [
+      "Saven"
+    ]
+  },
+  {
+    "date": "2026-11-26",
+    "role": "Team · Aufgaben noch offen",
+    "names": [
+      "Hamad",
+      "Adri"
+    ]
+  },
+  {
+    "date": "2026-11-26",
+    "role": "Backstage (noch offen)",
+    "names": [
+      "Joab"
+    ]
+  },
+  {
+    "date": "2026-11-27",
+    "role": "Bar",
+    "names": [
+      "Hamad",
+      "Adri"
+    ]
+  },
+  {
+    "date": "2026-11-27",
+    "role": "Service",
+    "names": [
+      "Adriano"
+    ]
+  },
+  {
+    "date": "2026-11-27",
+    "role": "Backstage",
+    "names": [
+      "Joab"
+    ]
+  },
+  {
+    "date": "2026-11-28",
+    "role": "Bar",
+    "names": [
+      "Hamad",
+      "Adri"
+    ]
+  },
+  {
+    "date": "2026-11-28",
+    "role": "Service",
+    "names": [
+      "Adriano"
+    ]
+  },
+  {
+    "date": "2026-11-28",
+    "role": "Backstage",
+    "names": [
+      "Joab"
     ]
   }
 ]

@@ -150,3 +150,16 @@ Quellen der Recherche:
 - https://tillersystems-v3.readme.io/reference/migrating-from-order-v2
 - https://help.sumup.com/en-GB/articles/5tmYbBkiipnwwMVNi2JT5s-article-exploring-my-sumup-kds-screen-and-settings
 - https://help.sumup.com/en-GB/articles/5DMyYhDtk3r23QizapYDHi-article-configure-the-menu-for-my-qr-order-and-pay
+
+
+## Dienstplan November – Aktualisierung 17.11.2026
+
+- Anitas Monatsplan ab 18.11. übernommen; Namen: Hamad, Adri (Adrian), Adriano, Saven (Savus), Chelly, Joab und Laura. Interne Eventtitel werden nicht übernommen. Farben und Stationskacheln bleiben unverändert.
+- 18./25.: Bar Hamad + Adri, Backstage Joab, Service Adriano, Door Saven.
+- 19.: Bar inkl. Backstage Joab + Adri, Service Laura. Bereits erfasster Door-Einsatz Ana bleibt bestehen.
+- 20.: Bar Hamad + Adri, Service Adriano; Joab Backstage vorläufig, da im Bild blass markiert (Interpretation, noch zu bestätigen).
+- 21./27./28.: Bar Hamad + Adri, Backstage Joab, Service Adriano.
+- 22.: Bar Chelly + Adri, Backstage Joab, Service Adriano, Door Saven.
+- 26.: Hamad + Adri bestätigt, Aufgabenverteilung noch offen (ggf. auch Service/Backstage); Joab Backstage ausdrücklich noch offen. Keine feste Stationszuordnung der beiden erfinden.
+- Vergangene gespeicherte Schichten bleiben abrufbar, Woche/Monat startet beim aktuellen Betriebsdatum. Vor dem 18.11. wurden keine historischen Einsätze aus dem Foto ergänzt. Dienstplan ist Planung, kein Anwesenheitsnachweis.
+- Noch keine Admin-App zum Bearbeiten; Datenquelle bleibt `data/dienstplan.json` und Veröffentlichung per Deployment.

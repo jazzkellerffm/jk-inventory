@@ -4,6 +4,8 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Shift } from "@/lib/staff/types";
 
+import { serviceDate } from "@/lib/staff/service-day";
+
 import { StationCards } from "./station-cards";
 
 type View = "Woche" | "Monat";
@@ -30,6 +32,7 @@ function periodLabel(key:string, view:View) {
 }
 
 export function Schedule({ shifts, invalid, loading }: { shifts: Shift[]; invalid: boolean; loading: boolean }) {
+  const [today] = useState(() => serviceDate(Date.now()));
   const [view,setView] = useState<View>("Woche");
   const [anchor,setAnchor] = useState("");
   const [name,setName] = useState("");
@@ -41,8 +44,8 @@ export function Schedule({ shifts, invalid, loading }: { shifts: Shift[]; invali
   const activeName = names.includes(name) ? name : "";
   const filtered = shifts.filter(s=>!activeName || s.names.includes(activeName));
   const periods = [...new Set(filtered.map(s=>period(s.date,view)))].sort();
-  const requested = period(anchor || filtered[0].date,view);
-  const current = periods.includes(requested) ? requested : periods[0];
+  const requested = period(anchor || today,view);
+  const current = periods.includes(requested) ? requested : (periods.find(key => key >= requested) ?? periods[periods.length - 1]);
   const index = periods.indexOf(current);
   const visible = filtered.filter(s=>period(s.date,view)===current);
   const dates = [...new Set(visible.map(s=>s.date))].sort();

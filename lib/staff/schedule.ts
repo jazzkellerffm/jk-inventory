@@ -2,13 +2,11 @@ import "server-only";
 import type { Shift } from "./types";
 
 import plan from "@/data/dienstplan.json";
-import { weekDay } from "./ticket-weeks";
 
-export function upcomingShifts(raw = plan.length ? JSON.stringify(plan) : process.env.STAFF_SHIFTS_JSON, now = new Date()): Shift[] {
+export function upcomingShifts(raw = plan.length ? JSON.stringify(plan) : process.env.STAFF_SHIFTS_JSON): Shift[] {
   if (!raw) return [];
   const rows: unknown = JSON.parse(raw);
   if (!Array.isArray(rows)) throw new Error("Invalid schedule");
-  const weekStart = weekDay(now.getTime()/1000,0);
   return rows.map(row => {
     if (typeof row?.date !== "string" || !/^\d{4}-\d\d-\d\d$/.test(row.date) ||
         !Number.isFinite(Date.parse(row.date)) || new Date(row.date).toISOString().slice(0, 10) !== row.date ||
@@ -19,5 +17,5 @@ export function upcomingShifts(raw = plan.length ? JSON.stringify(plan) : proces
       throw new Error("Invalid shift");
     }
     return { date: row.date, role: row.role?.trim(), names: row.names.map((name: string) => name.trim()), start: row.start };
-  }).filter(row => row.date >= weekStart).sort((a,b) => a.date.localeCompare(b.date) || (a.start ?? "").localeCompare(b.start ?? ""));
+  }).sort((a,b) => a.date.localeCompare(b.date) || (a.start ?? "").localeCompare(b.start ?? ""));
 }

@@ -349,7 +349,7 @@
 .shift-line { margin:16px 0; padding:12px 4px; border-block:1px solid var(--line); }
 .shift-line p { margin:0; color:var(--muted); font-size:13px; }
 .shift-line .roster-role { padding:8px 10px; gap:6px; }
-.shift-line .roster-name { font-size:13px; padding:3px 8px; }
+.shift-line .roster-name { font-size:13px; padding:2px 8px 4px; }
 @media (min-width:640px) { .shift-line .station-cards { grid-template-columns:repeat(4,minmax(0,1fr)); } }
 .shift-line h2 { margin:0 0 7px; font:700 16px/1.25 var(--staff-display),sans-serif; }
 @media (max-width: 420px) {

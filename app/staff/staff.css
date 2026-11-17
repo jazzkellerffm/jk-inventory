@@ -319,7 +319,8 @@
 
 .staff-turnover { background:#f4e3e3; color:var(--paper); margin-bottom:16px; }
 .staff-turnover .staff-eyebrow,.staff-turnover h2 { color:inherit; }
-.staff-turnover strong { display:block; font:700 clamp(34px,7vw,64px)/1.1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
+.staff-turnover strong,
+.food-total strong { display:block; font:700 clamp(34px,7vw,64px)/1.1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
 .staff-turnover p { margin:6px 0 0; }
 
 .door-guests header { background:white; color:var(--paper); padding:14px; }
@@ -364,7 +365,6 @@
   .food-panel .cocktail-tiles li:nth-child(4) { grid-area:2 / 2; }
 }
 .food-total { margin:8px 0 16px; }
-.food-total strong { font-size:1.65rem; }
 .food-share { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
 .food-share b { white-space:nowrap; }
 .food-meter { height:12px; background:#efdecc; border-radius:999px; overflow:hidden; margin-top:6px; }

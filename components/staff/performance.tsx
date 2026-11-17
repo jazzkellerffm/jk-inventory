@@ -94,7 +94,7 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
           {feed.monthlyGuests.unknownPackages === 1 ? "1 Ticketpaket ohne Gästezahl" : feed.monthlyGuests.unknownPackages + " Ticketpakete ohne Gästezahl"}
         </small>}
       </div>
-      <strong className="shrink-0 whitespace-nowrap font-poly-bulky text-3xl tabular-nums">
+      <strong className="perf-monthly-guests-value shrink-0 whitespace-nowrap">
         {feed.monthlyGuests.unknownPackages > 0 && "≥ "}{feed.monthlyGuests.count.toLocaleString("de-DE")}
       </strong>
     </section>}

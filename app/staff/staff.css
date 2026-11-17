@@ -291,7 +291,8 @@
 
 .staff-turnover { background:#f4e3e3; color:var(--paper); margin-bottom:16px; }
 .staff-turnover .staff-eyebrow,.staff-turnover h2 { color:inherit; }
-.staff-turnover strong { display:block; font:700 clamp(34px,7vw,64px)/1.1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
+.staff-turnover strong,
+.perf-monthly-guests-value { display:block; font:700 clamp(34px,7vw,64px)/1.1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
 .staff-turnover p { margin:6px 0 0; }
 
 .door-guests header { background:white; color:var(--paper); padding:14px; }

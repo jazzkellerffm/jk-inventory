@@ -217,3 +217,8 @@ Poly Sans Bulky (vorhandenes `--font-poly`, Gewicht 700) für Ticketmix-Zahlen, 
 NYJB wechselt auf gedecktes Pflaumengrau (#eeebf0 / #d5cbd9 / #a99ab2, dunkel #786580, Logokopf #68596f); Jam bleibt Grau-Blau. Gleicher Aufbau und Umschalter. Doppelte Abschnittslinien bei Pro-Gast/Mix und VIP/Bewegung entfernt.
 
 Historische SumUp-Daten waren bereits vorgesehen, aktuell im Nutzer-Screenshot jedoch nicht verfügbar; konkrete Live-Ursache noch nicht bestätigt. Monatsabfrage nun in lückenlosen, halb offenen 7-Tage-Fenstern statt einem langen Verlauf; Fehler verwerfen weiterhin den gesamten Betrag. Zugangswerte werden wie in der funktionierenden Barabende-Route getrimmt. Server protokolliert Ausfallgrund ohne Zahlungsdaten. Oberfläche unterscheidet nicht ladbare Quelle von nicht zuordenbarem Abend, fehlende Werte bleiben Striche. Bei komplett fehlenden Chartwerten kompakter Hinweis statt leerer Säulenfläche. Tests prüfen Fenstergrenze, Tageswechsel und Teilfehler. Keine Behauptung, reale historische Umsätze seien bereits verifiziert.
+
+
+### Originalmotive im Performance-Kopf · 18.11.2026
+
+Auf Nutzerwunsch größere plakative Bildköpfe (16:10 plus kompakte Performance-Zeile) statt kleiner Logozelle. Jam verwendet unverändert `/JKOS/EXPERIENCE_ASSETS/jam/artwork/jamsession-wide.png`, NYJB `/JKOS/REUSABLE_ARTWORK/nyjb-classic-4x3.jpg`, lokal unter `public/branding/*-performance.*`. Eingebettete Originalschrift/Logos bleiben sichtbar; kein doppeltes Titel-Overlay. Responsive CSS-Ausschnitte mit motivspezifischem Fokus. NYJB-Pflaumengrau ausdrücklich bestätigt; Diagramme, Navigation, Datenlogik unverändert. Alternative bei späterer Ablehnung: gleich großer Farbkopf mit weißem Original-SVG, nicht zurück zur kleinen Zelle.

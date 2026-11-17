@@ -76,9 +76,9 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
       <p className="text-sm text-[var(--muted)]">Abgeschlossene Abende · gebuchte Gäste</p>
       <NightColumns rows={[
           ["Sold out", "Ticket Tailor", feed.monthlyNights.soldOut, "bg-[#f2e8ce]"],
-          ["Gut besucht", "Ab 45 Gästen", feed.monthlyNights.busy, "bg-[#dbe8df]"],
-          ["Halb voll", "25–44 Gäste", feed.monthlyNights.half, "bg-[#f4e3e3]"],
-          ["Ruhig", "Bis 24 Gäste", feed.monthlyNights.quiet, "bg-[#ededeb]"],
+          ["Gut besucht", "Ab 45 Gästen", feed.monthlyNights.busy, "bg-[#42675a]"],
+          ["Halb voll", "25–44 Gäste", feed.monthlyNights.half, "bg-[#9eb7a6]"],
+          ["Ruhig", "Bis 24 Gäste", feed.monthlyNights.quiet, "bg-[#dce3dd]"],
        ]}/>
       {feed.monthlyNights.unclear > 0 && <small>Gästezahl ungeklärt · {feed.monthlyNights.unclear}</small>}
     </section>}

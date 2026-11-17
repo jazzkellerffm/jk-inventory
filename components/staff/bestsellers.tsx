@@ -60,17 +60,24 @@ export function Bestsellers({example}:{example:boolean}) {
     <div className="staff-section-head"><span className="staff-eyebrow"><ChartBar size={16}/> SumUp</span>
       <small>{example ? "Beispieldaten" : feed ? "Stand "+clock.format(Date.parse(feed.asOf))+" Uhr" : ""}</small></div>
     <h2>{titles[period]}</h2>
-    <div className="service-switch" role="group" aria-label="Zeitraum der Bestseller">{periods.map(p=>
-      <button key={p.id} type="button" aria-pressed={period===p.id} onClick={()=>{setFeed(example?demoFeed(p.id):null);setPeriod(p.id);}}>{p.label}</button>)}</div>
-    <p>{feed ? dates.format(bestsellerStart(Date.parse(feed.asOf),period))+" – "+dates.format(Date.parse(feed.asOf))+" · Tageswechsel 03:00 Uhr" : "Tageswechsel 03:00 Uhr"}</p>
-    <div className="service-switch" role="group" aria-label="Anzahl Bestseller">{[3,5,10].map(n=>
-      <button key={n} type="button" aria-pressed={limit===n} onClick={()=>setLimit(n)}>Top {n}</button>)}</div>
-    {feed && <ol>{feed.products.slice(0,limit).map((p,i)=><li key={p.name}>
+    <div className="bestseller-controls">
+      <select aria-label="Zeitraum der Bestseller" value={period} onChange={event=>{
+        const next=event.target.value as BestsellerPeriod;
+        setFeed(example?demoFeed(next):null);setPeriod(next);
+      }}>{periods.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}</select>
+      <div className="service-switch" role="group" aria-label="Anzahl Bestseller">{[3,5,10].map(n=>
+        <button key={n} type="button" aria-pressed={limit===n} onClick={()=>setLimit(n)}>Top {n}</button>)}</div>
+    </div>
+    <p className="bestseller-period">{feed ? dates.format(bestsellerStart(Date.parse(feed.asOf),period))+" – "+dates.format(Date.parse(feed.asOf)) : "Zeitraum wird geladen"}</p>
+    {feed && !feed.incomplete && <ol>{feed.products.slice(0,limit).map((p,i)=><li key={p.name}>
       <span>{i+1}</span><div><b>{p.name}</b><div className="best-track"><i style={{width:100*p.quantity/feed.products[0].quantity+"%"}}/></div></div><strong>{p.quantity} ×</strong>
     </li>)}</ol>}
     {feed && !feed.products.length && !feed.incomplete && <p>In diesem Zeitraum noch keine Artikel verkauft.</p>}
     {!example && message && <p role="status">{message}</p>}
-    {!!feed?.incomplete && <p>{feed.incomplete} Beleg(e) ohne vollständige Artikeldaten.</p>}
-    <small>Verkaufte Stückzahl</small>
+    {!!feed?.incomplete && <div className="bestseller-unavailable" role="status">
+      <b>Für diesen Zeitraum fehlt eine verlässliche Artikelübersicht.</b>
+      <p>Bei {feed.incomplete} Zahlungen fehlen eindeutige Artikel oder Stückzahlen. Deshalb zeigen wir hier keine Rangliste.</p>
+    </div>}
+    <small>Verkaufte Stückzahl · Tageswechsel 03:00 Uhr</small>
   </section>;
 }

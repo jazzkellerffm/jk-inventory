@@ -443,3 +443,13 @@
 .purchase-reset { padding:5px 10px; border-radius:99px; font-size:.78rem; }
 .purchase-hours { grid-template-columns:repeat(24,minmax(0,1fr)); align-items:end; height:48px; gap:3px; margin:8px 0 0; padding:0; list-style:none; border-bottom:1px solid var(--line); }
 .purchase-axis { display:grid; grid-template-columns:repeat(4,1fr) auto; color:var(--muted); font-size:.72rem; margin:3px 0 5px; }
+
+/* Compact controls: one time selector and one ranking-size control. */
+.bestseller-controls { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:16px 0 0; }
+.bestseller-controls select { min-width:0; max-width:40%; min-height:44px; border:1px solid var(--line); border-radius:999px; padding:8px 24px 8px 12px; font:inherit; color:inherit; background:transparent; }
+.bestseller-controls .service-switch { margin:0; flex-shrink:0; }
+.bestseller-controls .service-switch button { padding:8px 10px; min-height:44px; font-size:.85rem; white-space:nowrap; }
+.staff-bestsellers .bestseller-period { font-size:.8rem; color:var(--muted); margin:8px 0 16px; }
+.bestseller-unavailable { padding:16px 0; }
+.bestseller-unavailable p { font-size:.9rem; color:var(--muted); margin:8px 0 0; }
+@media (max-width:360px) { .bestseller-controls { gap:6px; } .bestseller-controls .service-switch button { padding:8px 6px; } }

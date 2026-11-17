@@ -133,28 +133,19 @@ export function readBarFeed(merchant: string, token: string) {
   return value;
 }
 
-function rankedSummary(summary?: string): ReceiptItem[] {
-  if (!summary) return [];
-  const items: ReceiptItem[] = [];
-  for (const part of summary.split(",")) {
-    const match = /^(?:(\d+)\s*[x×]\s*)?(mini dream|bowl of crisps|goldstein mule|nachos con salsa)$/i.exec(part.trim());
-    if (!match) return [];
-    const quantity = Number(match[1] ?? 1);
-    if (!Number.isSafeInteger(quantity) || quantity < 1) return [];
-    items.push({name:match[2], quantity});
-  }
-  return items;
-}
-
 async function rankSales(merchant:string,token:string,start:number,now:number):Promise<BestsellerFeed> {
   const sales = await history(merchant,token,start,now);
   const totals = new Map<string,{name:string;quantity:number}>();
   let incomplete=0;
   for (let i=0;i<sales.length;i+=8) {
     const receipts=await Promise.all(sales.slice(i,i+8).map(p=>receiptItems(merchant,p,token)));
-    for (const [offset, receipt] of receipts.entries()) {
-      const items = receipt.length ? receipt : rankedSummary(sales[i + offset].summary);
-      if (!items.length || items.some(item=>item.quantity===null)) incomplete++;
+    for (const items of receipts) {
+      // Generic terminal labels describe a payment, not a countable product.
+      const generic = /^(drinks?|getränke|custom amount|custom item|benutzerdefinierter betrag|freier betrag)$/i;
+      if (!items.length || items.some(item=>item.quantity===null || generic.test(item.name))) {
+        incomplete++;
+        continue;
+      }
       for (const {name,quantity} of items) {
         if (quantity===null) continue;
         const key=name.normalize("NFC").toLocaleLowerCase("de");
@@ -165,7 +156,7 @@ async function rankSales(merchant:string,token:string,start:number,now:number):P
     }
   }
   const products=[...totals.values()].sort((a,b)=>b.quantity-a.quantity || a.name.localeCompare(b.name,"de")).slice(0,10);
-  return {products,incomplete,asOf:new Date(now).toISOString()};
+  return {products: incomplete ? [] : products,incomplete,asOf:new Date(now).toISOString()};
 }
 
 const rankings = new Map<string, { until: number; data: Promise<BestsellerFeed> }>();

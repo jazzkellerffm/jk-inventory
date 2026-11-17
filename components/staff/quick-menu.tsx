@@ -56,11 +56,13 @@ export function QuickMenu() {
       cancelAnimationFrame(frame);
     };
   },[]);
-  return <nav aria-label="Schnellzugriff" className="staff-quick" data-hidden={hidden} data-dark={dark}>
-    {destinations.map(({href,label,icon:Icon})=><a key={href} href={href} aria-current={active === href ? "location" : undefined}
-      onClick={()=>{if(href==="#service-door"){
-        const plan=document.querySelector<HTMLDetailsElement>(href);
-        if(plan) plan.open=true;
-      }}}><Icon size={20} aria-hidden="true"/>{label}</a>)}
-  </nav>;
+  return <div className="staff-quick-dock">
+    <nav aria-label="Schnellzugriff" className="staff-quick" data-hidden={hidden} data-dark={dark}>
+      {destinations.map(({href,label,icon:Icon})=><a key={href} href={href} aria-current={active === href ? "location" : undefined}
+        onClick={()=>{if(href==="#service-door"){
+          const plan=document.querySelector<HTMLDetailsElement>(href);
+          if(plan) plan.open=true;
+        }}}><Icon size={20} aria-hidden="true"/>{label}</a>)}
+    </nav>
+  </div>;
 }

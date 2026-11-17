@@ -4,7 +4,7 @@ import { Activity, LayoutGrid, ClipboardList, Martini, Utensils } from "lucide-r
 import { useEffect, useRef, useState } from "react";
 
 const destinations = [
-  { href:"#bar-monitor", label:"Bar", icon:Activity, sections:'#bar-monitor, #bestseller, #performance' },
+  { href:"#bar-monitor", label:"Bar", icon:Activity, sections:'#bar-monitor, #bar-evenings, #bestseller, #performance' },
   { href:"#bar-orders", label:"Drinks", icon:Martini, sections:"#bar-orders" },
   { href:"#food-orders", label:"Food", icon:Utensils, sections:"#food-orders" },
   { href:"#service-door", label:"Service", icon:ClipboardList,

@@ -1,5 +1,5 @@
 import "server-only";
-import { serviceStart } from "./service-day";
+import { serviceDate, serviceStart } from "./service-day";
 import { prepWeight } from "./bar-workload";
 import type { BarFeed, Payment, ReceiptItem, BestsellerFeed } from "./types";
 
@@ -175,4 +175,45 @@ export function readBestsellers(merchant:string,token:string) {
   ranking={merchant,start,until:now+minute,data};
   data.catch(()=>{if(ranking?.data===data) ranking=undefined;});
   return data;
+}
+
+let eveningHistory: { merchant: string; end: number; expires: number; payments: Promise<Payment[]> } | undefined;
+
+export async function readBarEvenings(merchant: string, token: string, detailDay: string | null) {
+  const end = serviceStart(Date.now());
+  if (!eveningHistory || eveningHistory.merchant !== merchant || eveningHistory.end !== end || eveningHistory.expires <= Date.now()) {
+    let start = end;
+    for (let i = 0; i < 14; i++) start = serviceStart(start - 1);
+    const payments = history(merchant, token, start, end);
+    eveningHistory = { merchant, end, expires: Date.now() + 10 * minute, payments };
+    payments.catch(() => { if (eveningHistory?.payments === payments) eveningHistory = undefined; });
+  }
+  const groups = new Map<string, Payment[]>();
+  for (const payment of await eveningHistory.payments) {
+    if (payment.currency !== "EUR") continue;
+    const date = serviceDate(Date.parse(payment.at));
+    const rows = groups.get(date);
+    if (rows) rows.push(payment);
+    else groups.set(date, [payment]);
+  }
+  if (detailDay) {
+    const rows = groups.get(detailDay) ?? [];
+    let units = 0;
+    let complete = true;
+    for (let i = 0; i < rows.length; i += 8) {
+      const receipts = await Promise.all(rows.slice(i, i + 8).map(row => receiptItems(merchant, row, token)));
+      for (const items of receipts) {
+        if (!items.length) complete = false;
+        for (const item of items) {
+          if (item.quantity === null) complete = false;
+          else units += item.quantity;
+        }
+      }
+    }
+    return { units, complete };
+  }
+  return { nights: [...groups.keys()].sort().map(date => {
+    const rows = groups.get(date)!;
+    return { date, payments: rows.length, cents: rows.reduce((sum, row) => sum + Math.round(row.amount * 100), 0) };
+  }) };
 }

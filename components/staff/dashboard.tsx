@@ -11,6 +11,7 @@ import { OrderAlerts } from "./order-alerts";
 import type { FoodOrder } from "@/lib/staff/food";
 import { MaskedRevenue } from "./masked-revenue";
 import { FoodOrders } from "./food-orders";
+import { BarEvenings } from "./bar-evenings";
 import { Bestsellers } from "./bestsellers";
 import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
@@ -174,6 +175,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           <StationCards shifts={tonight}/>
           : <p>Für heute ist keine Schicht eingetragen.</p>}
       </section>}
+      <BarEvenings example={!!example}/>
       <Bestsellers example={!!example}/>
       <TicketSales week={salesWeek} setWeek={setSalesWeek} {...tickets} example={!!example}/>
       <h2 id="staff-tools" className="staff-tools-title">Tools</h2>

@@ -277,10 +277,13 @@ export async function readBarEvenings(merchant: string, token: string) {
 export async function readBattleRevenue(merchant:string,token:string,start:number,end:number):Promise<Record<string,number>> {
   const totals:Record<string,number>={};
   if(end<=start)return totals;
-  for(const payment of await history(merchant,token,start,end)) {
+  // Keep monthly ranges below the per-request pagination budget. Half-open windows avoid duplicates.
+  for(let from=start;from<end;from+=7*86400000){
+  for(const payment of await history(merchant,token,from,Math.min(end,from+7*86400000))) {
     if(payment.currency!=="EUR"||payment.amount<=0)continue;
     const date=serviceDate(Date.parse(payment.at));
     totals[date]=(totals[date]??0)+Math.round(payment.amount*100);
+  }
   }
   return totals;
 }

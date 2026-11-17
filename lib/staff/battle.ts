@@ -25,7 +25,7 @@ async function collect(key:string,month:string,merchant?:string,token?:string):P
  const selected=events.filter(e=>(e.start.date.startsWith(month)&&!!eventFormat(e))||(e.start.date>=today&&e.start.date<endDate));
  const start=serviceStart(Date.parse(month+"-01T12:00:00Z"));
  const end=Math.min(serviceStart(now),serviceStart(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5)),1,12)));
- const revenuePromise=merchant&&token?readBattleRevenue(merchant,token,start,end).catch(()=>null):Promise.resolve(null);
+ const revenuePromise=merchant&&token?readBattleRevenue(merchant,token,start,end).catch(error=>{console.warn("Staff format revenue unavailable",{month,reason:error instanceof Error?error.message:"Unknown error"});return null;}):Promise.resolve(null);
  const nights:BattleNight[]=[];
  // Bound provider concurrency; only the opened Tools module triggers this request.
  for(let i=0;i<selected.length;i+=3){await Promise.all(selected.slice(i,i+3).map(async event=>{

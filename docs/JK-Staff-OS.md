@@ -210,3 +210,10 @@ Original-SVGs aus `jazzkellerffm/jkos-public`, unverändert unter `public/brandi
 ### Typografischer Feinschliff · 17.11.2026
 
 Poly Sans Bulky (vorhandenes `--font-poly`, Gewicht 700) für Ticketmix-Zahlen, Vergleichssatz, Vergleichswerte, Ringzahl und kompakte kommende Abendzahlen/-daten. Gustavo (`--staff-display`) bleibt bei großen Hauptkennzahlen und Überschriften. Keine neuen Fonts. „Buchungen in Bewegung“ erhält 16 px Abstand zum Erklärungstext und 24 px bis zur Liste; Zeilen bekommen mehr vertikale Luft. Große eingefärbte Gäste- und Bewegungsflächen entfallen: neutrale App-Fläche, Farbakzente in Logos und Balken. Alle Statistikabschnitte sind ohne zusätzliche innere Seiteneinrückung auf einer gemeinsamen Kante ausgerichtet; äußerer Kartenabstand bleibt als Lesegutter erhalten. „Auf Null“ betrifft die Einrückung, niemals Datenwerte. Navbar, Zählregeln und APIs unverändert.
+
+
+### Historische Umsätze und NYJB-Farbe · 18.11.2026
+
+NYJB wechselt auf gedecktes Pflaumengrau (#eeebf0 / #d5cbd9 / #a99ab2, dunkel #786580, Logokopf #68596f); Jam bleibt Grau-Blau. Gleicher Aufbau und Umschalter. Doppelte Abschnittslinien bei Pro-Gast/Mix und VIP/Bewegung entfernt.
+
+Historische SumUp-Daten waren bereits vorgesehen, aktuell im Nutzer-Screenshot jedoch nicht verfügbar; konkrete Live-Ursache noch nicht bestätigt. Monatsabfrage nun in lückenlosen, halb offenen 7-Tage-Fenstern statt einem langen Verlauf; Fehler verwerfen weiterhin den gesamten Betrag. Zugangswerte werden wie in der funktionierenden Barabende-Route getrimmt. Server protokolliert Ausfallgrund ohne Zahlungsdaten. Oberfläche unterscheidet nicht ladbare Quelle von nicht zuordenbarem Abend, fehlende Werte bleiben Striche. Bei komplett fehlenden Chartwerten kompakter Hinweis statt leerer Säulenfläche. Tests prüfen Fenstergrenze, Tageswechsel und Teilfehler. Keine Behauptung, reale historische Umsätze seien bereits verifiziert.

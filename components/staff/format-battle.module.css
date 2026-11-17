@@ -29,7 +29,7 @@
 .barSpace{height:116px;display:flex;align-items:end}
 .barSpace span{width:100%;background:linear-gradient(0deg,var(--format-light),var(--format-mid));border-radius:8px 8px 2px 2px;min-height:0}
 .barSpace span[data-peak=true]{background:var(--format-dark)}
-.perGuest{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px 0;margin-top:24px;font-size:13px}
+.perGuest{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-top:1px solid var(--line);padding:18px 0;margin-top:24px;font-size:13px}
 .perGuest strong{font:700 26px/1.1 var(--staff-display),sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
 .movers{margin-top:36px;background:transparent;padding:28px 0 0;border-top:1px solid var(--line)}
 .movers h3{display:flex;align-items:center;gap:10px;font-size:19px;line-height:1.3;margin:0 0 16px}.movers h3 svg{flex:none}.movers>p{margin:0 0 24px;max-width:50ch}
@@ -46,7 +46,7 @@
 
 @media(max-width:380px){.hero{gap:12px}.logo{width:68px;height:68px;padding:10px}.hero h2{font-size:25px}.tabs button{font-size:12px;padding-inline:9px}.chart{gap:8px}.column{min-width:42px}}
 
-.body[data-format=nyjb]{--format-soft:#f4e3e3;--format-light:#ebcbc4;--format-mid:#d6a39a;--format-dark:#b57c73;--format-hero:#956860}
+.body[data-format=nyjb]{--format-soft:#eeebf0;--format-light:#d5cbd9;--format-mid:#a99ab2;--format-dark:#786580;--format-hero:#68596f}
 .formatTabs{width:100%;margin-bottom:20px}
 .formatTabs button{flex:1;font-size:14px}
 .mix,.vip,.race{margin-top:32px;padding-top:24px;border-top:1px solid var(--line)}
@@ -62,7 +62,7 @@
 .ring{width:88px;height:88px;flex:none;border-radius:50%;display:grid;place-items:center}
 .ring strong{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--card);font:700 23px var(--font-poly),sans-serif}
 .drinkShare h4{font:700 17px var(--font-poly),sans-serif;margin:0 0 6px}.drinkShare p{font-size:13px;color:var(--muted);margin:0;line-height:1.5}
-.vip article{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:14px}
+.vip article{display:flex;justify-content:space-between;gap:16px;padding:14px 0;font-size:14px}
 .vip>p,.race>p{font-size:13px;line-height:1.5}
 .movers .slimTrack{background:var(--format-soft);margin:18px 0 14px}
 .movers article p{margin:12px 0 0}.movers small{display:block;line-height:1.5}
@@ -72,5 +72,7 @@
 .raceRow{display:grid;grid-template-columns:38px minmax(0,1fr) 72px;align-items:center;gap:12px;margin:12px 0;font-size:12px}
 .raceRow b{text-align:right;font:700 17px var(--font-poly),sans-serif;font-variant-numeric:tabular-nums}
 .raceRow[data-format=jam]{--format-soft:#e5ebef;--format-light:#c6d4dd;--format-mid:#91a9b9}
-.raceRow[data-format=nyjb]{--format-soft:#f4e3e3;--format-light:#ebcbc4;--format-mid:#d6a39a}
+.raceRow[data-format=nyjb]{--format-soft:#eeebf0;--format-light:#d5cbd9;--format-mid:#a99ab2}
 @media(max-width:420px){.body{padding:20px 16px}.hero{gap:14px;padding:22px 16px}.hero h2{font-size:26px}.hero p{font-size:12px}.formatTabs button{font-size:12px;padding-inline:10px}.tabs button{font-size:12px;padding-inline:8px}.logo{width:76px;height:76px;padding:0}}
+
+.emptyChart{padding:18px 0;margin:0;color:var(--muted);font-size:13px;line-height:1.6}

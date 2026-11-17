@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readBarFeed, readBestsellers } from '../lib/staff/sumup.ts';
+import { readBarFeed, readBestsellers, readBattleRevenue } from '../lib/staff/sumup.ts';
 import { readSales } from '../lib/staff/sumup-sales.ts';
 import { barLoadLevel, prepWeight, isFreshSnapshot } from '../lib/staff/bar-workload.ts';
 import { serviceStart } from '../lib/staff/service-day.ts';
@@ -189,4 +189,18 @@ test('A busy half-hour ago does not keep the current bar busy', async t => {
   assert.equal(feed.missingReceiptDetails, false);
   assert.equal(feed.buckets.at(-1), 0);
   assert.equal(barLoadLevel(feed.paidEffort, 0, true), 1);
+});
+
+
+test('historical revenue splits months into contiguous windows and preserves night boundaries',async t=>{
+ const start=Date.parse('2026-11-01T02:00:00Z'),end=Date.parse('2026-11-18T02:00:00Z');const calls=[];
+ const rows=[payment('a',1,{timestamp:'2026-11-04T22:00:00Z',amount:12}),payment('b',1,{timestamp:'2026-11-05T01:00:00Z',amount:8}),payment('edge',1,{timestamp:'2026-11-08T02:00:00Z',amount:5})];
+ t.mock.method(globalThis,'fetch',async input=>{const u=new URL(input);calls.push(u);return Response.json({items:rows});});
+ assert.deepEqual(await readBattleRevenue('merchant','token',start,end),{'2026-11-04':2000,'2026-11-08':500});
+ assert.equal(calls.length,3);
+ assert.equal(calls[0].searchParams.get('newest_time'),calls[1].searchParams.get('oldest_time'));
+});
+test('failed historical window rejects partial revenue rather than treating it as zero',async t=>{
+ let calls=0;t.mock.method(globalThis,'fetch',async()=>++calls===1?Response.json({items:[]}):new Response('',{status:503}));
+ await assert.rejects(readBattleRevenue('merchant','token',Date.parse('2026-11-01Z'),Date.parse('2026-11-18Z')),/SumUp HTTP 503/);
 });

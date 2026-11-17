@@ -194,6 +194,7 @@ async function attachSaleItems(merchant: string, token: string, payments: ItemPa
   }
   // Aggregate diagnostics only; no product, payment, customer or credential data.
   console.info("SumUp item coverage", { payments: payments.length, matchedSales: matched,
+    sales: sales.length, saleReferences: byReference.size, withCode: payments.filter(payment => !!payment.transactionCode).length,
     incomplete: payments.filter(payment => !payment.itemsComplete).length });
 }
 

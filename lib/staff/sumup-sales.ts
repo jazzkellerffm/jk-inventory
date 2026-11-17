@@ -49,6 +49,10 @@ function normalizeSale(raw: RawSale, id: string): ItemSale {
       typeof category?.name === "string" ? [category.name] : []) : [];
     items.push({ name, quantity, categories });
   }
+  if (!references.length) console.info("SumUp sale reference shape", { payments: raw.payments.length,
+    successful: raw.payments.filter(payment => payment.status === "SUCCESSFUL").length,
+    purchase: raw.payments.filter(payment => payment.type === "purchase").length,
+    withReference: raw.payments.filter(payment => typeof payment.reference === "string" && payment.reference).length });
   return { id, items, references: [...new Set(references)], complete };
 }
 
@@ -83,6 +87,12 @@ export async function readSales(merchant: string, token: string, since: number, 
       pagination_limit: 25, pagination_token: cursor,
     }, deadline);
     if (!Array.isArray(page?.items)) throw new Error("Invalid SumUp sales page");
+    if (pages === 1) console.info("SumUp sales window", {
+      rows: page.items.length,
+      withinWindow: page.items.filter((row: SearchRow) => Date.parse(row.closed_at) >= since).length,
+      newestClosedDay: page.items[0]?.closed_at?.slice(0, 10) ?? null,
+      windowStartDay: new Date(since).toISOString().slice(0, 10),
+    });
     let reachedStart = false;
     const ids: string[] = [];
     for (const row of page.items as SearchRow[]) {

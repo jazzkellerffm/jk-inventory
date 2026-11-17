@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChartBar } from "lucide-react";
-import { bestsellerStart, defaultBestsellerPeriod, type BestsellerPeriod } from "@/lib/staff/bestseller-period";
+import { bestsellerStart, type BestsellerPeriod } from "@/lib/staff/bestseller-period";
 import type { BestsellerFeed } from "@/lib/staff/types";
 
 const sample:BestsellerFeed={
@@ -23,14 +23,11 @@ function demoFeed(period:BestsellerPeriod):BestsellerFeed {
 }
 
 export function Bestsellers({example}:{example:boolean}) {
-  const [period,setPeriod]=useState<BestsellerPeriod>("week");
-  const [initialized,setInitialized]=useState(false);
-  useEffect(()=>{setPeriod(defaultBestsellerPeriod(Date.now()));setInitialized(true);},[]);
+  const [period,setPeriod]=useState<BestsellerPeriod>("evening");
   const [limit,setLimit]=useState(3);
-  const [feed,setFeed]=useState<BestsellerFeed|null>(example ? demoFeed("week") : null);
+  const [feed,setFeed]=useState<BestsellerFeed|null>(example ? demoFeed("evening") : null);
   const [message,setMessage]=useState("Verkäufe werden geladen …");
   useEffect(()=>{
-    if(!initialized) return;
     setMessage("Verkäufe werden geladen …");
     if(example) {setFeed(demoFeed(period));return;}
     setFeed(null);
@@ -55,7 +52,7 @@ export function Bestsellers({example}:{example:boolean}) {
     const timer=setInterval(refresh,60000);
     document.addEventListener("visibilitychange",refresh);
     return ()=>{controller.abort();clearInterval(timer);document.removeEventListener("visibilitychange",refresh);};
-  },[example,period,initialized]);
+  },[example,period]);
   return <section id="bestseller" className="staff-panel staff-bestsellers">
     <div className="staff-section-head"><span className="staff-eyebrow"><ChartBar size={16}/> SumUp</span>
       <small>{example ? "Beispieldaten" : feed ? "Stand "+clock.format(Date.parse(feed.asOf))+" Uhr" : ""}</small></div>

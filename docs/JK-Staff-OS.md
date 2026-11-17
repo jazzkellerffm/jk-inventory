@@ -172,7 +172,15 @@ Quellen der Recherche:
 - Hamad und Adri am 26. sind fest eingeplant und bleiben voll sichtbar; nur ihre Aufgabenverteilung ist offen.
 
 
-## Jam vs. NYJB und Aufsteiger (17.11.2026)
+## Format-Performance (17.11.2026)
+
+Aktueller Stand: Das Battle wurde auf Philipps Wunsch durch zwei unabhängige Tools ersetzt: **Jazz Jam Session Performance** und **New York Jazz Bar Performance**. Keine Rangliste, kein Blitz, keine Duell-Texte. Jeder Bereich zeigt ausschließlich sein Format mit weißem Original-Logo auf gedämpftem Blaugrün (#355951), Creme-/Salbeiflächen und grünen Balken im bestehenden Staff-OS-Stil. Die Ockerbraun-Farbwelt wurde verworfen.
+
+Ansichten: Monat (Durchschnitt abgeschlossener Abende), letzter Abend im gewählten Monat, nächster kommender Abend (Buchungsstand). Kennzahlen: Gäste, bezahlte Online-Pakete, gebuchte Included Drinks, SumUp-Umsatz und Umsatz pro gebuchtem Gast. „Abend für Abend“ zeigt wählbare Kennzahlen als datierte Säulen. Fehlende Daten bleiben „–“, kommende Umsätze werden nicht behauptet. Buchungszuwächse werden je Format gefiltert. Originale Datenroute und Berechnungen werden weiterverwendet, keine Änderung an SumUp/Ticket Tailor.
+
+### Technische Grundlage und Historie des ersetzten Battles
+
+Die folgenden Battle-Angaben dokumentieren den vorherigen Aufbau; sie beschreiben keine weiterhin sichtbare Vergleichsoberfläche.
 
 - Tools enthält **Jam vs. NYJB** (`components/staff/format-battle.tsx`, eigenes CSS-Modul). Vorhandene Farben und Navigation bleiben erhalten. Daten werden erst beim Öffnen geladen; Aktualisierung alle fünf Minuten bei sichtbarer Seite, gemeinsamer Ticket-Tailor-Loader und Fehlerhinweis mit letztem Stand. Demo nutzt ausdrücklich gekennzeichnete Beispieldaten.
 - Geschützte Read-only-Route `/api/staff/battle?month=YYYY-MM`, gleicher Teamzugang, private/no-store. Sechs auswählbare Monate. Serverdateien `lib/staff/battle.ts` und `battle-math.ts`; keine neue Datenbank, keine Schreibzugriffe auf SumUp/Ticket Tailor. Antwort enthält nur aggregierte Eventdaten, keine Gäste-/Käufernamen oder Zahlungsreferenzen.
@@ -188,6 +196,6 @@ Quellen der Recherche:
 - API-Schema geprüft anhand offizieller Dokumentation https://developers.tickettailor.com/docs/api/new-order-webhook/ und realer, ausschließlich lesender Antwort. Tatsächliche Orders-Antwort liefert `transactions` und `line_items.fulfilments` (keine Annahme eines alten `payment_method`-Objekts).
 
 
-### Battle-Branding
+### Aktuelles Performance-Branding
 
-Original-SVGs aus `jazzkellerffm/jkos-public`: `assets/logos/jam/jam-white.svg` und `assets/logos/nyjb/nyjb-white.svg`, unverändert lokal unter `public/branding/` eingebunden. Battle-Kopf zeigt beide weißen Logos kleiner (max. 125 px) mit dezentem Glow auf dunklem Ockerbraun und einem soliden gelben Power-up-Blitz ohne Kontur. Die Statistikflächen und Vergleichsbalken nutzen die NYJB-Goldocker-Farbwelt (Originalton #c0a066); Jam und NYJB erhalten unterscheidbare warme Töne. Umschalter bleiben in Form, Bedienung und Grün/Salbei-Farben des Staff OS. Keine Fremdmarken-Spielassets, keine Blinkanimation. Responsive Anordnung, zugängliche Überschrift/Alternativtexte; Datenlogik unverändert.
+Original-SVGs aus `jazzkellerffm/jkos-public`: `assets/logos/jam/jam-white.svg` und `assets/logos/nyjb/nyjb-white.svg`, unverändert lokal unter `public/branding/`. Je Modul ein Logo (112–124 px) mit dezentem Glow, Überschrift und Wochentag. Gemeinsame Blaugrün/Salbei/Creme-Palette, bestehende Staff-OS-Umschalter, keine Gegenüberstellung. Rendering in `components/staff/format-battle.tsx` exportiert `FormatPerformance`; technische Dateinamen und API-Pfad bleiben zur Kompatibilität erhalten.

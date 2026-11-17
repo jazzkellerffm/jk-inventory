@@ -205,3 +205,8 @@ Die folgenden Battle-Angaben dokumentieren den vorherigen Aufbau; sie beschreibe
 ### Aktuelles Performance-Branding
 
 Original-SVGs aus `jazzkellerffm/jkos-public`, unverändert unter `public/branding/`. Bestehende Staff-OS-Variablen, Typografie, Rundungen und `service-switch` bleiben maßgeblich. Umschalter erben Poly Sans; Überschriften/Zahlen verwenden `--staff-display`. Jam: Grau-Blau #e5ebef / #c6d4dd / #91a9b9, dunkler Akzent #526f83, Logofläche #526b79. NYJB: bestehendes Rosé #f4e3e3, Balken #ebcbc4 → #d6a39a, dunkler Abschnitt #b57c73, Logofläche #956860 für lesbares Weiß. Die neue Grau-Blau-Freigabe ersetzt die frühere Ablehnung des ungewünschten Blaugrüns. Keine Ockerbrauntöne. Kompakte Köpfe, schmale Vergleichsbalken; keine Änderung an der Navbar. Technische Dateinamen und API-Pfad bleiben kompatibel.
+
+
+### Typografischer Feinschliff · 17.11.2026
+
+Poly Sans Bulky (vorhandenes `--font-poly`, Gewicht 700) für Ticketmix-Zahlen, Vergleichssatz, Vergleichswerte, Ringzahl und kompakte kommende Abendzahlen/-daten. Gustavo (`--staff-display`) bleibt bei großen Hauptkennzahlen und Überschriften. Keine neuen Fonts. „Buchungen in Bewegung“ erhält 16 px Abstand zum Erklärungstext und 24 px bis zur Liste; Zeilen bekommen mehr vertikale Luft. Große eingefärbte Gäste- und Bewegungsflächen entfallen: neutrale App-Fläche, Farbakzente in Logos und Balken. Alle Statistikabschnitte sind ohne zusätzliche innere Seiteneinrückung auf einer gemeinsamen Kante ausgerichtet; äußerer Kartenabstand bleibt als Lesegutter erhalten. „Auf Null“ betrifft die Einrückung, niemals Datenwerte. Navbar, Zählregeln und APIs unverändert.

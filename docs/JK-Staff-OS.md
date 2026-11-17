@@ -186,3 +186,8 @@ Quellen der Recherche:
 - Tests: `tests/staff-battle.test.mjs`, mit `npm run test:staff` gemeinsam mit SumUp-Tests. Prüfen Zuordnung, Paket-/Gästeumrechnung, Gratis/Offline/Pending/Refunds, Deduplizierung, unvollständige Daten, faire Durchschnitte und Aufsteiger.
 - Ticketkäufe-Reset bereits live: „Alle Tage anzeigen“ mit Undo-Pfeil, setzt Tagesfilter zurück; „Alle 7 Tage“ ohne Auswahl bleibt reine Zustandsanzeige.
 - API-Schema geprüft anhand offizieller Dokumentation https://developers.tickettailor.com/docs/api/new-order-webhook/ und realer, ausschließlich lesender Antwort. Tatsächliche Orders-Antwort liefert `transactions` und `line_items.fulfilments` (keine Annahme eines alten `payment_method`-Objekts).
+
+
+### Battle-Branding
+
+Original-SVGs aus `jazzkellerffm/jkos-public`: `assets/logos/jam/jam-champagne.svg` und `assets/logos/nyjb/nyjb-white.svg`, unverändert lokal unter `public/branding/` eingebunden. Battle-Kopf zeigt beide Logos mit dezentem CSS-Drop-Shadow und einem eigens gezeichneten gelben Comic-Power-up-Blitz als dekorativem Inline-SVG dazwischen. Keine Fremdmarken-Spielassets, keine Blinkanimation. Responsive Anordnung, zugängliche Überschrift/Alternativtexte; Datenlogik unverändert.

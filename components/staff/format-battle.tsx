@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Crown, TrendingUp, ArrowUpRight } from "lucide-react";
 import type { BattleFeed } from "@/lib/staff/battle";
 import { ranking, risingEvents, type BattleNight } from "@/lib/staff/battle-math";
@@ -47,7 +48,16 @@ export function FormatBattle({example=false}:{example?:boolean}){
  const peak=Math.max(1,...stats.map(s=>s.packages??0));
  const movers=risingEvents(shown?.upcoming??[]);
  return <div ref={root} className={styles.body}>
-  <div className={styles.hero}><span className={styles.eyebrow}>THE MIDWEEK MATCHUP</span><h2>Jam <span>vs.</span> NYJB</h2><p>Zwei Abende. Ein Keller.</p></div>
+  <div className={styles.hero}><span className={styles.eyebrow}>THE MIDWEEK MATCHUP</span><h2 className={styles.battleTitle}>Jam vs. NYJB</h2><div className={styles.logoDuel}>
+   <Image className={styles.jamLogo} src="/branding/jam-champagne.svg" width={257} height={227} alt="The Famous Jazz Jam Session" unoptimized/>
+   <span className={styles.powerUp} aria-hidden="true"><svg viewBox="0 0 72 110" fill="none" focusable="false">
+    <path d="M45 9 13 61h23l-8 39 33-54H39z" fill="#bd742b" stroke="#172f28" strokeWidth="7" strokeLinejoin="round" transform="translate(1 4)"/>
+    <path d="M44 7 12 59h23l-8 39 33-54H38z" fill="#ffcf35" stroke="#172f28" strokeWidth="5" strokeLinejoin="round"/>
+    <path d="m40 19-20 34h11" stroke="#fff3a2" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="m10 24 1-5m-7 13-4-1m61 47 5 3m-8 6 1 5" stroke="#f9dc78" strokeWidth="2.5" strokeLinecap="round"/>
+   </svg><b>VS</b></span>
+   <Image className={styles.nyjbLogo} src="/branding/nyjb-white.svg" width={967} height={967} alt="New York Jazz Bar · Jazzkeller" unoptimized/>
+  </div><p>Zwei Abende. Ein Keller.</p></div>
   <div className={styles.toolbar}><label>Ranking-Monat<select value={month} disabled={example} onChange={e=>{setMonth(e.target.value);setMode("month");}}>{months.map(m=><option key={m.value} value={m.value}>{m.label}</option>)}</select></label><button type="button" onClick={()=>setRetry(x=>x+1)} disabled={loading||example}>{loading?"Aktualisiert …":"Aktualisieren"}</button></div>
   <div className={styles.tabs} role="group" aria-label="Vergleich auswählen">{([['month','Monatsranking'],['last','Letztes Duell'],['next','Nächstes Duell']] as const).map(([key,label])=><button type="button" key={key} aria-pressed={mode===key} onClick={()=>setMode(key)}>{label}</button>)}</div>
   {failed&&<p role="status">Daten gerade nicht erreichbar. {shown?"Letzter geladener Stand bleibt sichtbar.":"Bitte erneut versuchen."}</p>}

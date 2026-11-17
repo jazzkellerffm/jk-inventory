@@ -82,6 +82,6 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
   orders.sort((a,b)=>Date.parse(b.at)-Date.parse(a.at));
   const bestsellers = [...snackCounts.values()]
     .sort((a,b) => b.quantity - a.quantity || a.name.localeCompare(b.name, "de"))
-    .slice(0, 3);
+    .slice(0, 5);
   return {recentPortions, recentHummus, recentIncomplete, totalCents:orders.reduce((sum,order)=>sum+order.cents,0), orders:orders.slice(0,5), bestsellers, uncategorized};
 }

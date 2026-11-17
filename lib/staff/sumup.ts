@@ -46,7 +46,8 @@ async function readItemDetails(path: string, token: string, source: "receipt" | 
     const products = source === "receipt" ? data?.transaction_data?.products : data?.products;
     if (!Array.isArray(products) || !products.length) {
       console.warn("SumUp item diagnostics", { source, result: "no-products",
-        hasTransactionData: !!data?.transaction_data, productsType: typeof products });
+        hasTransactionData: !!data?.transaction_data, productsType: typeof products, isNull: products === null, isArray: Array.isArray(products),
+        count: Array.isArray(products) ? products.length : null });
     } else if (parseItems(products).some(item => item.quantity === null)) {
       console.warn("SumUp item diagnostics", { source, result: "missing-quantity", count: products.length });
     }
@@ -154,7 +155,26 @@ export function readBarFeed(merchant: string, token: string) {
   return value;
 }
 
+let salesProbeUntil = 0;
+async function probeSales(merchant: string, token: string) {
+  if (Date.now() < salesProbeUntil) return;
+  salesProbeUntil = Date.now() + 10 * minute;
+  try {
+    const page = await read(`/v1.0/merchants/${encodeURIComponent(merchant)}/sales?pagination_limit=25`, token);
+    const sales = Array.isArray(page?.items) ? page.items : [];
+    console.warn("SumUp sales diagnostics", {
+      result: "received", sales: sales.length,
+      withLines: sales.filter((sale: { items?: unknown }) => Array.isArray(sale.items) && sale.items.length > 0).length,
+      hasNextPage: !!page?.pagination_token,
+    });
+  } catch (error) {
+    const status = /^SumUp HTTP (\\d{3})$/.exec(error instanceof Error ? error.message : "")?.[1];
+    console.warn("SumUp sales diagnostics", { result: "request-failed", status: status || null });
+  }
+}
+
 async function rankSales(merchant:string,token:string,start:number,now:number):Promise<BestsellerFeed> {
+  await probeSales(merchant, token);
   const sales = await history(merchant,token,start,now);
   const totals = new Map<string,{name:string;quantity:number}>();
   let incomplete=0;

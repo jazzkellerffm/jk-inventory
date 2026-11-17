@@ -1,4 +1,5 @@
 import "server-only";
+import { bestsellerStart, type BestsellerPeriod } from "./bestseller-period";
 import { serviceDate, serviceStart } from "./service-day";
 import { prepWeight } from "./bar-workload";
 import type { BarFeed, Payment, ReceiptItem, BestsellerFeed } from "./types";
@@ -167,13 +168,18 @@ async function rankSales(merchant:string,token:string,start:number,now:number):P
   return {products,incomplete,asOf:new Date(now).toISOString()};
 }
 
-let ranking:{merchant:string;start:number;until:number;data:Promise<BestsellerFeed>} | undefined;
-export function readBestsellers(merchant:string,token:string) {
-  const now=Date.now(), start=serviceStart(now);
-  if (ranking?.merchant===merchant && ranking.start===start && ranking.until>now) return ranking.data;
-  const data=rankSales(merchant,token,start,now);
-  ranking={merchant,start,until:now+minute,data};
-  data.catch(()=>{if(ranking?.data===data) ranking=undefined;});
+const rankings = new Map<string, { until: number; data: Promise<BestsellerFeed> }>();
+export function readBestsellers(merchant: string, token: string, period: BestsellerPeriod = "evening") {
+  const now = Date.now(), start = bestsellerStart(now, period);
+  const key = merchant + "/" + period + "/" + start;
+  const cached = rankings.get(key);
+  if (cached && cached.until > now) return cached.data;
+  const data = rankSales(merchant, token, start, now);
+  if (rankings.size >= 12) rankings.delete(rankings.keys().next().value!);
+  const entry = { until: Infinity, data };
+  rankings.set(key, entry);
+  data.then(() => { entry.until = Date.now() + (period === "evening" ? minute : 5 * minute); })
+    .catch(() => { if (rankings.get(key) === entry) rankings.delete(key); });
   return data;
 }
 

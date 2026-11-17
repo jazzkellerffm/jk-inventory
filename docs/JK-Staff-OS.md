@@ -2,6 +2,22 @@
 
 Stand 17. November 2026. JK Staff OS ist der mobile Arbeitsbildschirm für Bar, Backstage, Service und Door im Jazzkeller Frankfurt. Diese Datei ist der Einstieg für eine neue Cursor- oder ChatGPT-Sitzung.
 
+## Verbindlicher Stand für die nächste Sitzung
+
+Abgleich am 17. November 2026 nach der Abendbesprechung. GitHub `main` ist der maßgebliche Stand; `/JKOS/DOCUMENTATION/CONTEXT/JK-Staff-OS.md` ist die synchronisierte Kontextkopie. Letzter hier geprüfter Funktionsstand: `f4d816583bff1f73bc3a32533ec4ed30b3f3731b` (Wochenbeschriftung/Ladeanzeigen); SumUp-URN-Korrektur: `06226f616b57a0f0700059716c870ae6d1d24fc1`. Beide wurden als READY mit `staff.jazzkeller.com` bestätigt. Spätere reine Dokumentationscommits ändern diese Funktionsreferenz nicht.
+
+| Thema | Status |
+| --- | --- |
+| SumUp-Artikelzuordnung, Abend-/Wochenbestseller | Repariert und live; Artikel aus Sales statt allein aus leeren Belegfeldern. Produktionsprotokoll bestätigte vier von vier Wochenzahlungen zugeordnet, `incomplete: 0`. |
+| SumUp-Monatsbestseller | Noch offen: ältere Zahlungen sind teilweise nicht zugeordnet. Keine vollständige Reparatur behaupten. |
+| Wochenwahl und Preloader | Live: Aktuell / +1 Wo. / +2 Wo. / +3 Wo.; SumUp verwendet denselben Salbei/Rosé-Loader wie Ticket Tailor. |
+| Barpegel | Live: festes Fünf-Minuten-Fenster für SumUp plus offene Included Drinks aus der letzten Stunde. |
+| Küchenpegel | Live: festes Zehn-Minuten-Fenster; ab zwei Hummus oder drei Snackportionen „Viel los“. |
+| Mengenabhängiges langsameres Abklingen | Nur besprochen, NICHT implementiert; konkrete Formel und Zeiten noch nicht festgelegt. |
+| QR Order & Pay / Web-KDS-Statusintegration | Nur recherchiert, NICHT angebunden; Zugriff mit unserem Schlüssel nicht bestätigt. |
+
+Der letzte Funktionsstand bestand den Produktionsbuild und 15 automatisierte Tests. Die Simulation großer Bestellmengen ersetzt keine Kalibrierung während eines echten vollen Abends. Bei dieser Übergabepflege wird ausschließlich die Dokumentation geändert.
+
 ## In fünf Minuten wieder einsteigen
 
 1. Produktion läuft vom Branch `main` im Repository `jazzkellerffm/jk-inventory`. Der Stand vom 17. November enthält den Buchungston, die Zeitraumwahl für Bestseller (Standard immer aktueller Betriebsabend) und die Sales-Artikelanbindung für Bestseller und Barpegel. Für die weitere Arbeit den aktuellen Stand von `main` laden.
@@ -33,7 +49,7 @@ Next.js App Router, TypeScript und React. Die Staff-Ansicht führt vorhandene Qu
 ## Regeln für den laufenden Abend
 
 - **Tageswechsel um 03:00 Uhr Frankfurter Zeit.** Die zentrale Berechnung steht in `lib/staff/service-day.ts` und berücksichtigt die Zeitumstellung. Donnerstag 02:59 gehört noch zum Mittwoch. Die UI spart den Hinweis auf die Uhrzeit aus. Rollierende Anzeigen wie „letzte fünf Minuten“ laufen über diese Grenze hinweg.
-- **Barpegel.** Grundlage sind Artikelmengen aus den letzten fünf Minuten erfolgreicher SumUp-Zahlungen plus offene Included Drinks der letzten Stunde. `lib/staff/bar-workload.ts` gewichtet erkannte Cocktailnamen mit 1, einfache Getränke mit 0,125 und übrige Artikel mit 0,5 pro Stück. Ab 3 Punkten „Zieht an“, ab 5 „Viel los“. „Bar Snacks“, Gebühren, Pfand und verkaufte Gutscheine erhöhen den Barpegel nicht. Geteilte Zahlungen desselben Sales zählen die Artikel nur einmal. Alle Zahlungen der letzten fünf Minuten zählen, auch wenn nur acht Karten sichtbar sind. Fehlende Artikelmengen werden nicht als ein Stück geraten. Unvollständige oder über 45 Sekunden alte Daten dürfen niemals „Ruhig“ ergeben; bekannte Mengen können trotzdem „Zieht an“ oder „Viel los“ belegen. Der Pegel schätzt den Arbeitsaufwand. Bei SumUp kennt die App weder den Fertigstellungsstatus noch die Tischnummer.
+- **Barpegel.** Grundlage sind Artikelmengen aus den letzten fünf Minuten erfolgreicher SumUp-Zahlungen plus offene Included Drinks der letzten Stunde. `lib/staff/bar-workload.ts` gewichtet erkannte Cocktailnamen mit 1, einfache Getränke mit 0,125 und übrige Artikel mit 0,5 pro Stück. Ab 3 Punkten „Zieht an“, ab 5 „Viel los“. „Bar Snacks“, Gebühren, Pfand und verkaufte Gutscheine erhöhen den Barpegel nicht. Geteilte Zahlungen desselben Sales zählen die Artikel nur einmal. Alle Zahlungen der letzten fünf Minuten zählen, auch wenn nur acht Karten sichtbar sind. Fehlende Artikelmengen werden nicht als ein Stück geraten. Unvollständige oder über 45 Sekunden alte Daten dürfen niemals „Ruhig“ ergeben; bekannte Mengen können trotzdem „Zieht an“ oder „Viel los“ belegen. Der Pegel schätzt den Arbeitsaufwand. Die aktuelle Staff-OS-Anbindung liest bei SumUp weder den Fertigstellungsstatus noch die Tischnummer aus; im separaten Web KDS sind solche Bestelldaten sichtbar.
 - **Küchenpegel.** Für die letzten zehn Minuten ergeben zwei Hummus-Platten oder mindestens drei Snackportionen „Viel los“. Ticket-Tailor-Hummus für denselben Veranstaltungsabend steht separat als Vorbestellung. Er zählt weder zum SumUp-Snackumsatz noch als frisch eingegangene Küchenbestellung.
 - **Sichtschutz.** Abendumsatz startet mit vier Punkten. Beim Snack-Umsatz entspricht ein Punkt einer Eurostelle vor dem Komma. 45,00 € erscheinen als ••. Antippen zeigt den Betrag fünf Sekunden lang, erneutes Tippen verdeckt ihn sofort. Die Maskierung dient dem Sichtschutz auf dem Display.
 - **Hinweise und Ton.** Beim ersten Öffnen sind Drinks, Essen und Buchungen ausgewählt. Auswahl und Stummschaltung werden lokal für Demo und Teamzugang getrennt gespeichert. „Hinweise an“ zeigt die Auswahl an. Solange die Audioausgabe noch freigeschaltet werden muss, erscheint „Ton aktivieren“. Ein Tipp in der geöffneten App kann die Freigabe ebenfalls auslösen.
@@ -79,13 +95,13 @@ Venue Performance zählt abgeschlossene Geschäftstage im laufenden Monat, jewei
 
 **Nachgewiesene Ursache:** In den Produktionsprotokollen lieferten sowohl `transaction_data.products` des Receipt-Endpunkts als auch `products` des Transaction-Endpunkts leere Arrays. `product_summary` zeigte trotzdem Namen wie Caipirinha Magnifica; dieser Freitext ist keine belastbare Artikelliste. Der Sales-Probeaufruf lieferte 25 von 25 Verkäufen mit Artikelpositionen. Die alte Bestsellerlogik verwendete diese Positionen noch nicht.
 
-**Artikelquelle:** `lib/staff/sumup-sales.ts` liest paginiert `POST /v1.0/merchants/{merchant}/sales/search` (PAID) und danach die Sale-Details. `payments[].reference` erfolgreicher Purchase-Zahlungen wird exakt gegen `transaction_code` bzw. die Transaktions-ID abgeglichen. Bei Order & Pay kommt die Referenz tatsächlich als `urn:sumup:charge:<transaction_code>;2`; der bekannte URN-Vorsatz und die optionale numerische Version müssen vor dem Abgleich entfernt werden. Der direkte Vergleich ohne diese Normalisierung hatte trotz vorhandener Artikel keinen Treffer. Andere URN-Namensräume oder fehlerhafte Versionssuffixe werden nicht geraten. Keine Zuordnung über ähnliche Uhrzeit, Betrag oder Produkttext. Die Geldbeträge und Zahlungsbalken stammen weiterhin aus der erfolgreichen Transaktionshistorie. Damit werden dieselben Zahlungen mit echten Mengen ergänzt. Split-Zahlungen dürfen Bestseller und Arbeitsaufwand nicht verdoppeln.
+**Artikelquelle:** `lib/staff/sumup-sales.ts` liest paginiert `POST /v1.0/merchants/{merchant}/sales/search` (PAID) und danach die Sale-Details. `payments[].reference` erfolgreicher Purchase-Zahlungen wird exakt gegen `transaction_code` bzw. die Transaktions-ID abgeglichen. Bei Order & Pay kommt die Referenz als Charge-URN (z. B. `urn:sumup:charge:<transaction_code>;2`); der bekannte URN-Vorsatz und die optionale numerische Version müssen vor dem Abgleich entfernt werden. Der direkte Vergleich ohne diese Normalisierung hatte trotz vorhandener Artikel keinen Treffer. Andere URN-Namensräume oder fehlerhafte Versionssuffixe werden nicht geraten. Keine Zuordnung über ähnliche Uhrzeit, Betrag oder Produkttext. Die Geldbeträge und Zahlungsbalken stammen weiterhin aus der erfolgreichen Transaktionshistorie. Damit werden dieselben Zahlungen mit echten Mengen ergänzt. Split-Zahlungen dürfen Bestseller und Arbeitsaufwand nicht verdoppeln.
 
 Search-Ergebnisse sind nach Abschlussdatum sortiert. Der Leser stoppt am Beginn des benötigten Zeitfensters. Ein `start_date`-Filter wird bewusst nicht verwendet: Dieser filtert laut SumUp nach Anlagezeit und könnte einen vor dem Fenster eröffneten, aber erst darin bezahlten Bon verlieren. Details werden kurz gecacht; fehlende Daten werden nachgeladen. Wiederholte Seitentokens, ungültige Antworten und Seitenfehler dürfen keine unvollständige Liste als vollständig ausgeben. Der Live-Artikelabruf hat maximal zehn Sekunden Budget; der Umsatz bleibt auch bei fehlenden Artikeln sichtbar. Bestseller benötigen weiterhin eindeutige Artikel und Mengen für alle berücksichtigten Zahlungen.
 
 **Diagnose:** `SumUp item coverage` protokolliert nur Anzahlen (`payments`, `matchedSales`, `incomplete`), keine Artikel-, Kunden-, Zahlungsreferenz- oder Zugangsdaten. Ein vollständiger erfolgreicher Live-Abgleich hat `incomplete: 0`. Die Prüfung mit echten neuen Bestellungen im laufenden Betrieb bleibt der Maßstab für die praktische Kalibrierung des geschätzten Barpegels.
 
-**Automatische Prüfung:** `npm run test:staff` prüft 14 Fälle mit simulierten SumUp-Antworten, darunter echte Order-&-Pay-Referenzformen, unbekannte URN-Namensräume, 30 Zahlungen/60 Cocktails in fünf Minuten, mehrere Seiten, Split-Zahlungen, Gebühren/Snacks, fehlende Mengen, API-Ausfälle, Zeitlimits, veraltete Daten und den 03:00-Wechsel. `npm run build` prüft den Produktionsbuild. Der komplette ESLint-Lauf meldet weiterhin bestehende Probleme außerhalb dieser Korrektur (Inventory, Bestseller-Effekt, Performance, Ticket-Sales, Tickets); die geänderten Dateien werden separat geprüft.
+**Automatische Prüfung:** `npm run test:staff` prüft 15 Fälle mit simulierten SumUp-Antworten, darunter echte Order-&-Pay-Referenzformen, unbekannte URN-Namensräume, 30 Zahlungen/60 Cocktails in fünf Minuten, mehrere Seiten, Split-Zahlungen, Gebühren/Snacks, fehlende Mengen, API-Ausfälle, Zeitlimits, veraltete Daten und den 03:00-Wechsel. `npm run build` prüft den Produktionsbuild. Der komplette ESLint-Lauf meldet weiterhin bestehende Probleme außerhalb dieser Korrektur (Inventory, Bestseller-Effekt, Performance, Ticket-Sales, Tickets); die geänderten Dateien werden separat geprüft.
 
 **Prüfung mit echten Daten:** Der korrigierte Servercode wurde am 17. November in einer Vorschau mit den dort eingerichteten SumUp-Zugangsdaten ausgeführt. Bar-Artikelzuordnung sowie Abend- und Wochenbestseller bestanden den Vollständigkeitscheck. Der Monatsrückblick enthält noch unvollständige ältere Zahlungen; diese sind separat zu prüfen. Die manuelle Prüfung gibt nur Prüfergebnisse aus, keine Artikelnamen, Mengen, Umsätze oder Zahlungsreferenzen. Ein realer voller Betriebsabend bleibt für die praktische Kalibrierung des Pegels erforderlich.
 
@@ -98,3 +114,39 @@ Die Wochenwahl heißt „Aktuell“, „+1 Wo.“, „+2 Wo.“ und „+3 Wo.“
 Alle SumUp-Erstladeanzeigen (Baraktivität, Barpegel, Abendumsatz, letzte Zahlungen, Food Orders, Bestseller und Barumsatzvergleich) verwenden dieselbe `TicketLoader`-Komponente wie Ticket Tailor. Damit sind Salbei/Rosé, Animationsgeschwindigkeit und reduzierte Bewegung identisch. Folgeabrufe behalten vorhandene Daten und zeigen dezent „Wird aktualisiert …“. Fehlermeldungen bleiben während weiterer Abrufversuche sichtbar, bis eine erfolgreiche Antwort kommt. Beim Wechsel des Bestsellerzeitraums werden die alten Zahlen entfernt, damit sie nicht unter der neuen Überschrift stehen.
 
 SumUp umfasst sowohl QR Order & Pay als auch Terminalzahlungen und manuell eingegebene, später bezahlte Bestellungen. Es zählt der Zahlungszeitpunkt; der ursprüngliche Bestellzeitpunkt ist daraus nicht verlässlich ableitbar. Der Barpegel berücksichtigt nur die letzten fünf Minuten SumUp-Zahlungen sowie ausdrücklich offene Included Drinks der letzten Stunde. Ein früherer Ansturm hält den Pegel nicht hoch. Ohne aktuelle Zahlungen und ohne offene Included Drinks lautet er bei vollständigen frischen Daten „Ruhig“. 15 automatisierte Tests enthalten nun ausdrücklich den Fall mit 60 Cocktails vor einer halben Stunde und anschließend ruhigem aktuellen Zeitfenster.
+
+## Einsatzzweck der Live-Pegel und besprochene Weiterentwicklung
+
+Philipps konkretes Beispiel: Adri verlässt die Bar für eine kurze Pause (etwa fünf bis neun Minuten), während Hamad noch wenige Cocktails macht. Kommen in dieser Zeit vier oder fünf Tischbestellungen mit zehn bis zwölf Cocktails herein, soll Adri beim Blick aufs geöffnete Handy sofort erkennen, dass er zurückkommen sollte. Joab nutzt den Food-Monitor entsprechend während einer kurzen Unterbrechung seiner Backstage-Arbeit. Der Pegel ist eine praktische Schätzung frisch eingegangener Arbeit, keine Umsatzstatistik und keine Bestätigung, dass alles serviert ist.
+
+**Live bleibt vorerst die dokumentierte Zeitfensterlogik.** Board und Food aktualisieren bei sichtbarer Seite alle 15 Sekunden. Alte Bestellkacheln dürfen weiterhin sichtbar sein, ohne den aktuellen Pegel hochzuhalten. Kein gesicherter Hintergrund- oder Sperrbildschirmbetrieb.
+
+**Nur besprochene Idee:** Größere Cocktail-Bestellschübe sollen sofort hoch ausschlagen und länger nachwirken als kleine Bestellungen; neue Mengen kommen hinzu. Kein starres Multiplizieren von Stückzahl und Zubereitungsminuten, weil Arbeitsschritte gebündelt werden können. Philipps Einschätzung von etwa zwei bis drei Minuten je Cocktail ist eine betriebliche Orientierung, kein bereits verwendeter Rechenparameter. Es wurden weder Abklingkurve noch Personalstärke noch neue Schwellen festgelegt. Diese Idee nicht als eingebaut darstellen und nicht im Rahmen einer reinen Dokumentationspflege umsetzen.
+
+## Food-Monitor: Anzeige und Berechnung getrennt halten
+
+- Bestellkacheln: die fünf neuesten erfassten Snack-Bestellungen; mehrere Snacks derselben Bestellung stehen gemeinsam auf einer Kachel.
+- Snack-Bestseller: bis zu fünf unterschiedliche Artikel, nach Stückzahl des Betriebsabends sortiert.
+- Küchenpegel und Snack-Abendumsatz werden vor der Begrenzung der Anzeige berechnet. Auch Bestellungen außerhalb der fünf sichtbaren Kacheln zählen im jeweils relevanten Zeitraum.
+- Ticket-Tailor-Hummus bleibt separat; keine Doppelzählung als SumUp-Umsatz oder frische Küchenbestellung.
+- Philipp bestätigte am 17. November anhand des Live-Screenshots die funktionierende Anzeige: Popcorn von 19:38 Uhr war um 21:05 weiterhin als letzte Bestellung/Bestseller sichtbar, aber korrekt nicht mehr Teil der letzten zehn Minuten. Das ist eine Sichtprüfung dieses Falls, kein vollständiger Lasttest.
+
+## QR Order & Pay / Web KDS: Recherche, keine Integration
+
+Philipps Screenshots zeigen Tisch-/Platznamen (B1, Table 1), Mengen, die Bereiche „Zu erledigen“, „In Bearbeitung“, „Fertig“ und „Bestellung abschließen“. Diese Daten existieren im Web KDS; ihre Verfügbarkeit über unseren vorhandenen API-Zugang wurde nicht nachgewiesen. In den Developer Settings stehen getrennte Schlüssel mit den Bezeichnungen „SumUp JK Staff OS“ und „Order and Pay“. Der Name des zweiten Schlüssels belegt weder seinen Ersteller noch zusätzliche Berechtigungen. Keine Schlüsselwerte in diese Dokumentation aufnehmen.
+
+Recherche vom 17. November:
+
+- Die öffentliche Sales-API liefert bezahlte Verkäufe und den Kanal `ORDER_AND_PAY`; kein dokumentierter KDS-Bearbeitungsstatus wurde dort gefunden. Nicht als Beweis einer grundsätzlichen technischen Unmöglichkeit verstehen.
+- Die separate SumUp-POS-Order-API v3 dokumentiert Partner-OAuth, Bestellungen, Standort und Zubereitungsdaten. Ob sie dieses QR-Order-&-Pay/Web-KDS-Produkt abdeckt, bleibt offen; der normale Merchant-Key ist dafür kein bestätigter Zugang.
+- „Complete Order“ führt laut KDS-Hilfe zu „Ready“: fertig zur Ausgabe ist nicht zwingend bereits am Tisch serviert.
+- Nicht abgeschlossene alte KDS-Einträge können trotz bereits erledigter Arbeit offen bleiben. Für Philipps Pausen-Signal ist deshalb eine einfache Schätzung wichtiger als eine zusätzliche, ungeprüfte Statusintegration.
+- QR Order & Pay unterstützt unterschiedliche Menüs nach Tagen und Zeitfenstern. Es wurden weder Menüs noch KDS-Einstellungen noch Schlüssel geändert; keine Anfrage an SumUp versendet.
+
+Bei erneutem Bedarf zuerst offiziell klären, ob ein ausschließlich lesender Zugriff auf QR-Order-&-Pay-Bestellungen, Tisch/Abholplatz und Bearbeitungsstatus oder passende Webhooks verfügbar ist. Keine Versuche am laufenden System im Rahmen dieser Dokumentationspflege.
+
+Quellen der Recherche:
+- https://developer.sumup.com/api/sales/list/
+- https://tillersystems-v3.readme.io/reference/migrating-from-order-v2
+- https://help.sumup.com/en-GB/articles/5tmYbBkiipnwwMVNi2JT5s-article-exploring-my-sumup-kds-screen-and-settings
+- https://help.sumup.com/en-GB/articles/5DMyYhDtk3r23QizapYDHi-article-configure-the-menu-for-my-qr-order-and-pay

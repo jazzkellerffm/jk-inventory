@@ -39,6 +39,27 @@ function parseItems(products: unknown): ReceiptItem[] {
   });
 }
 
+// Record only API status and product-field availability, never receipt/customer data.
+async function readItemDetails(path: string, token: string, source: "receipt" | "transaction") {
+  try {
+    const data = await read(path, token);
+    const products = source === "receipt" ? data?.transaction_data?.products : data?.products;
+    if (!Array.isArray(products) || !products.length) {
+      console.warn("SumUp item diagnostics", { source, result: "no-products",
+        hasTransactionData: !!data?.transaction_data, productsType: typeof products });
+    } else if (parseItems(products).some(item => item.quantity === null)) {
+      console.warn("SumUp item diagnostics", { source, result: "missing-quantity", count: products.length });
+    }
+    return data;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const status = /^SumUp HTTP (\\d{3})$/.exec(message)?.[1];
+    console.warn("SumUp item diagnostics", { source, result: "request-failed",
+      status: status || null, kind: error instanceof Error ? error.name : "UnknownError" });
+    return null;
+  }
+}
+
 async function receiptItems(merchant: string, payment: Payment, token: string): Promise<ReceiptItem[]> {
   const id = payment.id;
   const key = merchant + "/" + id;
@@ -46,12 +67,12 @@ async function receiptItems(merchant: string, payment: Payment, token: string): 
   if (cached && cached.until > Date.now()) return cached.items;
 
   const mid = encodeURIComponent(merchant);
-  const receipt = await read(`/v1.1/receipts/${encodeURIComponent(id)}?mid=${mid}`, token).catch(() => null);
+  const receipt = await readItemDetails(`/v1.1/receipts/${encodeURIComponent(id)}?mid=${mid}`, token, "receipt");
   let items = parseItems(receipt?.transaction_data?.products);
   if (!items.length) {
     const field = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? "id" : "transaction_code";
     const query = new URLSearchParams({ [field]: id });
-    const transaction = await read(`/v2.1/merchants/${mid}/transactions?${query}`, token).catch(() => null);
+    const transaction = await readItemDetails(`/v2.1/merchants/${mid}/transactions?${query}`, token, "transaction");
     items = parseItems(transaction?.products);
   }
   const recent = Date.now() - Date.parse(payment.at) < 5 * minute;

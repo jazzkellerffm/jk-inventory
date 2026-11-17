@@ -13,7 +13,12 @@ import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
 
 const date = new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"});
 const clock = new Intl.DateTimeFormat("de-DE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Berlin"});
-const demo: TicketFeed = {bookingDay:{count:6,latest:{at:1794859140,lines:[{ticket:"Worldstar VIP · 2 Gäste",event:"Saturday Trio",date:"2026-11-21"}]}},monthlyNights:{soldOut:2,busy:4,half:3,quiet:1,unclear:0},foodPreorders:2,asOf:1794859200,monthlyCategories:{Club:54,"Club Plus":38,Premium:21,VIP:8,"Worldstar VIP":2,"Weitere Tickets":0},monthlyTables:{vip:8,worldstar:2},nights:Array.from({length:4},(_,week)=>["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
+const demo: TicketFeed = {bookingDay:{count:6,recent:[
+  {id:"demo-a",at:1794859140,lines:[{ticket:"Worldstar VIP · 2 Gäste",event:"Saturday Trio",date:"2026-11-21"}]},
+  {id:"demo-b",at:1794856200,lines:[{ticket:"Premium · 2 Gäste",event:"New York Jazz Bar",date:"2026-11-19"}]},
+  {id:"demo-c",at:1794850500,lines:[{ticket:"Club · 1 Guest",event:"Jazz Jam Session",date:"2026-11-18"}]},
+  {id:"demo-d",at:1794846900,lines:[{ticket:"Club Plus · 3 Gäste",event:"Friday Quartet",date:"2026-11-20"}]},
+]},monthlyNights:{soldOut:2,busy:4,half:3,quiet:1,unclear:0},foodPreorders:2,asOf:1794859200,monthlyCategories:{Club:54,"Club Plus":38,Premium:21,VIP:8,"Worldstar VIP":2,"Weitere Tickets":0},monthlyTables:{vip:8,worldstar:2},nights:Array.from({length:4},(_,week)=>["Jazz Jam Session","New York Jazz Bar","Friday Quartet","Saturday Trio","Swingin’ Sunday"].map((name,i)=>({
   soldOut:week===0 && i===4,id:String(week*5+i),name,start:1795028400+(week*7+i)*86400,guests:[26,18,42,52,60][i],recent:[4,2,8,5,0][i],drinks:[12,6,18,24,20][i],unknown:0,
 }))).flat()};
 
@@ -98,31 +103,45 @@ export function TicketSales({example,feed,state,refreshing,week,setWeek}:Props &
       <p className="ticket-legend"><i aria-hidden="true"/> Neu gebuchte Gäste in den letzten 24 Stunden</p>
     </> :
       <p>{feed ? "Keine Veranstaltungen in dieser Woche." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : ""}</p>}
-    {feed && <div className="mt-4 rounded-2xl bg-[#f4e3e3] p-4 text-[#223a32]">
-      <div className="flex items-center justify-between gap-3">
-        <b>Buchungen heute</b>
-        <strong className="text-2xl tabular-nums">{feed.bookingDay?.count ?? "–"}</strong>
-      </div>
-      {feed.bookingDay?.latest ? <div className="mt-3 border-t border-black/10 pt-3">
-        <small>Letzte Buchung · {date.format(feed.bookingDay.latest.at * 1000)} · {clock.format(feed.bookingDay.latest.at * 1000)} Uhr</small>
-        {feed.bookingDay.latest.lines.map((line, i) => {
-          const category = ticketCategory(line.ticket);
-          const quantity = Number(line.ticket.match(/^(\d+) × /)?.[1] ?? 1);
-          const guests = packageSize(line.ticket) * quantity;
-          const drinks = includedDrinks(line.ticket) * quantity;
-          const title = category === "Weitere Tickets" ? line.ticket : (quantity > 1 ? quantity + " × " : "") + category;
-          const details = [guests && (guests === 1 ? "1 Gast" : guests + " Gäste"), drinks && (drinks === 1 ? "1 Drink" : drinks + " Drinks")].filter(Boolean).join(" · ");
-          return <div key={i} className="mt-2">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <b className="text-xl leading-tight">{title}</b>
-              {details && <span className="rounded-full bg-white/75 px-2 py-0.5 text-xs font-semibold">{details}</span>}
-            </div>
-            <div className="mt-1.5 text-sm leading-snug">{[line.date && date.format(new Date(line.date + "T12:00:00Z")), line.event].filter(Boolean).join(" · ") || "Konzertangabe fehlt"}</div>
-          </div>;
-        })}
-      </div> : <small>{feed.bookingDay ? "Noch keine Ticketbuchung." : "Buchungen derzeit nicht abrufbar."}</small>}
-    </div>}
+    {feed && <BookingHistory day={feed.bookingDay}/>}
   </section>
   <Performance feed={feed} example={example}/>
   <ServicePlan nights={feed?.nights ?? []} defaultId={upcoming[0]?.id} example={example}/></>;
+}
+
+const concertMonth = new Intl.DateTimeFormat("de-DE", { month: "short", timeZone: "Europe/Berlin" });
+const concertWeekday = new Intl.DateTimeFormat("de-DE", { weekday: "long", timeZone: "Europe/Berlin" });
+
+function BookingHistory({day}: {day: TicketFeed["bookingDay"]}) {
+  return <section className="booking-history" aria-label="Buchungsübersicht">
+    <div className="booking-history-heading"><b>Buchungen heute</b><strong>{day?.count ?? "–"}</strong></div>
+    {day?.recent?.length ? <ul className="booking-history-rail" tabIndex={0} aria-label="Letzte Buchungen, neueste zuerst">
+      {day.recent.map(record => <li key={record.id} className="booking-history-card">
+        {record.lines.map((line, i) => {
+          const first = record.lines.findIndex(other => other.eventId === line.eventId && other.event === line.event && other.date === line.date);
+          if (first !== i) return null;
+          const lines = record.lines.filter(other => other.eventId === line.eventId && other.event === line.event && other.date === line.date);
+          const concert = line.date ? new Date(line.date + "T12:00:00Z") : null;
+          return <div className="booking-history-event" key={i}>
+            {concert && Number.isFinite(concert.getTime()) && <time className="booking-history-date" dateTime={line.date}>
+              <b>{concert.getUTCDate()}</b><span>{concertWeekday.format(concert)}<small>{concertMonth.format(concert)} {concert.getUTCFullYear()}</small></span>
+            </time>}
+            <b className="booking-history-title">{line.event || "Konzert noch offen"}</b>
+            {lines.map((item, index) => {
+              const category = ticketCategory(item.ticket);
+              const qty = Number(item.ticket.match(/^(\d+) × /)?.[1] ?? 1);
+              const guests = packageSize(item.ticket) * qty;
+              const drinks = includedDrinks(item.ticket) * qty;
+              const detail = [guests && (guests === 1 ? "1 Gast" : guests + " Gäste"), drinks && (drinks === 1 ? "1 Drink" : drinks + " Drinks")].filter(Boolean).join(" · ");
+              return <div className="booking-history-package" key={index}>
+                <b>{category === "Weitere Tickets" ? item.ticket : (qty > 1 ? qty + " × " : "") + category}</b>
+                {detail && <span>{detail}</span>}
+              </div>;
+            })}
+          </div>;
+        })}
+        <small className="booking-history-stamp">Gebucht am {date.format(record.at * 1000)} · {clock.format(record.at * 1000)} Uhr</small>
+      </li>)}
+    </ul> : <small>{day ? "Noch keine Ticketbuchung." : "Buchungen derzeit nicht abrufbar."}</small>}
+  </section>;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Volume2, VolumeX } from "lucide-react";
 import { isDrink } from "@/lib/staff/bar-workload";
 import type { StaffBoard, ReceiptItem } from "@/lib/staff/types";
 import type { FoodOrder } from "@/lib/staff/food";
@@ -20,13 +20,6 @@ function enabled(mode: Mode, kind: Notice["kind"]) {
 
 function bookingNotice(booking: BookingAlert): Notice {
   return {kind: "booking", label: "Neue Buchung · " + booking.label, target: "ticket-title", booking};
-}
-
-function playbackMode(active: boolean) {
-  const session = (navigator as Navigator & {audioSession?: {type: string}}).audioSession;
-  if (session) {
-    try { session.type = active ? "playback" : "auto"; } catch {}
-  }
 }
 
 function chime(ctx: AudioContext, kind: Notice["kind"]) {
@@ -49,7 +42,7 @@ function chime(ctx: AudioContext, kind: Notice["kind"]) {
 export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?: BookingAlert[]; onBooking: (booking: BookingAlert) => void; board?: StaffBoard; food?: FoodOrder[]; demo: boolean}) {
   const [mode, setMode] = useState<Mode>("off");
   const [notice, setNotice] = useState<Notice | null>(null);
-  const [audioReady, setAudioReady] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [audioFailed, setAudioFailed] = useState(false);
   const ctx = useRef<AudioContext | null>(null);
   const since = useRef(Infinity);
@@ -65,6 +58,7 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
     let selection: Mode = "all";
     let muted = false;
     try {
+      setSoundEnabled(localStorage.getItem(storageKey + "-sound") !== "off");
       const saved = localStorage.getItem(storageKey);
       if (saved && saved !== "off" && Object.hasOwn(modes, saved)) selection = saved as Mode;
       muted = saved === "off" || localStorage.getItem(storageKey + "-muted") === "true";
@@ -72,20 +66,14 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
     since.current = Date.now();
     setPreferred(selection);
     setMode(muted ? "off" : selection);
-    return () => { clearTimeout(batch.current); clearTimeout(dismiss.current); if (ctx.current) { ctx.current.onstatechange = null; playbackMode(false); void ctx.current.close().catch(()=>{}); ctx.current = null; } };
+    return () => { clearTimeout(batch.current); clearTimeout(dismiss.current); if (ctx.current) { void ctx.current.close().catch(()=>{}); ctx.current = null; } };
   }, [storageKey]);
 
   const unlockAudio = useCallback(() => {
     try {
-      playbackMode(true);
       const audio = ctx.current ??= new AudioContext();
-      const sync = () => {
-        if (ctx.current === audio) setAudioReady(audio.state === "running");
-      };
-      audio.onstatechange = sync;
-      sync();
       if (audio.state !== "running") {
-        void audio.resume().then(sync, () => setAudioFailed(true));
+        void audio.resume().catch(() => { if (ctx.current === audio) setAudioFailed(true); });
       }
       const primer = audio.createBufferSource();
       primer.buffer = audio.createBuffer(1, 1, audio.sampleRate);
@@ -97,7 +85,7 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
   }, []);
 
   useEffect(() => {
-    if (mode === "off") return;
+    if (mode === "off" || !soundEnabled) return;
     function onInteraction() {
       if (ctx.current?.state !== "running") unlockAudio();
     }
@@ -109,7 +97,22 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
       window.removeEventListener("click", onInteraction, true);
       window.removeEventListener("keydown", onInteraction, true);
     };
-  }, [mode, unlockAudio]);
+  }, [mode, soundEnabled, unlockAudio]);
+
+  function closeAudio() {
+    const audio = ctx.current;
+    ctx.current = null;
+    if (audio) void audio.close().catch(() => {});
+  }
+
+  function toggleSound() {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    setAudioFailed(false);
+    try { localStorage.setItem(storageKey + "-sound", next ? "on" : "off"); } catch {}
+    if (next) unlockAudio();
+    else closeAudio();
+  }
 
   function activate(value: Mode) {
     since.current = Date.now();
@@ -129,10 +132,10 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
         localStorage.removeItem(storageKey + "-muted");
       }
     } catch {}
-    if (value === "off") playbackMode(false);
+    if (value === "off") closeAudio();
     else {
       setPreferred(value);
-      unlockAudio();
+      if (soundEnabled) unlockAudio();
     }
   }
 
@@ -150,9 +153,9 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
 
   const queue = useCallback((item: Notice) => {
     const queuedAt = Date.now();
-    const audio = ctx.current;
-    if (audio && !document.hidden) {
+    if (soundEnabled && !document.hidden) {
       try {
+        const audio = ctx.current ??= new AudioContext();
         // Expire a delayed resume so an old alert cannot sound on a later tap.
         if (audio.state === "running") chime(audio, item.kind);
         else void audio.resume().then(() => {
@@ -162,7 +165,7 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
     }
     pending.current.push(item);
     if (dismiss.current === undefined) advance();
-  }, [advance]);
+  }, [advance, soundEnabled]);
 
   const queueOrder = useCallback((item: Notice) => {
     orderBatch.current.push(item);
@@ -209,13 +212,15 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
     {mode!=="off" && <select aria-label="Bestellhinweise für" value={mode} onChange={e=>activate(e.target.value as Mode)}>
       {(["drink","food","both","booking","drinkBooking","foodBooking","all"] as const).map(m=><option key={m} value={m}>{modes[m]}</option>)}
     </select>}
-    {mode !== "off" && !audioReady && <button type="button" onClick={unlockAudio}>Ton aktivieren</button>}
+    {mode !== "off" && <button type="button" aria-label="Hinweistöne" title={soundEnabled ? "Ton ausschalten" : "Ton einschalten"} aria-pressed={soundEnabled} onClick={toggleSound}>
+      {soundEnabled ? <Volume2 size={18}/> : <VolumeX size={18}/>}
+    </button>}
     {demo && mode!=="off" && (["drink","food"] as const).filter(k=>enabled(mode,k)).map(k=>
       <button key={k} onClick={()=>queue(k==="drink" ? {kind:k,label:"2 × Basil Bliss · Tisch 12",target:"included-title"} : {kind:k,label:"2 × Hummus-Platte · SumUp",target:"food-orders"})}>{k==="drink" ? "Drink testen" : "Essen testen"}</button>)}
     {mode !== "off" && enabled(mode,"booking") && <button type="button" onClick={()=>queue(bookingNotice({
       id:"test", at:Date.now()/1000, label:"Premium – 2 Guests · Test", eventName:"Testbuchung"
     }))}>Buchung testen</button>}
-    {audioFailed && <small role="status">Ton nicht verfügbar. Hinweise erscheinen oben.</small>}
+    {soundEnabled && mode !== "off" && audioFailed && <small role="status">Ton nicht verfügbar. Hinweise erscheinen oben.</small>}
     <div role="status" aria-live="polite">{notice && <a className="staff-order-banner" data-kind={notice.kind} href={"#"+notice.target} onClick={()=>{if (notice.booking) onBooking(notice.booking); advance();}}>{notice.label}</a>}</div>
   </aside>;
 }

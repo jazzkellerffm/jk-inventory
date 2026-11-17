@@ -61,12 +61,41 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
   const storageKey = "jkos-order-tones-" + (demo ? "demo" : "staff");
   const [preferred, setPreferred] = useState<Mode>("all");
   useEffect(() => {
+    let selection: Mode = "all";
+    let muted = false;
     try {
       const saved = localStorage.getItem(storageKey);
-      if (saved && Object.hasOwn(modes, saved)) setPreferred(saved as Mode);
+      if (saved && saved !== "off" && Object.hasOwn(modes, saved)) selection = saved as Mode;
+      muted = saved === "off" || localStorage.getItem(storageKey + "-muted") === "true";
     } catch {}
+    since.current = Date.now();
+    setPreferred(selection);
+    setMode(muted ? "off" : selection);
     return () => { clearTimeout(batch.current); clearTimeout(dismiss.current); if (ctx.current) { playbackMode(false); void ctx.current.close().catch(()=>{}); ctx.current = null; } };
   }, [storageKey]);
+
+  const unlockAudio = useCallback(() => {
+    try {
+      playbackMode(true);
+      ctx.current ??= new AudioContext();
+      if (ctx.current.state !== "running") {
+        void ctx.current.resume().then(() => setAudioFailed(false), () => setAudioFailed(true));
+      }
+    } catch { setAudioFailed(true); }
+  }, []);
+
+  useEffect(() => {
+    if (mode === "off") return;
+    function onInteraction() {
+      if (ctx.current?.state !== "running") unlockAudio();
+    }
+    window.addEventListener("click", onInteraction, true);
+    window.addEventListener("keydown", onInteraction, true);
+    return () => {
+      window.removeEventListener("click", onInteraction, true);
+      window.removeEventListener("keydown", onInteraction, true);
+    };
+  }, [mode, unlockAudio]);
 
   function activate(value: Mode) {
     since.current = Date.now();
@@ -79,14 +108,18 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
     setNotice(null);
     setMode(value);
     setAudioFailed(false);
-    playbackMode(value !== "off");
-    if (value === "off") return;
-    setPreferred(value);
-    try { localStorage.setItem(storageKey,value); } catch {}
     try {
-      ctx.current ??= new AudioContext();
-      void ctx.current.resume().catch(() => setAudioFailed(true));
-    } catch { setAudioFailed(true); }
+      if (value === "off") localStorage.setItem(storageKey + "-muted", "true");
+      else {
+        localStorage.setItem(storageKey, value);
+        localStorage.removeItem(storageKey + "-muted");
+      }
+    } catch {}
+    if (value === "off") playbackMode(false);
+    else {
+      setPreferred(value);
+      unlockAudio();
+    }
   }
 
   const advance = useCallback(function next() {
@@ -96,12 +129,12 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
     const item = pending.current.shift();
     setNotice(item ?? null);
     if (!item) return;
+    const timer = setTimeout(next, item.kind === "booking" ? 5000 : 20000);
+    dismiss.current = timer;
     const audio = ctx.current;
-    if (audio) {
-      void audio.resume().catch(() => setAudioFailed(true));
-      chime(audio, item.kind);
-    }
-    dismiss.current = setTimeout(next, item.kind === "booking" ? 5000 : 20000);
+    if (audio) void audio.resume().then(() => {
+      if (ctx.current === audio && dismiss.current === timer && !document.hidden) chime(audio, item.kind);
+    }).catch(() => setAudioFailed(true));
   }, []);
 
   const queue = useCallback((item: Notice) => {
@@ -163,3 +196,4 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
     <div role="status" aria-live="polite">{notice && <a className="staff-order-banner" data-kind={notice.kind} href={"#"+notice.target} onClick={()=>{if (notice.booking) onBooking(notice.booking); advance();}}>{notice.label}</a>}</div>
   </aside>;
 }
+

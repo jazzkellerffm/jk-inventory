@@ -238,7 +238,6 @@
 .roster-day time { display:flex; align-items:center; gap:12px; }
 .roster-date-number,
 .booking-history-date b,
-.booking-history-heading strong,
 .perf-grid > section > strong,
 .perf-monthly-guests-value { font:700 2.5rem/1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
 .roster-date-number { color:var(--accent); }
@@ -374,6 +373,7 @@
 
 .booking-history { margin-top:20px; min-width:0; }
 .booking-history-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:10px; }
+.booking-history-heading strong { font:700 24px/1.05 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
 .booking-history-rail { display:grid; grid-auto-flow:column; grid-auto-columns:min(91%, 320px); gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; list-style:none; padding:0 0 4px; margin:0; scrollbar-width:thin; scrollbar-color:#ceb6b3 transparent; }
 .booking-history-rail:has(> :only-child) { grid-auto-columns:min(100%, 320px); }
 .booking-history-card { min-width:0; display:flex; flex-direction:column; gap:12px; scroll-snap-align:start; scroll-snap-stop:always; border-radius:15px; background:#f4e3e3; color:var(--paper); padding:14px; overflow-wrap:anywhere; }

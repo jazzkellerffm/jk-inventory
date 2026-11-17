@@ -1,4 +1,5 @@
 import "server-only";
+import { purchasedTickets, purchaseTime, purchaseWindow, summarizePurchases, type TicketActivity } from "./ticket-activity";
 import { serviceDate, serviceStart } from "./service-day";
 import {ticketDay, weekDay} from "./ticket-weeks";
 import { ticketCategory, includedDrinks, packageSize, paidSupply, type Supply } from "./entitlements";
@@ -9,7 +10,7 @@ export type TicketNight = { soldOut?: boolean; id: string; name: string; start: 
 type NightCounts = { soldOut: number; busy: number; half: number; quiet: number; unclear: number };
 export type BookingAlert = { id: string; at: number; label: string; eventId?: string; eventDate?: string; eventName?: string };
 type BookingLine = { ticket: string; eventId?: string; event?: string; date?: string };
-export type TicketFeed = { monthlyGuests: { count: number; unknownPackages: number }; bookingDay?: { count: number; recent: { id: string; at: number; lines: BookingLine[] }[] }; bookingAlerts?: BookingAlert[]; monthlyNights?: NightCounts; foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
+export type TicketFeed = { ticketActivity?: TicketActivity; monthlyGuests: { count: number; unknownPackages: number }; bookingDay?: { count: number; recent: { id: string; at: number; lines: BookingLine[] }[] }; bookingAlerts?: BookingAlert[]; monthlyNights?: NightCounts; foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
 
 async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string) {
   const rows = new Map<string,T>();
@@ -28,12 +29,28 @@ async function pages<T extends { id: string }>(resource: string, filters: Record
   }
 }
 
+// Historical orders change much less frequently than the live booking alerts.
+let activityCache: { auth: string; start: number; until: number; data: Promise<TicketActivity> } | undefined;
+function readTicketActivity(auth: string, now: number) {
+  const { dates, start } = purchaseWindow(now);
+  if (activityCache?.auth === auth && activityCache.start === start && now < activityCache.until) {
+    return activityCache.data;
+  }
+  const data = pages<ServiceOrder>("orders", {
+    created_at_gte: String(start), created_at_lte: String(now),
+  }, auth).then(orders => summarizePurchases(orders, dates, now));
+  activityCache = { auth, start, until: now + 300, data };
+  data.catch(() => { if (activityCache?.data === data) activityCache = undefined; });
+  return data;
+}
+
 async function collect(key: string, now: number, serviceDay: string): Promise<TicketFeed> {
   const start=weekDay(now,0), end=weekDay(now,28);
   const month = ticketDay(now).slice(0, 7);
   const monthlyGuests = { count: 0, unknownPackages: 0 };
   const monthlyCategories = { Club: 0, "Club Plus": 0, Premium: 0, VIP: 0, "Worldstar VIP": 0, "Weitere Tickets": 0 };
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
+  const activity = readTicketActivity(auth, now).catch(() => undefined);
   const allEvents = await pages<EventRow>("events",{},auth);
   const events = allEvents
     .filter(e => e.start?.date && (e.start.date.startsWith(serviceDay.slice(0, 7)) || e.start.date.startsWith(month) || (e.start.date >= start && e.start.date < end)) && ["published","close_sales","sales_closed"].includes(e.status))
@@ -89,7 +106,7 @@ async function collect(key: string, now: number, serviceDay: string): Promise<Ti
     else if (night.guests >= 25) monthlyNights.half++;
     else monthlyNights.quiet++;
   }
-  return {asOf:now,...bookings,nights,monthlyGuests,monthlyNights,foodPreorders,monthlyCategories,monthlyTables:{vip:monthlyCategories.VIP,worldstar:monthlyCategories["Worldstar VIP"]}};
+  return {asOf:now,ticketActivity:await activity,...bookings,nights,monthlyGuests,monthlyNights,foodPreorders,monthlyCategories,monthlyTables:{vip:monthlyCategories.VIP,worldstar:monthlyCategories["Worldstar VIP"]}};
 }
 
 let cached: { day:string; until:number; data:Promise<TicketFeed> } | undefined;
@@ -148,8 +165,6 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
 async function recentBookings(auth: string, now: number, events: Map<string, EventRow>) {
   const start = serviceStart(now * 1000) / 1000;
   const cutoff = Math.min(start, now - 600);
-  const isBooking = (order: ServiceOrder) => ["completed", "paid"].includes(order.status)
-    && order.line_items.some(line => line.type === "ticket" && line.quantity > 0);
   let from = cutoff;
   let until = now;
   let span = 86400;
@@ -158,11 +173,8 @@ async function recentBookings(auth: string, now: number, events: Map<string, Eve
     const orders = await pages<ServiceOrder>("orders", {
       created_at_gte: String(from), created_at_lte: String(until),
     }, auth);
-    const batch = orders.filter(isBooking).map(order => {
-      const value = Number(order.created_at);
-      const at = Number.isFinite(value) ? value : Date.parse(String(order.created_at)) / 1000;
-      return { ...order, at };
-    }).filter(order => order.at >= from && order.at <= until);
+    const batch = orders.filter(order => purchasedTickets(order) > 0)
+      .map(order => ({ ...order, at: purchaseTime(order) })).filter(order => order.at >= from && order.at <= until);
     bookings.push(...batch);
     if (bookings.length >= 4 || from === 0) break;
     until = from - 1;

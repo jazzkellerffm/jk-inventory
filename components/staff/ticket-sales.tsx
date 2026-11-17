@@ -13,7 +13,19 @@ import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
 
 const date = new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"});
 const clock = new Intl.DateTimeFormat("de-DE",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Berlin"});
-const demo: TicketFeed = {bookingDay:{count:6,recent:[
+const demoHours = [
+  [[10, 2], [17, 3], [20, 4]], [[12, 2], [18, 5]], [[11, 3], [17, 4], [20, 5]],
+  [[10, 2], [18, 3], [20, 1]], [[12, 4], [18, 7], [20, 5]], [[16, 4], [19, 5]],
+  [[11, 1], [16, 2], [18, 1], [20, 3]],
+];
+const demo: TicketFeed = {ticketActivity: {
+  asOf: 1794859200,
+  days: demoHours.map((sales, index) => {
+    const hours = Array<number>(24).fill(0);
+    for (const [hour, quantity] of sales) hours[hour] = quantity;
+    return { date: "2026-11-" + (10 + index), hours };
+  }),
+},bookingDay:{count:6,recent:[
   {id:"demo-a",at:1794859140,lines:[{ticket:"Worldstar VIP · 2 Gäste",event:"Saturday Trio",date:"2026-11-21"}]},
   {id:"demo-b",at:1794856200,lines:[{ticket:"Premium · 2 Gäste",event:"New York Jazz Bar",date:"2026-11-19"}]},
   {id:"demo-c",at:1794850500,lines:[{ticket:"Club · 1 Guest",event:"Jazz Jam Session",date:"2026-11-18"}]},

@@ -1,5 +1,6 @@
 "use client";
 import { serviceDate } from "@/lib/staff/service-day";
+import { TicketPurchaseMonitor } from "./ticket-activity";
 import { TicketLoader } from "./ticket-loader";
 import {useState} from "react";
 import { ticketCategories } from "@/lib/staff/entitlements";
@@ -75,6 +76,7 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
     <div className="perf-grid"><section><h3>Gebuchte Gäste</h3><strong>{nights.some(n=>n.unknown)?"≥ ":""}{total}</strong>
       <div className="perf-bars">{nights.map(n=><div key={n.id} title={n.name}><b>{n.guests}</b><i style={{height:Math.max(2,n.guests/max*78)}}/><small>{new Intl.DateTimeFormat("de-DE",{timeZone:"Europe/Berlin",weekday:"short",day:"numeric"}).format(n.start*1000)}</small></div>)}</div></section>
       <section><h3>Neu in 24 Stunden</h3><div className="perf-ring" style={{background:`conic-gradient(var(--accent) ${pct}%, #dbe8df 0)`}}><b>{pct}%</b></div><p>{recent} von {total} gebuchten Gästen</p></section></div>}
+    <TicketPurchaseMonitor activity={feed.ticketActivity}/>
     {feed?.monthlyNights && <section className="mt-4 border-t border-[var(--line)] pt-4">
       <h3 className="font-bold">Abende im {new Intl.DateTimeFormat("de-DE", {month:"long"}).format(new Date(serviceDate(feed.asOf*1000)+"T12:00:00Z"))}</h3>
       <p className="text-sm text-[var(--muted)]">Abgeschlossene Abende · gebuchte Gäste</p>

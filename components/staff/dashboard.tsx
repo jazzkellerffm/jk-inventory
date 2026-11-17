@@ -160,6 +160,8 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
             </li>)}</ol>}
           {feed && feed.payments.length > 4 && <button className="staff-more" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>{showAll ? "Weniger anzeigen" : `Alle ${feed.payments.length} anzeigen`} <ChevronDown size={16}/></button>}
         </section>
+      <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
+      <NightDrinks {...tickets} example={!!example} today={rosterDay}/>
       <FoodOrders payments={paid?.payments} onOrders={setFoodOrders} example={!!example} eveningCents={paid?.eveningCents}
         preorders={tickets.state === "unavailable" ? null : tickets.feed?.foodPreorders}/>
       {board && <section className="shift-line" aria-labelledby="tonight-team">
@@ -172,8 +174,6 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           <StationCards shifts={tonight}/>
           : <p>Für heute ist keine Schicht eingetragen.</p>}
       </section>}
-      <IncludedDrinks feed={board?.drinks} state={error ? "unavailable" : board?.drinksState}/>
-      <NightDrinks {...tickets} example={!!example} today={rosterDay}/>
       <Bestsellers example={!!example}/>
       <TicketSales week={salesWeek} setWeek={setSalesWeek} {...tickets} example={!!example}/>
       <h2 id="staff-tools" className="staff-tools-title">Tools</h2>

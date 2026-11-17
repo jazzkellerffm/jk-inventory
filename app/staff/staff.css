@@ -248,7 +248,7 @@
 .roster-role dd { margin:0; }
 .roster-role dd small { margin-bottom:5px; }
 .roster-names { display:flex; flex-wrap:wrap; gap:4px; }
-.roster-name { max-width:100%; overflow-wrap:anywhere; padding:4px 8px; border-radius:999px; background:#fff9f6; font:700 15px/1.2 var(--staff-display),sans-serif; }
+.roster-name { max-width:100%; overflow-wrap:anywhere; padding:3px 8px 5px; border-radius:999px; background:#fff9f6; font:700 15px/1.2 var(--staff-display),sans-serif; }
 .roster-name[data-match="true"] { background:var(--accent); color:white; }
 
 .door-guests { margin-top:18px; }

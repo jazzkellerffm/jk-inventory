@@ -236,7 +236,12 @@
 .roster-day + .roster-day { border-top:1px solid var(--line); padding-top:18px; }
 .roster-day h4 { margin:0 0 10px; }
 .roster-day time { display:flex; align-items:center; gap:12px; }
-.roster-date-number { font:700 40px/1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; color:var(--accent); }
+.roster-date-number,
+.booking-history-date b,
+.booking-history-heading strong,
+.perf-grid > section > strong,
+.perf-monthly-guests-value { font:700 2.5rem/1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
+.roster-date-number { color:var(--accent); }
 .roster-date-copy { display:grid; gap:2px; font:700 17px/1.2 var(--staff-display),sans-serif; }
 .roster-date-copy small { font:400 12px/1.2 var(--font-poly),sans-serif; }
 .station-cards { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
@@ -291,8 +296,7 @@
 
 .staff-turnover { background:#f4e3e3; color:var(--paper); margin-bottom:16px; }
 .staff-turnover .staff-eyebrow,.staff-turnover h2 { color:inherit; }
-.staff-turnover strong,
-.perf-monthly-guests-value { display:block; font:700 clamp(34px,7vw,64px)/1.1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
+.staff-turnover strong { display:block; font:700 clamp(34px,7vw,64px)/1.1 var(--staff-display),sans-serif; font-variant-numeric:tabular-nums; }
 .staff-turnover p { margin:6px 0 0; }
 
 .door-guests header { background:white; color:var(--paper); padding:14px; }
@@ -310,7 +314,6 @@
 .perf-grid { display:grid; grid-template-columns:2fr 1fr; gap:12px; }
 .perf-grid section { background:white; padding:14px; border:1px solid var(--line); border-radius:16px; min-width:0; }
 .perf-grid h3 { font-size:16px; margin:4px 0 12px; }
-.perf-grid strong { font:700 38px/1 var(--staff-display),sans-serif; }
 .perf-bars { display:flex; align-items:end; gap:6px; overflow:auto; margin-top:12px; }
 .perf-bars>div { min-width:32px; flex:1; display:grid; text-align:center; gap:3px; }
 .perf-bars i { background:#42675a; border-radius:6px 6px 2px 2px; }
@@ -371,13 +374,11 @@
 
 .booking-history { margin-top:20px; min-width:0; }
 .booking-history-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:10px; }
-.booking-history-heading strong { font-size:24px; font-variant-numeric:tabular-nums; }
 .booking-history-rail { display:grid; grid-auto-flow:column; grid-auto-columns:min(91%, 320px); gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; list-style:none; padding:0 0 4px; margin:0; scrollbar-width:thin; scrollbar-color:#ceb6b3 transparent; }
 .booking-history-rail:has(> :only-child) { grid-auto-columns:min(100%, 320px); }
 .booking-history-card { min-width:0; display:flex; flex-direction:column; gap:12px; scroll-snap-align:start; scroll-snap-stop:always; border-radius:15px; background:#f4e3e3; color:var(--paper); padding:14px; overflow-wrap:anywhere; }
 .booking-history-event { display:grid; gap:7px; }
 .booking-history-date { display:flex; align-items:center; gap:9px; color:var(--accent); }
-.booking-history-date b { font:700 2.25rem/1 var(--staff-display), sans-serif; }
 .booking-history-date span { position:relative; top:3px; font-size:.8125rem; font-weight:650; line-height:1.2; }
 .booking-history-date small { display:block; font-size:.75rem; font-weight:400; }
 .booking-history-title { font-size:1rem; line-height:1.25; }

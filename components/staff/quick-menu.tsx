@@ -4,11 +4,11 @@ import { Activity, LayoutGrid, ClipboardList, Martini, Utensils } from "lucide-r
 import { useEffect, useRef, useState } from "react";
 
 const destinations = [
-  { href:"#bar-monitor", label:"Bar", icon:Activity, sections:'#bar-monitor, #bestseller, [aria-labelledby="ticket-title"], #performance' },
+  { href:"#bar-monitor", label:"Bar", icon:Activity, sections:'#bar-monitor, #bestseller, #performance' },
   { href:"#bar-orders", label:"Drinks", icon:Martini, sections:"#bar-orders" },
   { href:"#food-orders", label:"Food", icon:Utensils, sections:"#food-orders" },
   { href:"#service-door", label:"Service", icon:ClipboardList,
-    sections:'[aria-labelledby="tonight-team"], #service-door' },
+    sections:'[aria-labelledby="tonight-team"], [aria-labelledby="ticket-title"], #service-door' },
   { href:"#staff-tools", label:"Tools", icon:LayoutGrid, sections:"#staff-tools" },
 ];
 

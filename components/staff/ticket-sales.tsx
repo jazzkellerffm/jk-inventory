@@ -105,7 +105,7 @@ export function TicketSales({example,feed,state,refreshing,week,setWeek}:Props &
       <p>{feed ? "Keine Veranstaltungen in dieser Woche." : state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : ""}</p>}
     {feed && <BookingHistory day={feed.bookingDay}/>}
   </section>
-  <Performance feed={feed} example={example}/>
+  <Performance feed={feed} example={example} state={state} refreshing={refreshing}/>
   <ServicePlan nights={feed?.nights ?? []} defaultId={upcoming[0]?.id} example={example}/></>;
 }
 

@@ -369,9 +369,9 @@
 .booking-history { margin-top:20px; min-width:0; }
 .booking-history-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:10px; }
 .booking-history-heading strong { font-size:24px; font-variant-numeric:tabular-nums; }
-.booking-history-rail { display:grid; grid-auto-flow:column; grid-auto-columns:min(91%, 320px); gap:10px; overflow-x:auto; scroll-snap-type:x proximity; overscroll-behavior-x:contain; list-style:none; padding:0 0 4px; margin:0; scrollbar-width:thin; scrollbar-color:#ceb6b3 transparent; }
+.booking-history-rail { display:grid; grid-auto-flow:column; grid-auto-columns:min(91%, 320px); gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; list-style:none; padding:0 0 4px; margin:0; scrollbar-width:thin; scrollbar-color:#ceb6b3 transparent; }
 .booking-history-rail:has(> :only-child) { grid-auto-columns:min(100%, 320px); }
-.booking-history-card { min-width:0; display:flex; flex-direction:column; gap:12px; scroll-snap-align:start; border-radius:15px; background:#f4e3e3; color:var(--paper); padding:14px; overflow-wrap:anywhere; }
+.booking-history-card { min-width:0; display:flex; flex-direction:column; gap:12px; scroll-snap-align:start; scroll-snap-stop:always; border-radius:15px; background:#f4e3e3; color:var(--paper); padding:14px; overflow-wrap:anywhere; }
 .booking-history-event { display:grid; gap:7px; }
 .booking-history-date { display:flex; align-items:center; gap:9px; color:var(--accent); }
 .booking-history-date b { font:700 2.25rem/1 var(--staff-display), sans-serif; }
@@ -381,3 +381,14 @@
 .booking-history-package { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 7px; font-size:.875rem; }
 .booking-history-package span { background:#fffaf7; padding:2px 8px; border-radius:20px; font-size:.75rem; }
 .booking-history-stamp { margin-top:auto; color:#554c49; font-size:.75rem; }
+
+@media (max-width: 480px) {
+  .booking-history-rail:has(> li:nth-child(2)) {
+    display:flex;
+  }
+  .booking-history-rail > li { flex:0 0 min(91%, 320px); }
+  .booking-history-rail:has(> li:nth-child(2))::after {
+    content:"";
+    flex:0 0 max(0px, calc(100% - min(91%, 320px) - 10px));
+  }
+}

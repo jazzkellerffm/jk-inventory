@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {eventFormat,summarizeBattleEvent,ranking,risingEvents} from '../lib/staff/battle-math.ts';
+import {eventFormat,summarizeBattleEvent,ranking,risingEvents,summarizeMix,latestCompletedPair} from '../lib/staff/battle-math.ts';
 const now=Date.parse('2026-11-17T21:00:00Z')/1000;
 const event={id:'ev_jam',name:'The Famous Jazz Jam Session',status:'published',start:{date:'2026-11-18',unix:now+86400}};
 const ticket=(id,label,status='valid')=>({id,event_id:event.id,status,description:label});
@@ -43,4 +43,23 @@ test('risers rank acceleration, exclude decline and tiny changes',()=>{
  const n=summarizeBattleEvent(event,[],[],now);
  const results=risingEvents([{...n,id:'large',recent:20,previous:19},{...n,id:'surprise',recent:12,previous:2},{...n,id:'tiny',recent:2,previous:0},{...n,id:'decline',recent:10,previous:12}]);
  assert.deepEqual(results.map(n=>n.id),['surprise','large']);
+});
+
+test('ticket mix includes VIP guests once, table units separately, and ignores add-ons and voids',()=>{
+ const ts=[ticket('a','Club - 2 Guests'),ticket('b','Club Plus - 3 Guests'),ticket('c','Premium - 4 Guests'),ticket('d','VIP - 2 Guests'),ticket('e','Worldstar VIP - 4 Guests'),ticket('void','Premium - 2 Guests','voided'),{...ticket('addon','Premium - 2 Guests'),add_on_id:'addon'}];
+ const n=summarizeBattleEvent(event,[...ts,ts[0]],[],now);
+ assert.equal(n.guests,15);assert.equal(n.vipTables,1);assert.equal(n.worldstarTables,1);
+ assert.deepEqual(n.mix,{Club:2,'Club Plus':3,Premium:4,VIP:2,'Worldstar VIP':4,'Weitere Tickets':0});
+ assert.equal(Object.values(n.mix).reduce((a,b)=>a+b,0),n.guests);
+ assert.equal(summarizeMix([n,n]).guests,30);
+ assert.equal(summarizeMix([{...n,unknown:1}]),null);
+});
+test('comparison uses consecutive completed nights, rejects live or ambiguous pairs',()=>{
+ const n=summarizeBattleEvent(event,[],[],now);
+ const jam={...n,id:'j',date:'2026-11-11',format:'jam'};
+ const nyjb={...n,id:'n',date:'2026-11-12',format:'nyjb'};
+ assert.equal(latestCompletedPair([jam,nyjb],'2026-11-12'),null);
+ assert.deepEqual(latestCompletedPair([jam,nyjb],'2026-11-13').map(n=>n.id),['j','n']);
+ assert.equal(latestCompletedPair([jam,nyjb,{...nyjb,id:'duplicate'}],'2026-11-13'),null);
+ assert.equal(latestCompletedPair([jam,{...nyjb,date:'2026-11-19'}],'2026-11-20'),null);
 });

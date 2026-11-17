@@ -9,8 +9,7 @@ type StaffModule = { id: string; title: string; hint: string; icon: LucideIcon }
 );
 
 export const staffModules: StaffModule[] = [
-  { id: "jam-performance", title: "Jazz Jam Session Performance", hint: "Mittwochs · Gäste, Drinks & Umsatz", icon: ChartNoAxesColumnIncreasing, render: (_board, _error, example) => <FormatPerformance format="jam" example={example}/> },
-  { id: "nyjb-performance", title: "New York Jazz Bar Performance", hint: "Donnerstags · Gäste, Drinks & Umsatz", icon: ChartNoAxesColumnIncreasing, render: (_board, _error, example) => <FormatPerformance format="nyjb" example={example}/> },
+  { id: "jam-nyjb", title: "Jam & NYJB", hint: "Gäste, Ticketmix & Performance", icon: ChartNoAxesColumnIncreasing, render: (_board, _error, example) => <FormatPerformance example={example}/> },
   { id: "inventory", title: "Inventory", hint: "Bestände prüfen", icon: Boxes, href: "/inventory" },
   {
     id: "schedule", title: "Dienstplan", hint: "Schichten & Team", icon: CalendarDays,

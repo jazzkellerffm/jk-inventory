@@ -174,9 +174,15 @@ Quellen der Recherche:
 
 ## Format-Performance (17.11.2026)
 
-Aktueller Stand: Das Battle wurde auf Philipps Wunsch durch zwei unabhängige Tools ersetzt: **Jazz Jam Session Performance** und **New York Jazz Bar Performance**. Keine Rangliste, kein Blitz, keine Duell-Texte. Jeder Bereich zeigt ausschließlich sein Format mit weißem Original-Logo auf einer kleinen dunkelgrünen Logofläche, Rosé-Kennzahlfläche und Rosé-Verlaufsbalken aus dem bestehenden Staff-OS-Stil. Die Ockerbraun-Farbwelt wurde verworfen.
+Aktueller Stand: Ein gemeinsames Tool **Jam & NYJB**, mit internen Format-Pillen. Die untere Staff-OS-Navigation bleibt unverändert. Jam erhält auf ausdrücklichen neuen Wunsch ein gedecktes Grau-Blau, NYJB Rosé; weiße Original-Logos direkt auf der Farbfläche. Kein umfassendes Ranking, nur ein kleiner Vergleich unten mit solidem gelbem Blitz.
 
-Ansichten: Monat (Durchschnitt abgeschlossener Abende), letzter Abend im gewählten Monat, nächster kommender Abend (Buchungsstand). Kennzahlen: Gäste, bezahlte Online-Pakete, gebuchte Included Drinks, SumUp-Umsatz und Umsatz pro gebuchtem Gast. „Abend für Abend“ zeigt wählbare Kennzahlen als datierte Säulen. Fehlende Daten bleiben „–“, kommende Umsätze werden nicht behauptet. Buchungszuwächse werden je Format gefiltert. Originale Datenroute und Berechnungen werden weiterverwendet, keine Änderung an SumUp/Ticket Tailor.
+Ansichten: Monat (Durchschnitt abgeschlossener Abende), letzter Abend im gewählten Monat, nächster kommender Abend. Kennzahlen: gebuchte Gäste, Included Drinks, SumUp-Umsatz und Umsatz pro gebuchtem Gast. Bezahlte Online-Pakete wurden aus der Oberfläche entfernt. Fehlende Daten bleiben „–“.
+
+Ticketmix zählt gültige issued tickets mit den bestehenden Kategorien und Paketgrößen: Club, Club Plus, Premium, VIP, Worldstar VIP, Weitere Tickets. Gruppenpaket für drei = drei Gäste. VIP-Gäste sind in allen Gesamtzahlen enthalten; VIP-Pakete werden zusätzlich als gebuchte Tische pro Datum gezeigt, ohne Gäste doppelt zu zählen. Unbekannte Paketgrößen sperren den Mix. Monatsmix ist eine klar beschriftete Summe, Hauptkennzahlen bleiben Durchschnitte.
+
+Schmale abgerundete Balken zeigen den Mix und kommende Abende. Dunkler Abschnitt = neu gebuchte Gäste in den letzten **7 Tagen**, mit Vergleich zu den 7 Tagen davor. Der Included-Drinks-Kreis zeigt gebuchte Drinks relativ zur Gästezahl, keine eingelösten Getränke. Unten wird das letzte eindeutige abgeschlossene Mittwoch-/Donnerstag-Paar im gewählten Monat nach Gästen, Drinks und SumUp verglichen. Keine Anwesenheitsbehauptung; fehlende Daten niemals null. API und Zugriffsrechte unverändert, zusätzliche aggregierte Mix-/Tischfelder; keine neue Datenbank.
+
+Tests ergänzen VIP-/Gruppen-/Add-on-/Deduplizierungsregeln und vollständige, eindeutige Wochenpaare.
 
 ### Technische Grundlage und Historie des ersetzten Battles
 
@@ -198,4 +204,4 @@ Die folgenden Battle-Angaben dokumentieren den vorherigen Aufbau; sie beschreibe
 
 ### Aktuelles Performance-Branding
 
-Original-SVGs aus `jazzkellerffm/jkos-public`: `assets/logos/jam/jam-white.svg` und `assets/logos/nyjb/nyjb-white.svg`, unverändert lokal unter `public/branding/`. Je Modul ein kompakter Logo-Kopf (68–82 px Logo inklusive Innenabstand), keine große Hero-Fläche, keine zusätzliche Blaugrün-Farbe. Verbindlich sind die vorhandenen CSS-Variablen aus `app/staff/staff.css`: `--paper`, `--muted`, `--accent`, `--line`, `--card`. Rosé #f4e3e3 wie Abendumsatz/Buchungskarten; Diagramme mit #ebcbc4 → #d6a39a und stärkstem Balken #b57c73 wie Ticket Tailor. Überschriften und Zahlen verwenden ausdrücklich `--staff-display`, Fließtexte die geerbte Staff-OS-Schrift. Umschalter verwenden die gemeinsame Klasse `service-switch`. Keine Gegenüberstellung. Philipps Korrektur: Die eingeführte Blaugrün-Farbwelt und der generische große Logo-Block waren nicht gewünscht; vorhandene App ist visuelle Referenz. Rendering in `components/staff/format-battle.tsx` exportiert `FormatPerformance`; technische Dateinamen und API-Pfad bleiben zur Kompatibilität erhalten.
+Original-SVGs aus `jazzkellerffm/jkos-public`, unverändert unter `public/branding/`. Bestehende Staff-OS-Variablen, Typografie, Rundungen und `service-switch` bleiben maßgeblich. Umschalter erben Poly Sans; Überschriften/Zahlen verwenden `--staff-display`. Jam: Grau-Blau #e5ebef / #c6d4dd / #91a9b9, dunkler Akzent #526f83, Logofläche #526b79. NYJB: bestehendes Rosé #f4e3e3, Balken #ebcbc4 → #d6a39a, dunkler Abschnitt #b57c73, Logofläche #956860 für lesbares Weiß. Die neue Grau-Blau-Freigabe ersetzt die frühere Ablehnung des ungewünschten Blaugrüns. Keine Ockerbrauntöne. Kompakte Köpfe, schmale Vergleichsbalken; keine Änderung an der Navbar. Technische Dateinamen und API-Pfad bleiben kompatibel.

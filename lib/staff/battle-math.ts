@@ -1,9 +1,10 @@
-import { includedDrinks, packageSize } from "./entitlements";
+import { includedDrinks, packageSize, ticketCategory, ticketCategories } from "./entitlements";
 export type Format = "jam" | "nyjb";
 export type BattleEvent = { id:string; name:string; status:string; created_at?:number; start:{date:string;unix:number} };
 export type BattleTicket = {id:string;event_id:string;status:string;description:string;add_on_id?:string};
 export type BattleOrder = {id:string;status:string;created_at:number|string;total?:number;transactions?:{amount:number;payment_method:string;pending:boolean}[];line_items:{type:string;value:number;quantity:number;description:string;event_summary?:{event_id:string};fulfilments?:{reference_id:string}[]}[]};
-export type BattleNight = {id:string;name:string;date:string;format:Format|null;packages:number;guests:number;drinks:number;unknown:number;recent:number;previous:number;cents:number|null;complete:boolean;isNew:boolean};
+export type TicketMix = Record<typeof ticketCategories[number],number>;
+export type BattleNight = {id:string;name:string;date:string;format:Format|null;packages:number;guests:number;drinks:number;unknown:number;recent:number;previous:number;cents:number|null;complete:boolean;isNew:boolean;mix:TicketMix;vipTables:number;worldstarTables:number};
 export function eventFormat(event:BattleEvent):Format|null {
  const weekday=new Date(event.start.date+"T12:00:00Z").getUTCDay();
  if(weekday===3 && /\bjazz\s+jam\s+session\b/i.test(event.name))return "jam";
@@ -12,9 +13,10 @@ export function eventFormat(event:BattleEvent):Format|null {
 }
 export function summarizeBattleEvent(event:BattleEvent,tickets:BattleTicket[],orders:BattleOrder[],now:number):BattleNight {
  const valid=new Map(tickets.filter(t=>t.event_id===event.id&&t.status==="valid"&&!t.add_on_id).map(t=>[t.id,t]));
- const result:BattleNight={id:event.id,name:event.name,date:event.start.date,format:eventFormat(event),packages:0,guests:0,drinks:0,unknown:0,recent:0,previous:0,cents:null,complete:true,isNew:!!event.created_at&&event.created_at>now-14*86400};
+ const mix=Object.fromEntries(ticketCategories.map(c=>[c,0])) as TicketMix;
+ const result:BattleNight={id:event.id,name:event.name,date:event.start.date,format:eventFormat(event),packages:0,guests:0,drinks:0,unknown:0,recent:0,previous:0,cents:null,complete:true,mix,vipTables:0,worldstarTables:0,isNew:!!event.created_at&&event.created_at>now-14*86400};
  // Guest and entitlement counts match the existing valid-issued-ticket display.
- for(const t of valid.values()){const size=packageSize(t.description);result.guests+=size;result.drinks+=includedDrinks(t.description);if(!size)result.unknown++;}
+ for(const t of valid.values()){const size=packageSize(t.description);result.guests+=size;const category=ticketCategory(t.description);result.mix[category]+=size;if(category==="VIP")result.vipTables++;if(category==="Worldstar VIP")result.worldstarTables++;result.drinks+=includedDrinks(t.description);if(!size)result.unknown++;}
  const counted=new Set<string>();
  for(const order of orders){
   if(!["completed","paid"].includes(order.status))continue;
@@ -44,3 +46,18 @@ export function ranking(nights:BattleNight[]){
  });
 }
 export function risingEvents(nights:BattleNight[]){return nights.filter(n=>!n.unknown&&n.complete&&n.recent>=3&&n.recent>n.previous).sort((a,b)=>(b.recent-b.previous)-(a.recent-a.previous)||b.recent-a.recent).slice(0,3);}
+
+export function summarizeMix(nights:BattleNight[]){
+ if(!nights.length||nights.some(n=>n.unknown||!n.mix))return null;
+ const mix=Object.fromEntries(ticketCategories.map(c=>[c,nights.reduce((sum,n)=>sum+n.mix[c],0)])) as TicketMix;
+ return {mix,guests:nights.reduce((sum,n)=>sum+n.guests,0),drinks:nights.reduce((sum,n)=>sum+n.drinks,0),vipTables:nights.reduce((sum,n)=>sum+n.vipTables,0),worldstarTables:nights.reduce((sum,n)=>sum+n.worldstarTables,0)};
+}
+export function latestCompletedPair(nights:BattleNight[],today:string){
+ const completed=nights.filter(n=>n.date<today);
+ for(const jam of completed.filter(n=>n.format==="jam").sort((a,b)=>b.date.localeCompare(a.date))){
+  const next=new Date(jam.date+"T12:00:00Z");next.setUTCDate(next.getUTCDate()+1);
+  const partners=completed.filter(n=>n.format==="nyjb"&&n.date===next.toISOString().slice(0,10));
+  if(partners.length===1&&completed.filter(n=>n.format==="jam"&&n.date===jam.date).length===1)return [jam,partners[0]] as const;
+ }
+ return null;
+}

@@ -312,6 +312,7 @@
 .perf-bars { display:flex; align-items:end; gap:6px; overflow:auto; margin-top:12px; }
 .perf-bars>div { min-width:32px; flex:1; display:grid; text-align:center; gap:3px; }
 .perf-bars i { background:#42675a; border-radius:6px 6px 2px 2px; }
+.perf-panel .ticket-fill { background:linear-gradient(90deg,#9eb7a6,#42675a); }
 .perf-ring { display:grid; place-items:center; height:90px; width:90px; border-radius:50%; }
 .perf-ring b { display:grid; place-items:center; border-radius:50%; width:72%; height:72%; background:white; font-size:21px; }
 @media(max-width:550px){.perf-grid { grid-template-columns:1fr; }}

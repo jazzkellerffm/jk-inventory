@@ -99,7 +99,7 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
       {highest ? <ol className="mt-3 space-y-3">{categories.map(({label,count}) =>
         <li key={label}>
           <div className="flex items-baseline justify-between gap-3"><b>{label}</b><b className="tabular-nums">{count}</b></div>
-          <div aria-hidden="true" className="mt-1 h-3 overflow-hidden rounded-full bg-[#f7eeeb]">
+          <div aria-hidden="true" className="mt-1 h-3 overflow-hidden rounded-full bg-[#e8eeea]">
             <div className="ticket-fill" style={{width:count / highest * 100 + "%"}}/>
           </div>
         </li>)}</ol> : <p>Noch keine gebuchten Ticketpakete für diesen Monat.</p>}

@@ -190,11 +190,16 @@ export async function readBarEvenings(merchant: string, token: string, detailDay
   }
   const groups = new Map<string, Payment[]>();
   for (const payment of await eveningHistory.payments) {
-    if (payment.currency !== "EUR") continue;
+    if (payment.currency !== "EUR" || payment.amount <= 0) continue;
     const date = serviceDate(Date.parse(payment.at));
     const rows = groups.get(date);
     if (rows) rows.push(payment);
     else groups.set(date, [payment]);
+  }
+  // The only sale on this service night was the confirmed €3 test.
+  const testNight = groups.get("2026-11-16");
+  if (testNight?.length === 1 && Math.round(testNight[0].amount * 100) === 300) {
+    groups.delete("2026-11-16");
   }
   if (detailDay) {
     const rows = groups.get(detailDay) ?? [];

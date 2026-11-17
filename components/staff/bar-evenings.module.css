@@ -2,9 +2,11 @@
 .summary { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin: 20px 0 12px; }
 .summary strong { font: 700 clamp(28px, 6vw, 42px)/1.1 var(--staff-display), sans-serif; }
 .chart { display: flex; overflow-x: auto; gap: 4px; scroll-snap-type: x proximity; }
-.chart button { display: flex; flex: 1 0 44px; flex-direction: column; align-items: stretch; justify-content: end; gap: 5px; padding: 3px; min-height: 108px; border: 0; background: transparent; color: inherit; cursor: pointer; scroll-snap-align: start; }
-.chart i { display: block; background: #d5a59e; border-radius: 5px 5px 2px 2px; }
+.chart button { display: flex; min-width: 0; flex: 0 0 calc((100% - 28px) / 8); flex-direction: column; align-items: stretch; justify-content: end; gap: 5px; padding: 3px; min-height: 108px; border: 0; background: transparent; color: inherit; cursor: pointer; scroll-snap-align: start; }
+.chart i { display: block; background: #d5a59e; border-radius: 6px 6px 2px 2px; }
 .chart button[aria-pressed=true] i { background: #a46760; }
 .chart button[aria-pressed=true] small { font-weight: 700; }
 .chart button:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
 .panel p { margin: 12px 0 4px; }
+
+.chart button small { font-size: clamp(9px, 2.6vw, 12px); white-space: nowrap; }

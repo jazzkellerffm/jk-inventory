@@ -50,7 +50,7 @@ export function BarEvenings({ example }: { example: boolean }) {
   const items = example && night ? { units: night.payments * 2, complete: true } : detail?.date === date ? detail?.value : undefined;
   const peak = Math.max(1, ...(nights ?? []).map(n => n.cents));
   return <section id="bar-evenings" className={`staff-panel ${styles.panel}`} aria-labelledby="bar-evenings-title">
-    <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={16}/> SumUp</span><small>{example ? "Beispieldaten" : "Letzte 14 Tage"}</small></div>
+    <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={16}/> SumUp</span><small>{example ? "Beispieldaten · 14 Tage" : "Letzte 14 Tage"}</small></div>
     <h2 id="bar-evenings-title">Barumsatz im Vergleich</h2>
     {night && nights ? <>
       <div className={styles.summary} aria-live="polite"><b>{dateLabel.format(new Date(night.date))}</b><strong>{amount.format(night.cents / 100)}</strong></div>

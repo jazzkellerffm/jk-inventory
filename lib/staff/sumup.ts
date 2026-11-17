@@ -2,6 +2,7 @@ import "server-only";
 import { bestsellerStart, type BestsellerPeriod } from "./bestseller-period";
 import { serviceDate, serviceStart } from "./service-day";
 import { prepWeight } from "./bar-workload";
+import { readSales, type ItemSale } from "./sumup-sales";
 import type { BarFeed, Payment, ReceiptItem, BestsellerFeed } from "./types";
 
 const minute = 60_000;
@@ -10,6 +11,7 @@ const receiptCache = new Map<string, { until: number; items: ReceiptItem[] }>();
 let lastFeed: { key: string; start: number; until: number; value: Promise<BarFeed> } | undefined;
 
 type Transaction = {
+  id?: string;
   transaction_id?: string;
   transaction_code?: string;
   product_summary?: string;
@@ -20,11 +22,12 @@ type Transaction = {
   currency: string;
 };
 
-async function read(path: string, token: string) {
+async function read(path: string, token: string, deadline = Infinity) {
+  if (Date.now() >= deadline) throw new Error("SumUp request budget exhausted");
   const response = await fetch(api + path, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(Math.max(1, Math.min(5000, deadline - Date.now()))),
   });
   if (!response.ok) throw new Error(`SumUp HTTP ${response.status}`);
   return response.json();
@@ -40,9 +43,9 @@ function parseItems(products: unknown): ReceiptItem[] {
 }
 
 // Record only API status and product-field availability, never receipt/customer data.
-async function readItemDetails(path: string, token: string, source: "receipt" | "transaction") {
+async function readItemDetails(path: string, token: string, source: "receipt" | "transaction", deadline = Infinity) {
   try {
-    const data = await read(path, token);
+    const data = await read(path, token, deadline);
     const products = source === "receipt" ? data?.transaction_data?.products : data?.products;
     if (!Array.isArray(products) || !products.length) {
       console.warn("SumUp item diagnostics", { source, result: "no-products",
@@ -54,26 +57,26 @@ async function readItemDetails(path: string, token: string, source: "receipt" | 
     return data;
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    const status = /^SumUp HTTP (\\d{3})$/.exec(message)?.[1];
+    const status = /^SumUp HTTP (\d{3})$/.exec(message)?.[1];
     console.warn("SumUp item diagnostics", { source, result: "request-failed",
       status: status || null, kind: error instanceof Error ? error.name : "UnknownError" });
     return null;
   }
 }
 
-async function receiptItems(merchant: string, payment: Payment, token: string): Promise<ReceiptItem[]> {
+async function receiptItems(merchant: string, payment: Payment, token: string, deadline = Infinity): Promise<ReceiptItem[]> {
   const id = payment.id;
   const key = merchant + "/" + id;
   const cached = receiptCache.get(key);
   if (cached && cached.until > Date.now()) return cached.items;
 
   const mid = encodeURIComponent(merchant);
-  const receipt = await readItemDetails(`/v1.1/receipts/${encodeURIComponent(id)}?mid=${mid}`, token, "receipt");
+  const receipt = await readItemDetails(`/v1.1/receipts/${encodeURIComponent(id)}?mid=${mid}`, token, "receipt", deadline);
   let items = parseItems(receipt?.transaction_data?.products);
   if (!items.length) {
     const field = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? "id" : "transaction_code";
     const query = new URLSearchParams({ [field]: id });
-    const transaction = await readItemDetails(`/v2.1/merchants/${mid}/transactions?${query}`, token, "transaction");
+    const transaction = await readItemDetails(`/v2.1/merchants/${mid}/transactions?${query}`, token, "transaction", deadline);
     items = parseItems(transaction?.products);
   }
   const recent = Date.now() - Date.parse(payment.at) < 5 * minute;
@@ -83,6 +86,8 @@ async function receiptItems(merchant: string, payment: Payment, token: string): 
   return items;
 }
 
+type ItemPayment = Payment & { transactionCode?: string; saleId?: string; itemsComplete?: boolean };
+
 async function history(merchant: string, token: string, since: number, now: number) {
   const path = `/v2.1/merchants/${encodeURIComponent(merchant)}/transactions/history`;
   const query = new URLSearchParams({
@@ -91,19 +96,19 @@ async function history(merchant: string, token: string, since: number, now: numb
   });
   let cursor = query.toString();
   const seen = new Set<string>();
-  const payments = new Map<string, Payment>();
+  const payments = new Map<string, ItemPayment>();
   while (cursor) {
     if (seen.has(cursor) || seen.size >= 30) throw new Error("Incomplete SumUp history");
     seen.add(cursor);
     const page = await read(path + "?" + cursor, token);
     if (!Array.isArray(page?.items)) throw new Error("Invalid SumUp history");
     for (const row of page.items as Transaction[]) {
-      const id = row.transaction_id || row.transaction_code;
+      const id = row.transaction_id || row.id || row.transaction_code;
       const time = Date.parse(row.timestamp);
       if (!id || row.type !== "PAYMENT" || row.status !== "SUCCESSFUL" ||
           !Number.isFinite(time) || time < since || time >= now ||
           !Number.isFinite(row.amount) || !/^[A-Z]{3}$/.test(row.currency)) continue;
-      payments.set(id, { id, at: row.timestamp, amount: row.amount, currency: row.currency,
+      payments.set(id, { id, transactionCode: row.transaction_code, at: row.timestamp, amount: row.amount, currency: row.currency,
         summary: typeof row.product_summary === "string" ? row.product_summary.trim() : undefined, items: [] });
     }
     const next = page.links?.find((link: { rel: string }) => link.rel === "next");
@@ -124,18 +129,17 @@ async function collect(merchant: string, token: string, now: number, start: numb
   const latest = sorted.slice(0, 8);
   const recent = sorted.filter(payment => Date.parse(payment.at) >= now - 5 * minute);
   const needsItems = sorted.slice(0, Math.max(latest.length, recent.length));
-  for (let i = 0; i < needsItems.length; i += 8) {
-    await Promise.all(needsItems.slice(i, i + 8).map(async payment => {
-      payment.items = await receiptItems(merchant, payment, token);
-    }));
-  }
+  await attachSaleItems(merchant, token, needsItems, now, 10_000);
   let paidEffort = 0;
   let missingReceiptDetails = false;
+  const countedSales = new Set<string>();
   for (const payment of recent) {
-    if (!payment.items.length) missingReceiptDetails = true;
+    if (!payment.itemsComplete) missingReceiptDetails = true;
+    if (payment.saleId && countedSales.has(payment.saleId)) continue;
+    if (payment.saleId) countedSales.add(payment.saleId);
     for (const item of payment.items) {
       if (item.quantity === null) missingReceiptDetails = true;
-      paidEffort += prepWeight(item.name) * (item.quantity ?? 1);
+      if (countable(item)) paidEffort += prepWeight(item.name, item.categories) * (item.quantity ?? 0);
     }
   }
   return {
@@ -155,45 +159,68 @@ export function readBarFeed(merchant: string, token: string) {
   return value;
 }
 
-let salesProbeUntil = 0;
-async function probeSales(merchant: string, token: string) {
-  if (Date.now() < salesProbeUntil) return;
-  salesProbeUntil = Date.now() + 10 * minute;
+// A transaction summary is display text, not a list with reliable quantities.
+// Match actual sale lines by the provider's payment reference; never by amount/name/time.
+async function attachSaleItems(merchant: string, token: string, payments: ItemPayment[], now: number, budgetMs = 240_000) {
+  const deadline = Date.now() + budgetMs;
+  if (!payments.length) return;
+  let sales: ItemSale[] = [];
   try {
-    const page = await read(`/v1.0/merchants/${encodeURIComponent(merchant)}/sales?pagination_limit=25`, token);
-    const sales = Array.isArray(page?.items) ? page.items : [];
-    console.warn("SumUp sales diagnostics", {
-      result: "received", sales: sales.length,
-      withLines: sales.filter((sale: { items?: unknown }) => Array.isArray(sale.items) && sale.items.length > 0).length,
-      hasNextPage: !!page?.pagination_token,
-    });
+    const since = Math.min(...payments.map(payment => Date.parse(payment.at)));
+    sales = await readSales(merchant, token, since, now, deadline);
   } catch (error) {
-    const status = /^SumUp HTTP (\\d{3})$/.exec(error instanceof Error ? error.message : "")?.[1];
-    console.warn("SumUp sales diagnostics", { result: "request-failed", status: status || null });
+    console.warn("SumUp sale items unavailable", error instanceof Error && /^SumUp HTTP \d{3}$/.test(error.message)
+      ? error.message : "request failed");
   }
+  const byReference = new Map<string, ItemSale | null>();
+  for (const sale of sales) for (const reference of sale.references) {
+    const existing = byReference.get(reference);
+    byReference.set(reference, existing === undefined || existing?.id === sale.id ? sale : null);
+  }
+  let matched = 0;
+  for (let i = 0; i < payments.length; i += 8) {
+    await Promise.all(payments.slice(i, i + 8).map(async payment => {
+      const sale = byReference.get(payment.transactionCode || payment.id) ?? byReference.get(payment.id);
+      if (sale) {
+        matched++;
+        payment.saleId = sale.id;
+        payment.items = sale.items;
+        payment.itemsComplete = sale.complete;
+      } else if (Date.now() < deadline) {
+        payment.items = await receiptItems(merchant, payment, token, deadline);
+        payment.itemsComplete = payment.items.length > 0 && payment.items.every(countable);
+      }
+    }));
+  }
+  // Aggregate diagnostics only; no product, payment, customer or credential data.
+  console.info("SumUp item coverage", { payments: payments.length, matchedSales: matched,
+    incomplete: payments.filter(payment => !payment.itemsComplete).length });
+}
+
+const generic = /^(drinks?|getränke|custom amount|custom item|benutzerdefinierter betrag|freier betrag)$/i;
+function countable(item: ReceiptItem) {
+  return item.quantity !== null && !generic.test(item.name);
 }
 
 async function rankSales(merchant:string,token:string,start:number,now:number):Promise<BestsellerFeed> {
-  await probeSales(merchant, token);
-  const sales = await history(merchant,token,start,now);
+  const payments = await history(merchant,token,start,now);
+  await attachSaleItems(merchant, token, payments, now);
   const totals = new Map<string,{name:string;quantity:number}>();
+  const countedSales = new Set<string>();
   let incomplete=0;
-  for (let i=0;i<sales.length;i+=8) {
-    const receipts=await Promise.all(sales.slice(i,i+8).map(p=>receiptItems(merchant,p,token)));
-    for (const items of receipts) {
-      // Generic terminal labels describe a payment, not a countable product.
-      const generic = /^(drinks?|getränke|custom amount|custom item|benutzerdefinierter betrag|freier betrag)$/i;
-      if (!items.length || items.some(item=>item.quantity===null || generic.test(item.name))) {
-        incomplete++;
-        continue;
-      }
-      for (const {name,quantity} of items) {
-        if (quantity===null) continue;
-        const key=name.normalize("NFC").toLocaleLowerCase("de");
-        const entry=totals.get(key);
-        if (entry) entry.quantity+=quantity;
-        else totals.set(key,{name,quantity});
-      }
+  for (const payment of payments) {
+    if (payment.saleId && countedSales.has(payment.saleId)) continue;
+    if (payment.saleId) countedSales.add(payment.saleId);
+    if (!payment.itemsComplete || payment.items.some(item => !countable(item))) {
+      incomplete++;
+      continue;
+    }
+    for (const {name,quantity} of payment.items) {
+      if (quantity===null) continue;
+      const key=name.normalize("NFC").toLocaleLowerCase("de");
+      const entry=totals.get(key);
+      if (entry) entry.quantity+=quantity;
+      else totals.set(key,{name,quantity});
     }
   }
   const products=[...totals.values()].sort((a,b)=>b.quantity-a.quantity || a.name.localeCompare(b.name,"de")).slice(0,10);

@@ -18,7 +18,7 @@ import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
 import { staffModules } from "./modules";
 import { serviceDate } from "@/lib/staff/service-day";
 import { StationCards } from "./station-cards";
-import { isCocktail } from "@/lib/staff/bar-workload";
+import { barLoadLevel, isCocktail, isFreshSnapshot } from "@/lib/staff/bar-workload";
 import { Masthead } from "./masthead";
 
 const time = new Intl.DateTimeFormat("de-DE", { timeZone: "Europe/Berlin", hour: "2-digit", minute: "2-digit" });
@@ -28,11 +28,13 @@ const money = (amount: number, currency: string) => new Intl.NumberFormat("de-DE
 function useBoard(example?: StaffBoard) {
   const [board, setBoard] = useState<StaffBoard | undefined>(example);
   const [error, setError] = useState(false);
+  const [checkedAt, setCheckedAt] = useState(0);
   useEffect(() => {
     if (example) return;
     const controller = new AbortController();
     let busy = false;
     const update = async () => {
+      setCheckedAt(Date.now());
       if (document.hidden || busy) return;
       busy = true;
       try {
@@ -61,7 +63,7 @@ function useBoard(example?: StaffBoard) {
       window.removeEventListener("online", update);
     };
   }, [example]);
-  return { board, error };
+  return { board, error, checkedAt };
 }
 
 function ActivityChart({ feed }: { feed: BarFeed }) {
@@ -88,13 +90,14 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
     const week = [0, 1, 2, 3].find(index => day && day >= weekDay(now, index * 7) && day < weekDay(now, index * 7 + 7));
     if (week !== undefined) setSalesWeek(week);
   }
-  const { board, error } = useBoard(example);
+  const { board, error, checkedAt } = useBoard(example);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>();
   const [showAll, setShowAll] = useState(false);
   const feed = board?.feed;
   const lastFive = feed?.buckets.at(-1);
-  const paid = !error && board?.feedState === "ready" ? feed : null;
-  const open = !error && board?.drinksState === "ready" ? board.drinks : null;
+  const fresh = (asOf?: string) => !!example || isFreshSnapshot(asOf, checkedAt);
+  const paid = !error && board?.feedState === "ready" && fresh(feed?.asOf) ? feed : null;
+  const open = !error && board?.drinksState === "ready" && fresh(board.drinks?.asOf) ? board.drinks : null;
   const cocktailTiles = [
     ...(paid?.payments ?? []).map(payment => ({ ...payment, source: "SumUp" })),
     ...(open?.orders ?? []).map(order => ({ ...order, source: "Included Drinks" })),
@@ -102,15 +105,14 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
     .flatMap(entry => entry.items.flatMap((item, index) => isCocktail(item.name)
       ? [{ ...item, at: entry.at, source: entry.source, key: [entry.source, entry.id, index].join("/") }]
       : []));
-  const effort = (paid?.paidEffort ?? 0) + (open?.openEffort ?? 0);
   const complete = paid && open && !paid.missingReceiptDetails;
-  const level = effort >= 5 ? 3 : effort >= 3 ? 2 : complete ? 1 : 0;
+  const level = barLoadLevel(paid?.paidEffort ?? 0, open?.openEffort ?? 0, !!complete);
   const loadLabel = [paid?.missingReceiptDetails ? "SumUp-Artikeldetails fehlen" : "Daten fehlen", "Ruhig", "Zieht an", "Viel los"][level];
-  const stale = error || board?.feedState === "unavailable";
+  const stale = error || board?.feedState === "unavailable" || (!!feed && !fresh(feed.asOf));
   const status = example ? "Beispieldaten" : stale ? "Verbindung unterbrochen" : feed ? "Verbunden" : board ? "Einrichtung offen" : "Lädt …";
   const timestamps = [feed?.asOf, board?.drinks?.asOf].filter((at): at is string => !!at);
   const snapshot = timestamps.length ? new Date(Math.max(...timestamps.map(at => Date.parse(at)))) : undefined;
-  const rosterDay = serviceDate(example && snapshot ? snapshot.getTime() : Date.now());
+  const rosterDay = serviceDate(example && snapshot ? snapshot.getTime() : checkedAt);
   const tonight = board?.shifts.filter(shift => shift.date === rosterDay) ?? [];
   const message = stale ? "SumUp ist gerade nicht erreichbar." : board?.feedState === "setup" ? "SumUp ist noch nicht verbunden." : "Zahlungen werden geladen …";
   return <div className="staff-shell">

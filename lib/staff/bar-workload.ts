@@ -11,7 +11,8 @@ export function isCocktail(name: string) {
   return cocktails.test(label) || /\b(spritz|highball|gin(?: and)? tonic|gintonic|fizz|gimlet|boulevardier)\b/i.test(label);
 }
 
-export function prepWeight(name: string) {
+export function prepWeight(name: string, categories: string[] = []) {
+  if (categories.some(category => category.trim().toLocaleLowerCase("de") === "bar snacks")) return 0;
   const label = normalizeName(name);
   if (cocktails.test(label)) return 1;
   if (simple.test(label)) return 0.125;
@@ -20,4 +21,15 @@ export function prepWeight(name: string) {
 
 export function isDrink(name: string) {
   return isCocktail(name) || simple.test(normalizeName(name));
+}
+
+// Missing or stale data must never produce a reassuring "Ruhig" signal.
+// Known work can still establish a lower bound of "Zieht an" or "Viel los".
+export function barLoadLevel(paidEffort: number, openEffort: number, complete: boolean): 0 | 1 | 2 | 3 {
+  const effort = paidEffort + openEffort;
+  return effort >= 5 ? 3 : effort >= 3 ? 2 : complete ? 1 : 0;
+}
+
+export function isFreshSnapshot(asOf: string | undefined, now: number): boolean {
+  return !!asOf && Number.isFinite(Date.parse(asOf)) && now - Date.parse(asOf) <= 45_000;
 }

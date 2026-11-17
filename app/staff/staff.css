@@ -453,3 +453,6 @@
 .bestseller-unavailable { padding:16px 0; }
 .bestseller-unavailable p { font-size:.9rem; color:var(--muted); margin:8px 0 0; }
 @media (max-width:360px) { .bestseller-controls { gap:6px; } .bestseller-controls .service-switch button { padding:8px 6px; } }
+
+/* Unconfirmed assignments stay legible and retain their station colour. */
+.roster-role[data-tentative="true"] { opacity:.72; outline:1px dashed currentColor; outline-offset:-1px; }

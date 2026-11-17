@@ -8,7 +8,8 @@ export function upcomingShifts(raw = plan.length ? JSON.stringify(plan) : proces
   const rows: unknown = JSON.parse(raw);
   if (!Array.isArray(rows)) throw new Error("Invalid schedule");
   return rows.map(row => {
-    if (typeof row?.date !== "string" || !/^\d{4}-\d\d-\d\d$/.test(row.date) ||
+    if ((row?.status !== undefined && row.status !== "confirmed" && row.status !== "tentative") ||
+        typeof row?.date !== "string" || !/^\d{4}-\d\d-\d\d$/.test(row.date) ||
         !Number.isFinite(Date.parse(row.date)) || new Date(row.date).toISOString().slice(0, 10) !== row.date ||
         (row.role !== undefined && (typeof row.role !== "string" || !row.role.trim())) ||
         !Array.isArray(row.names) || !row.names.length ||
@@ -16,6 +17,6 @@ export function upcomingShifts(raw = plan.length ? JSON.stringify(plan) : proces
         (row.start !== undefined && (typeof row.start !== "string" || !/^([01]\d|2[0-3]):[0-5]\d$/.test(row.start)))) {
       throw new Error("Invalid shift");
     }
-    return { date: row.date, role: row.role?.trim(), names: row.names.map((name: string) => name.trim()), start: row.start };
+    return { date: row.date, role: row.role?.trim(), names: row.names.map((name: string) => name.trim()), start: row.start, status: row.status };
   }).sort((a,b) => a.date.localeCompare(b.date) || (a.start ?? "").localeCompare(b.start ?? ""));
 }

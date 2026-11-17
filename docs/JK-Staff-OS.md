@@ -163,3 +163,10 @@ Quellen der Recherche:
 - 26.: Hamad + Adri bestätigt, Aufgabenverteilung noch offen (ggf. auch Service/Backstage); Joab Backstage ausdrücklich noch offen. Keine feste Stationszuordnung der beiden erfinden.
 - Vergangene gespeicherte Schichten bleiben abrufbar, Woche/Monat startet beim aktuellen Betriebsdatum. Vor dem 18.11. wurden keine historischen Einsätze aus dem Foto ergänzt. Dienstplan ist Planung, kein Anwesenheitsnachweis.
 - Noch keine Admin-App zum Bearbeiten; Datenquelle bleibt `data/dienstplan.json` und Veröffentlichung per Deployment.
+
+
+### Ergänzung Tür und offene Einsätze
+
+- Schreibweise auf ausdrückliche Korrektur: **Ana**. Door am 19., 20., 21., 26., 27. und 28. November. Saven bleibt am 18., 22. und 25. November.
+- Joabs vorläufige/offene Einsätze am 20. und 26. tragen `status: "tentative"`: Stationskarte mit 72 % Deckkraft und gestrichelter Kontur; Beschriftung bleibt ausdrücklich vorläufig/offen. Keine Unschärfe.
+- Hamad und Adri am 26. sind fest eingeplant und bleiben voll sichtbar; nur ihre Aufgabenverteilung ist offen.

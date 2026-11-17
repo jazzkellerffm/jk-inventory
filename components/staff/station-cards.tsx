@@ -17,7 +17,7 @@ function stationFor(role = "") {
 export function StationCards({ shifts, activeName }: { shifts: Shift[]; activeName?: string }) {
   return <dl className="station-cards">{shifts.map((shift, index) => {
     const { key: station, Icon } = stationFor(shift.role);
-    return <div key={index} className="roster-role" data-station={station}>
+    return <div key={index} className="roster-role" data-station={station} data-tentative={shift.status === "tentative"}>
       <dt><Icon size={15} aria-hidden="true"/><span>{shift.role || "Team"}</span></dt>
       <dd>
         {shift.start && <small>{shift.start} Uhr</small>}

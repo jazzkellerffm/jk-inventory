@@ -70,6 +70,14 @@
     "role": "Backstage (vorläufig)",
     "names": [
       "Joab"
+    ],
+    "status": "tentative"
+  },
+  {
+    "date": "2026-11-20",
+    "role": "Door",
+    "names": [
+      "Ana"
     ]
   },
   {
@@ -92,6 +100,13 @@
     "role": "Backstage",
     "names": [
       "Joab"
+    ]
+  },
+  {
+    "date": "2026-11-21",
+    "role": "Door",
+    "names": [
+      "Ana"
     ]
   },
   {
@@ -165,6 +180,14 @@
     "role": "Backstage (noch offen)",
     "names": [
       "Joab"
+    ],
+    "status": "tentative"
+  },
+  {
+    "date": "2026-11-26",
+    "role": "Door",
+    "names": [
+      "Ana"
     ]
   },
   {
@@ -190,6 +213,13 @@
     ]
   },
   {
+    "date": "2026-11-27",
+    "role": "Door",
+    "names": [
+      "Ana"
+    ]
+  },
+  {
     "date": "2026-11-28",
     "role": "Bar",
     "names": [
@@ -209,6 +239,13 @@
     "role": "Backstage",
     "names": [
       "Joab"
+    ]
+  },
+  {
+    "date": "2026-11-28",
+    "role": "Door",
+    "names": [
+      "Ana"
     ]
   }
 ]

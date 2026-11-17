@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 const destinations = [
   { href:"#bar-monitor", label:"Bar", icon:Activity },
-  { href:"#drink-orders", label:"Drinks", icon:Martini },
+  { href:"#bar-orders", label:"Drinks", icon:Martini },
   { href:"#food-orders", label:"Food", icon:Utensils },
   { href:"#service-door", label:"Service", icon:ClipboardList },
   { href:"#staff-tools", label:"Tools", icon:LayoutGrid },

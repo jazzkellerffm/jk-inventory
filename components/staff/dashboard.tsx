@@ -149,7 +149,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
         ) : <strong>–</strong>}
         <p>{stale ? "Aktualisierung fehlgeschlagen." : "Erfolgreiche Zahlungen"}</p>
       </section>
-        <section className="staff-feed staff-panel" aria-labelledby="payments">
+        <section id="bar-orders" className="staff-feed staff-panel" aria-labelledby="payments">
           <div className="staff-section-head"><span className="staff-eyebrow"><ReceiptText size={17}/> SumUp</span><span className="staff-period">Letzte Stunde</span></div>
           <h2 id="payments">Letzte Zahlungen</h2>
           {!feed?.payments.length ? <p className="staff-placeholder">{!feed ? message : "In der letzten Stunde gab es keine bezahlten Verkäufe."}</p> :

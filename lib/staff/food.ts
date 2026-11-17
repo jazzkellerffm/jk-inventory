@@ -6,7 +6,8 @@ type Sale = {
   items: {name: string; quantity: number; categories?: {name: string}[]; price: {total_gross_amount_final: number}}[];
 };
 export type FoodOrder = {id: string; at: string; description: string; cents: number};
-export type FoodFeed = {recentPortions: number; recentHummus: number; recentIncomplete: boolean; orders: FoodOrder[]; totalCents: number; uncategorized: boolean};
+type SnackCount = {name: string; quantity: number};
+export type FoodFeed = {recentPortions: number; recentHummus: number; recentIncomplete: boolean; orders: FoodOrder[]; bestsellers: SnackCount[]; totalCents: number; uncategorized: boolean};
 
 export async function readFood(merchant: string, key: string): Promise<FoodFeed> {
   const now = Date.now();
@@ -15,6 +16,7 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
   const base = "https://api.sumup.com/v1.0/merchants/" + encodeURIComponent(merchant) + "/sales";
   const headers = {Authorization: "Bearer " + key, "Content-Type": "application/json"};
   const orders: FoodOrder[] = [];
+  const snackCounts = new Map<string, SnackCount>();
   const seen = new Set<string>();
   const tokens = new Set<string>();
   let recentPortions = 0;
@@ -59,6 +61,14 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
         if (paidAt < start || paidAt > now) continue;
         if (missingCategory) uncategorized = true;
         if (!snacks.length) continue;
+        for (const snack of snacks) {
+          const name = snack.name?.trim().replace(/\s+/g, " ");
+          if (!name || !Number.isSafeInteger(snack.quantity) || snack.quantity <= 0) continue;
+          const key = name.toLocaleLowerCase("de");
+          const entry = snackCounts.get(key);
+          if (entry) entry.quantity += snack.quantity;
+          else snackCounts.set(key, {name, quantity:snack.quantity});
+        }
         const amount = snacks.reduce((sum,item) => sum + item.price.total_gross_amount_final, 0);
         if (!Number.isSafeInteger(amount)) throw new Error("Missing line amount");
         orders.push({id:sale.id, at:sale.closed_at, description:snacks.map(item => item.quantity+" × "+item.name).join(" · "),
@@ -70,5 +80,8 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
     if (cursor) tokens.add(cursor);
   } while (cursor);
   orders.sort((a,b)=>Date.parse(b.at)-Date.parse(a.at));
-  return {recentPortions, recentHummus, recentIncomplete, totalCents:orders.reduce((sum,order)=>sum+order.cents,0), orders:orders.slice(0,5), uncategorized};
+  const bestsellers = [...snackCounts.values()]
+    .sort((a,b) => b.quantity - a.quantity || a.name.localeCompare(b.name, "de"))
+    .slice(0, 3);
+  return {recentPortions, recentHummus, recentIncomplete, totalCents:orders.reduce((sum,order)=>sum+order.cents,0), orders:orders.slice(0,5), bestsellers, uncategorized};
 }

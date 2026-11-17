@@ -311,6 +311,7 @@
 .bar-load[data-level="2"] .load-meter::before { width:60%; }
 .bar-load[data-level="3"] .load-meter { background:#f5ebe7; }
 .bar-load[data-level="3"] .load-meter::before { width:100%; background:linear-gradient(90deg,#ebcbc4,#d6a39a); }
+.staff-feed + .staff-orders,
 .staff-feed + .service-drinks,
 .staff-orders + .service-drinks { margin-top:16px; }
 .drinks-date { display:flex; flex-wrap:wrap; align-items:center; gap:10px; font-size:14px; }
@@ -368,6 +369,11 @@
 .food-share b { white-space:nowrap; }
 .food-meter { height:12px; background:#efdecc; border-radius:999px; overflow:hidden; margin-top:6px; }
 .food-meter i { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#dfad81,#b8794e); }
+.food-ranking { margin-top:16px; padding-top:14px; border-top:1px solid #dfcbb8; }
+.food-ranking h3 { margin:0 0 12px; font-size:1rem; line-height:1.25; }
+.food-ranking ol { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
+.food-ranking .food-share { font-size:0.9375rem; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.food-ranking .food-meter { height:6px; margin-top:4px; }
 .food-preorders { margin-top:14px; padding-top:10px; border-top:1px solid #dfcbb8; }
 .food-preorders small,.food-preorders b { display:block; }
 

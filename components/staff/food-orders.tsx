@@ -8,9 +8,11 @@ import type { Payment } from "@/lib/staff/types";
 
 const euro = new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"});
 const time = new Intl.DateTimeFormat("de-DE",{timeZone:"Europe/Berlin",hour:"2-digit",minute:"2-digit"});
-const demo: FoodFeed = {recentPortions:2, recentHummus:2, recentIncomplete:false, totalCents:4500, uncategorized:false, orders:[
+const demo: FoodFeed = {recentPortions:2, recentHummus:2, recentIncomplete:false, totalCents:5100, uncategorized:false,
+  bestsellers:[{name:"Hummus-Platte",quantity:3},{name:"Bowl of Crisps",quantity:2}], orders:[
   {id:"one",at:"2026-11-18T20:54:00Z",description:"2 × Hummus-Platte",cents:3000},
   {id:"two",at:"2026-11-18T20:41:00Z",description:"1 × Hummus-Platte",cents:1500},
+  {id:"three",at:"2026-11-18T20:20:00Z",description:"2 × Bowl of Crisps",cents:600},
 ]};
 
 export function FoodOrders({example, eveningCents, preorders, onOrders, payments}:{
@@ -78,6 +80,15 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
           <small><time dateTime={order.at}>{time.format(new Date(order.at))}</time> · {euro.format(order.cents / 100)}</small>
         </li>)}
       </ul> : <p>Heute noch keine Bar Snacks verkauft.</p>}
+      {!!feed.bestsellers?.length && <div className="food-ranking">
+        <h3>Snack-Bestseller des Abends</h3>
+        <ol aria-label="Meistverkaufte Snacks nach Stückzahl">
+          {feed.bestsellers.map(snack => <li key={snack.name}>
+            <div className="food-share"><span>{snack.name}</span><b>{snack.quantity} Stück</b></div>
+            <div className="food-meter" aria-hidden="true"><i style={{width:100 * snack.quantity / feed.bestsellers[0].quantity + "%"}}/></div>
+          </li>)}
+        </ol>
+      </div>}
       {feed.uncategorized && <small>Positionen ohne Kategorie sind ausgenommen.</small>}
     </>}
     {!example && message && <p role="status">{message}</p>}

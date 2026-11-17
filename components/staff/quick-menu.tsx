@@ -4,19 +4,41 @@ import { Activity, LayoutGrid, ClipboardList, Martini, Utensils } from "lucide-r
 import { useEffect, useRef, useState } from "react";
 
 const destinations = [
-  { href:"#bar-monitor", label:"Bar", icon:Activity },
-  { href:"#bar-orders", label:"Drinks", icon:Martini },
-  { href:"#food-orders", label:"Food", icon:Utensils },
-  { href:"#service-door", label:"Service", icon:ClipboardList },
-  { href:"#staff-tools", label:"Tools", icon:LayoutGrid },
+  { href:"#bar-monitor", label:"Bar", icon:Activity, sections:"#bar-monitor, #bestseller" },
+  { href:"#bar-orders", label:"Drinks", icon:Martini, sections:"#bar-orders" },
+  { href:"#food-orders", label:"Food", icon:Utensils, sections:"#food-orders" },
+  { href:"#service-door", label:"Service", icon:ClipboardList,
+    sections:'[aria-labelledby="tonight-team"], [aria-labelledby="ticket-title"], #performance, #service-door' },
+  { href:"#staff-tools", label:"Tools", icon:LayoutGrid, sections:"#staff-tools" },
 ];
 
 const hideAfterDownwardScroll = 24;
 const showAfterUpwardScroll = 12;
+const showAfterIdleMs = 850;
 
 function pageScrollY() {
   const max = document.documentElement.scrollHeight - window.innerHeight;
   return Math.max(0, Math.min(window.scrollY, max));
+}
+
+function visibleDestination(y: number) {
+  if (y <= 1) return "#bar-monitor";
+  if (y + window.innerHeight >= document.documentElement.scrollHeight - 2) return "#staff-tools";
+
+  const viewport = window.visualViewport;
+  const readingLine = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight) * 0.4;
+  let current = "#bar-monitor";
+  let nearest = -Infinity;
+  for (const { href, sections } of destinations) {
+    for (const section of document.querySelectorAll<HTMLElement>(sections)) {
+      const top = section.getBoundingClientRect().top;
+      if (top <= readingLine && top > nearest) {
+        nearest = top;
+        current = href;
+      }
+    }
+  }
+  return current;
 }
 
 export function QuickMenu() {
@@ -28,6 +50,8 @@ export function QuickMenu() {
     let lastY = pageScrollY();
     let travel = 0;
     let frame = 0;
+    let idleTimer = 0;
+    let tappedDestination: string | undefined;
     let didScroll = false;
     let didNavigate = false;
     let serviceTarget: HTMLDetailsElement | null = null;
@@ -52,8 +76,15 @@ export function QuickMenu() {
       const y = pageScrollY();
       if (didNavigate) {
         travel = 0;
+        window.clearTimeout(idleTimer);
         setHidden(false);
-      } else if (didScroll) {
+      } else if (didScroll && y !== lastY) {
+        tappedDestination = undefined;
+        window.clearTimeout(idleTimer);
+        idleTimer = window.setTimeout(() => {
+          travel = 0;
+          setHidden(false);
+        }, showAfterIdleMs);
         const delta = y - lastY;
         if (delta > 0) travel = Math.max(0, travel) + delta;
         if (delta < 0) travel = Math.min(0, travel) + delta;
@@ -63,17 +94,7 @@ export function QuickMenu() {
       lastY = y;
       didScroll = false;
       didNavigate = false;
-      let current = "#bar-monitor";
-      let nearest = -Infinity;
-      for (const { href } of destinations) {
-        const top = document.querySelector(href)?.getBoundingClientRect().top;
-        if (top !== undefined && top <= 32 && top >= nearest) {
-          nearest = top;
-          current = href;
-        }
-      }
-      if (y + window.innerHeight >= document.documentElement.scrollHeight - 2) current = "#staff-tools";
-      setActive(serviceTarget?.open ? "#service-door" : current);
+      setActive(tappedDestination ?? visibleDestination(y));
       const layer=document.elementsFromPoint(window.innerWidth/2,window.innerHeight-44)
         .find(el=>el.closest("main"));
       setDark(!!layer?.closest(".staff-activity,.service-drinks"));
@@ -88,6 +109,7 @@ export function QuickMenu() {
     }
     function onNavigate(hash: string) {
       releaseService();
+      tappedDestination = destinations.find(({ href }) => href === hash)?.href;
       if (hash === "#service-door") {
         serviceTarget = document.querySelector<HTMLDetailsElement>(hash);
         if (serviceTarget) {
@@ -107,18 +129,25 @@ export function QuickMenu() {
     }
     function onHashChange() { onNavigate(window.location.hash); }
     const nav = menu.current;
+    const main = nav?.closest(".staff-shell")?.querySelector("main");
+    const layoutResize = new ResizeObserver(scheduleUpdate);
+    if (main) layoutResize.observe(main);
     if (window.location.hash === "#service-door") onHashChange();
     update();
     window.addEventListener("scroll",onScroll,{passive:true});
     window.addEventListener("resize",scheduleUpdate);
+    window.visualViewport?.addEventListener("resize",scheduleUpdate);
     window.addEventListener("hashchange",onHashChange);
     nav?.addEventListener("click",onMenuClick);
     return ()=>{
       window.removeEventListener("scroll",onScroll);
       window.removeEventListener("resize",scheduleUpdate);
+      window.visualViewport?.removeEventListener("resize",scheduleUpdate);
       window.removeEventListener("hashchange",onHashChange);
       nav?.removeEventListener("click",onMenuClick);
       releaseService();
+      layoutResize.disconnect();
+      window.clearTimeout(idleTimer);
       cancelAnimationFrame(frame);
     };
   },[]);

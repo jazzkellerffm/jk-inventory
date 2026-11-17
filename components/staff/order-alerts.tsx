@@ -146,7 +146,7 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
     const item = pending.current.shift();
     setNotice(item ?? null);
     if (!item) return;
-    const timer = setTimeout(next, item.kind === "booking" ? 5000 : 20000);
+    const timer = setTimeout(next, item.kind === "booking" ? 8000 : 20000);
     dismiss.current = timer;
 
   }, []);

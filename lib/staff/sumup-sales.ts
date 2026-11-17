@@ -15,6 +15,13 @@ const detailCache = new Map<string, { until: number; data: Promise<ItemSale> }>(
 const excludedTypes = new Set(["FEE", "DEPOSIT", "GIFT_CARD"]);
 const generic = /^(drinks?|getränke|custom amount|custom item|benutzerdefinierter betrag|freier betrag)$/i;
 
+function paymentReference(reference: string): string {
+  // Order & Pay supplies a charge URN, including an optional numeric version,
+  // where the payment history supplies only the underlying transaction code.
+  // Only unwrap this known namespace; never match arbitrary suffixes/amounts.
+  return /^urn:sumup:charge:([^:;\s]+)(?:;\d+)?$/.exec(reference)?.[1] ?? reference;
+}
+
 async function request(url: string, token: string, body?: object, deadline = Infinity) {
   if (Date.now() >= deadline) throw new Error("SumUp request budget exhausted");
   const response = await fetch(url, {
@@ -35,7 +42,7 @@ function normalizeSale(raw: RawSale, id: string): ItemSale {
   }
   const references = raw.payments.flatMap(payment =>
     payment?.status === "SUCCESSFUL" && payment.type === "purchase" && typeof payment.reference === "string" && payment.reference
-      ? [payment.reference] : []);
+      ? [paymentReference(payment.reference)] : []);
   let complete = raw.items.length > 0;
   const items: ReceiptItem[] = [];
   for (const line of raw.items) {

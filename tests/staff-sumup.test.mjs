@@ -63,6 +63,33 @@ test('Busy bar includes ALL recent payments, even beyond eight visible cards and
   assert.equal(calls.filter(c => c.url.pathname.endsWith('/search')).length, 2);
 });
 
+test('Order & Pay charge URNs join actual quantities to transaction codes', async t => {
+  const sales = [sale('qr-versioned', ['qr'], [line('Caipirinha Magnifica', 5)]),
+    sale('qr-bare', ['plain'], [line('Tonic Water', 2)])];
+  sales[0].payments[0].reference = 'urn:sumup:charge:code-qr;2';
+  sales[1].payments[0].reference = 'urn:sumup:charge:code-plain';
+  mockApi(t, { payments: [payment('qr'), payment('plain')], sales });
+  const feed = await readBarFeed('qr-urn', 'test');
+  assert.equal(feed.missingReceiptDetails, false);
+  assert.equal(feed.paidEffort, 5.25);
+  assert.equal(barLoadLevel(feed.paidEffort, 0, true), 3);
+  for (const period of ['evening', 'week', 'month']) {
+    const ranking = await readBestsellers('qr-urn', 'test', period);
+    assert.equal(ranking.incomplete, 0);
+    assert.equal(ranking.products.find(p => p.name === 'Caipirinha Magnifica').quantity, 5);
+  }
+});
+
+test('Unknown namespaces and malformed charge URNs never match by suffix', async t => {
+  const sales = [sale('qr-unknown', ['qr'], [line('Mojito', 50)]), sale('qr-malformed', ['plain'], [line('Mojito', 50)])];
+  sales[0].payments[0].reference = 'urn:other:charge:code-qr;2';
+  sales[1].payments[0].reference = 'urn:sumup:charge:code-plain;unexpected';
+  mockApi(t, { payments: [payment('qr'), payment('plain')], sales });
+  const feed = await readBarFeed('qr-invalid', 'test');
+  assert.equal(feed.missingReceiptDetails, true);
+  assert.equal(feed.paidEffort, 0);
+});
+
 test('Split payments count one sale once; fees/snacks do not inflate bar effort', async t => {
   mockApi(t, { payments: [payment('a'), payment('b')], sales: [sale('split', ['a', 'b'], [
     line('Caipirinha Magnifica', 3), line('Wasser', 8), line('Hummus Plate', 4, { categories: [{ name: 'Bar Snacks' }] }),

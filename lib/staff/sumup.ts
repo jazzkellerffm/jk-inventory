@@ -179,7 +179,7 @@ export function readBestsellers(merchant:string,token:string) {
 
 let eveningHistory: { merchant: string; end: number; expires: number; payments: Promise<Payment[]> } | undefined;
 
-export async function readBarEvenings(merchant: string, token: string, detailDay: string | null) {
+export async function readBarEvenings(merchant: string, token: string) {
   const end = serviceStart(Date.now());
   if (!eveningHistory || eveningHistory.merchant !== merchant || eveningHistory.end !== end || eveningHistory.expires <= Date.now()) {
     let start = end;
@@ -200,22 +200,6 @@ export async function readBarEvenings(merchant: string, token: string, detailDay
   const testNight = groups.get("2026-11-16");
   if (testNight?.length === 1 && Math.round(testNight[0].amount * 100) === 300) {
     groups.delete("2026-11-16");
-  }
-  if (detailDay) {
-    const rows = groups.get(detailDay) ?? [];
-    let units = 0;
-    let complete = true;
-    for (let i = 0; i < rows.length; i += 8) {
-      const receipts = await Promise.all(rows.slice(i, i + 8).map(row => receiptItems(merchant, row, token)));
-      for (const items of receipts) {
-        if (!items.length) complete = false;
-        for (const item of items) {
-          if (item.quantity === null) complete = false;
-          else units += item.quantity;
-        }
-      }
-    }
-    return { units, complete };
   }
   return { nights: [...groups.keys()].sort().map(date => {
     const rows = groups.get(date)!;

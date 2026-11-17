@@ -20,9 +20,9 @@ function NightColumns({rows}: {rows: ChartRow[]}) {
         <span className="font-poly-bulky">{label}</span>
         <span className="mt-1 block font-normal text-[var(--muted)]">{hint}</span>
       </dt>
-      <dd className="order-first flex h-28 flex-col items-center justify-end border-b border-[var(--line)]">
+      <dd className="order-first flex h-28 flex-col items-center justify-end">
         <b className="mb-1 tabular-nums">{count}</b>
-        <div aria-hidden="true" className={tone + " w-full max-w-20 rounded-t-md"} style={{height: 80 * count / max}}/>
+        <div aria-hidden="true" className={tone + " w-full max-w-20 rounded-t-md rounded-b-[2px]"} style={{height: 80 * count / max}}/>
       </dd>
     </div>)}
   </dl>;

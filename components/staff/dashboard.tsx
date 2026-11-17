@@ -192,7 +192,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           return "href" in module ?
             <Link key={id} className="staff-tile" href={module.href}>{label}<ArrowUpRight size={20}/></Link> :
             <details key={id} id={id} className="staff-tile-detail"><summary className="staff-tile">{label}<ChevronDown size={20}/></summary>
-              {module.render(board, error)}</details>;
+              {module.render(board, error, !!example)}</details>;
         })}
       </div>
       {example && <Link className="staff-exit-demo" href="/staff">Zum Teamzugang <ArrowRight size={15}/></Link>}

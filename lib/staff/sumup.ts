@@ -272,3 +272,15 @@ export async function readBarEvenings(merchant: string, token: string) {
     return { date, payments: rows.length, cents: rows.reduce((sum, row) => sum + Math.round(row.amount * 100), 0) };
   }) };
 }
+
+// Independent range for the format battle; existing live bar and 14-day view are unchanged.
+export async function readBattleRevenue(merchant:string,token:string,start:number,end:number):Promise<Record<string,number>> {
+  const totals:Record<string,number>={};
+  if(end<=start)return totals;
+  for(const payment of await history(merchant,token,start,end)) {
+    if(payment.currency!=="EUR"||payment.amount<=0)continue;
+    const date=serviceDate(Date.parse(payment.at));
+    totals[date]=(totals[date]??0)+Math.round(payment.amount*100);
+  }
+  return totals;
+}

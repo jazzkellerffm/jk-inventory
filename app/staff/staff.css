@@ -308,7 +308,7 @@
 .week-switch button { padding-inline:clamp(6px,2vw,16px); }
 
 .perf-panel { margin-top:16px; background:#fffdfa; }
-.perf-monthly-guests-value { color:#42675a; }
+.perf-monthly-guests-value { color:#68847b; }
 .perf-panel summary { font:700 23px/1.15 var(--staff-display),sans-serif; }
 .perf-panel[open] summary { margin-bottom:18px; }
 .perf-grid { display:grid; grid-template-columns:2fr 1fr; gap:12px; }

@@ -17,7 +17,7 @@ function NightColumns({rows}: {rows: ChartRow[]}) {
   return <dl className="mt-4 grid grid-cols-4 gap-2 text-center">
     {rows.map(([label, hint, count, tone]) => <div key={label} className="flex min-w-0 flex-col">
       <dt className="mt-1 text-xs leading-tight">
-        {label}
+        <span className="font-poly-bulky">{label}</span>
         <span className="mt-1 block font-normal text-[var(--muted)]">{hint}</span>
       </dt>
       <dd className="order-first flex h-28 flex-col items-center justify-end border-b border-[var(--line)]">

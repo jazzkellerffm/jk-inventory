@@ -272,3 +272,7 @@ Export enthält nur Datum, Veranstaltung, Buchungsname, Ticketkategorie, Persone
 - App-Pills: Speisen/Hummus Salbei-Mint `#dcefe4`, Text `#244c39`; Wein und inkludierte Getränke Rosé `#f5dce2`, Text `#652c41`. Inklusivleistungen bleiben ausdrücklich so beschriftet und getrennt von bezahlten Vorbestellungen.
 - CSV für Anita: 41 Tests und Produktionsbuild bestanden; gespeicherter realer Abgleich 18.11.: 25 gültige Paketzeilen, 21 Buchungen, 59 Gäste, genau 1 Hummus Plate. Keine personenbezogenen Beispieldaten in die Dokumentation übernehmen.
 - „Kommende Abende“ ersetzt „Buchungen in Bewegung“. „Abgesagte Abende“ und die zugehörige Zahl verwenden Poly Sans Bulky.
+
+
+### Barpegel und Inklusivleistungen · 18.11.2026
+Auf Philipps Wunsch verwenden die Barpegel-Statuswörter (Ruhig, Zieht an, Viel los und fehlende Daten) Poly Sans Bulky. Service-Inklusivleistungen, insbesondere VIP-Crémant, sind wieder hellgrau (#eeefed, Schrift #424944). Bezahlte Wein-/Flaschen-Add-ons bleiben Rosé, Speisen Salbei-Mint. Diese Farbkorrektur ersetzt die vorherige Rosé-Regel für inkludierte Getränke.

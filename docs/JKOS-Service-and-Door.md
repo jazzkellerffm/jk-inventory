@@ -102,3 +102,6 @@ UTF-8-BOM, Semikolon, CRLF, korrektes CSV-Escaping und Formelschutz für Excel/N
 41 Tests und Produktionsbuild bestanden. Realer gespeicherter Abgleich für Jam am 18.11.2026: 25 gültige Paketzeilen aus 21 Buchungen, 59 Gäste, genau 1 Hummus Plate. Alle 25 Ticketcodes, Beschreibungen und Buchungsnummern gegen die Original-Ticket-Tailor-Doorlist abgeglichen. Die frühere Kontrollzahl 55 war ein Fehler der separaten Handrechnung: zwei Crémant-für-2-Pakete waren übersehen worden; der Export zählte bereits 59.
 
 Tests decken Mehrpersonenpakete, mehrere Ticketarten, Teilstornierungen, manuelle Tickets, mehrere Ergebnisseiten, Dubletten und einmalige Add-ons ab. Die Live-Bestätigung betrifft die Service-Anzeige; der angemeldete CSV-Browserdownload wurde nicht separat durch den Agenten geprüft. Keine Kundennamen oder Zugangsdaten in dieser Übergabe speichern.
+
+### Farbkorrektur · 18.11.2026
+Neueste Vorgabe: VIP-Crémant und sonstige Inklusivleistungen wieder Hellgrau (#eeefed, Text #424944). Rosé gilt weiterhin für bezahlte Wein-/Flaschen-Add-ons, Salbei-Mint für Essen. Diese Regel ersetzt die vorstehende Rosé-Zuordnung inkludierter Getränke.

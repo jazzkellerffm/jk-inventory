@@ -38,8 +38,9 @@ function parseItems(products: unknown): ReceiptItem[] {
   return products.flatMap(product => {
     const name = typeof product?.name === "string" ? product.name.trim() : "";
     const quantity = Number(product?.quantity);
-    const catalogItem = product?.type === "CATALOG" || (Array.isArray(product?.categories) && product.categories.length > 0);
-    return name ? [{ name, quantity: quantity > 0 && Number.isFinite(quantity) ? quantity : null, catalogItem }] : [];
+    const nonProduct = ["CUSTOM", "FEE", "DEPOSIT", "GIFT_CARD"].includes(product?.type) || generic.test(name);
+    const catalogItem = !nonProduct && (product?.type === "CATALOG" || (Array.isArray(product?.categories) && product.categories.length > 0));
+    return name ? [{ name, quantity: quantity > 0 && Number.isFinite(quantity) ? quantity : null, catalogItem, nonProduct }] : [];
   });
 }
 
@@ -149,7 +150,7 @@ async function collect(merchant: string, token: string, now: number, start: numb
     if (payment.saleId && countedSales.has(payment.saleId)) continue;
     if (payment.saleId) countedSales.add(payment.saleId);
     for (const item of payment.items) {
-      if (item.quantity === null) missingReceiptDetails = true;
+      if (!item.nonProduct && item.quantity === null) missingReceiptDetails = true;
       if (countable(item)) paidEffort += prepWeight(item.name, item.categories) * (item.quantity ?? 0);
     }
   }
@@ -199,7 +200,7 @@ async function attachSaleItems(merchant: string, token: string, payments: ItemPa
         payment.itemsComplete = sale.complete;
       } else if (Date.now() < deadline) {
         payment.items = await receiptItems(merchant, payment, token, deadline);
-        payment.itemsComplete = payment.items.length > 0 && payment.items.every(countable);
+        payment.itemsComplete = payment.items.length > 0 ? payment.items.every(item => item.nonProduct || countable(item)) : generic.test(payment.summary ?? "");
       }
     }));
   }
@@ -211,7 +212,7 @@ async function attachSaleItems(merchant: string, token: string, payments: ItemPa
 
 const generic = /^(drinks?|getränke|custom amount|custom item|benutzerdefinierter betrag|freier betrag)$/i;
 function countable(item: ReceiptItem) {
-  return item.quantity !== null && !generic.test(item.name);
+  return !item.nonProduct && item.quantity !== null && !generic.test(item.name);
 }
 
 async function rankSales(merchant:string,token:string,start:number,now:number):Promise<BestsellerFeed> {

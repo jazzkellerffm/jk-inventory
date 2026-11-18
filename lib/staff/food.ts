@@ -3,7 +3,7 @@ import { serviceStart } from "./service-day";
 
 type Sale = {
   id: string; closed_at: string; currency: {code: string; scale: number};
-  items: {name: string; quantity: number; categories?: {name: string}[]; price: {total_gross_amount_final: number}}[];
+  items: {type?: string; name: string; quantity: number; categories?: {name: string}[]; price: {total_gross_amount_final: number}}[];
 };
 export type FoodOrder = {id: string; at: string; description: string; cents: number};
 type SnackCount = {name: string; quantity: number};
@@ -47,8 +47,9 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
         if (seen.has(sale.id)) continue;
         seen.add(sale.id);
         if (sale.currency.code !== "EUR") continue;
-        const snacks = sale.items.filter(item => item.categories?.some(c => c.name.trim().toLowerCase() === "bar snacks"));
-        const missingCategory = sale.items.some(item => !item.categories?.length);
+        const productItems = sale.items.filter(item => !["CUSTOM", "FEE", "DEPOSIT", "GIFT_CARD"].includes(item.type ?? "") && item.quantity !== 0);
+        const snacks = productItems.filter(item => item.categories?.some(c => c.name.trim().toLowerCase() === "bar snacks"));
+        const missingCategory = !sale.items.length || productItems.some(item => !item.categories?.length || !Number.isFinite(item.quantity) || item.quantity <= 0);
         const paidAt = Date.parse(sale.closed_at);
         if (!Number.isFinite(paidAt)) throw new Error("Missing sale timestamp");
         if (paidAt > recentStart && paidAt <= now) {

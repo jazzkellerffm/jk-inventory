@@ -50,11 +50,12 @@ function normalizeSale(raw: RawSale, id: string): ItemSale {
     if (line?.quantity === 0) continue;
     const name = typeof line?.name === "string" ? line.name.trim().replace(/\s+/g, " ") : "";
     const quantity = typeof line?.quantity === "number" && Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : null;
-    if (!name || quantity === null || generic.test(name)) complete = false;
+    const nonProduct = line.type === "CUSTOM" || generic.test(name);
+    if (!nonProduct && (!name || quantity === null)) complete = false;
     if (!name) continue;
     const categories = Array.isArray(line.categories) ? line.categories.flatMap(category =>
       typeof category?.name === "string" ? [category.name] : []) : [];
-    items.push({ name, quantity, categories, catalogItem: line.type === "CATALOG" || categories.length > 0 });
+    items.push({ name, quantity, categories, nonProduct, catalogItem: !nonProduct && (line.type === "CATALOG" || categories.length > 0) });
   }
   if (!references.length) console.info("SumUp sale reference shape", { payments: raw.payments.length,
     successful: raw.payments.filter(payment => payment.status === "SUCCESSFUL").length,

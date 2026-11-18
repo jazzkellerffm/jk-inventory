@@ -288,3 +288,10 @@ Für später, ausdrücklich NICHT umgesetzt: Countdown bis Einlass/Show mit Gäs
 ### Bestseller: freie Zahlungen (18.11.2026)
 
 Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit eindeutiger Menge. Freie Positionen (CUSTOM, etwa Custom amount, Drinks oder Bier ohne Artikelzuordnung) bleiben im Umsatz und Zahlungsstream, werden aber aus der Rangliste ausgeschlossen und blockieren sie nicht. Gemischte Verkäufe behalten ihre zugeordneten Artikel. Ein kompakter Hinweis erklärt ausgeschlossene freie Zahlungen. Echte fehlende Artikelmengen und nicht identifizierbare Abruflücken bleiben weiterhin als unvollständig markiert. Keine Änderung an Barpegel, Food-Berechnung oder Umsatzlogik.
+
+### 18.11.2026 — Freie Zahlungen und Pegel
+- Explizite CUSTOM-Positionen (auch beliebige Namen wie Bier) bleiben im Zahlungsstream/Umsatz, erzeugen jedoch keinen geschätzten Artikelaufwand und keinen Fehler wegen fehlender Menge/Kategorie.
+- Barpegel behandelt diese Positionen wie die Bestseller separat; Küchenpegel prüft nur Produktpositionen, nicht CUSTOM/FEE/DEPOSIT/GIFT_CARD oder Nullmengen.
+- Wirklich fehlende Katalogdaten und Abruffehler bleiben als unvollständig erkennbar.
+- Den dauerhaften Hinweis „Positionen ohne Kategorie sind ausgenommen“ bei Snack-Bestsellern entfernt.
+- 45 Staff-Tests und Produktionsbuild erfolgreich, einschließlich gemischter Verkäufe, freier Beträge, fehlender Katalogdaten und fehlgeschlagener Zahlungen.

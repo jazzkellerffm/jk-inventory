@@ -95,7 +95,6 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
           </li>)}
         </ol>
       </div>}
-      {feed.uncategorized && <small>Positionen ohne Kategorie sind ausgenommen.</small>}
     </>}
     {!example && message && <p role="status">{message}</p>}
     {!feed && message === "Food Orders derzeit nicht abrufbar." && paymentSnacks.length > 0 &&

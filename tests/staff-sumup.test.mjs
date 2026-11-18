@@ -247,6 +247,8 @@ test('Free payments never block catalogue rankings or disappear from revenue and
   assert.deepEqual(ranking.products, [{ name: 'Mojito', quantity: 3 }, { name: 'Nachos con Salsa', quantity: 2 }]);
   const feed = await readBarFeed('free-payments', 'test');
   assert.equal(feed.eveningCents, 4500);
+  assert.equal(feed.missingReceiptDetails, false);
+  assert.equal(feed.paidEffort, 3);
   assert.equal(feed.payments.length, 3);
   assert.ok(feed.payments.some(p => p.items.some(i => i.name === 'Custom amount')));
 });
@@ -257,4 +259,34 @@ test('Only free payments produce an empty catalogue ranking, not an unavailable 
   assert.equal(ranking.incomplete, 0);
   assert.equal(ranking.excluded, 1);
   assert.deepEqual(ranking.products, []);
+});
+
+test('Free payments with arbitrary names and no quantity do not invent bar workload', async t => {
+  mockApi(t, { payments: [payment('custom-only')], sales: [
+    sale('custom-only', ['custom-only'], [line('Bier', null, {type:'CUSTOM'}), line('Sonderzahlung', 8, {type:'CUSTOM'})])
+  ] });
+  const feed = await readBarFeed('custom-workload', 'test');
+  assert.equal(feed.missingReceiptDetails, false);
+  assert.equal(feed.paidEffort, 0);
+  assert.equal(feed.eveningCents, 1500);
+});
+
+test('Kitchen ignores free amounts but keeps genuine missing category warnings', async t => {
+  const { readFood } = await import('../lib/staff/food.ts');
+  t.mock.method(Date, 'now', () => now);
+  let items = [line('Bier', 1, {type:'CUSTOM'}), line('Fee', 1, {type:'FEE'})];
+  t.mock.method(globalThis, 'fetch', async input => Response.json(String(input).endsWith('/search')
+    ? {items:[{id:'food'}]} : {id:'food',closed_at:at(1),currency:{code:'EUR',scale:2},items}));
+  let feed = await readFood('food-custom','test');
+  assert.equal(feed.recentIncomplete, false);
+  assert.equal(feed.recentPortions, 0);
+  items.push(line('Nachos', 2, {categories:[{name:'Bar Snacks'}],price:{total_gross_amount_final:1200}}));
+  feed = await readFood('food-custom','test');
+  assert.equal(feed.recentIncomplete, false);
+  assert.equal(feed.recentPortions, 2);
+  assert.equal(feed.totalCents, 1200);
+  items.push(line('Unknown catalogue item', 1));
+  feed = await readFood('food-custom','test');
+  assert.equal(feed.recentIncomplete, true);
+  assert.equal(feed.recentPortions, 2);
 });

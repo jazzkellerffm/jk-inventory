@@ -310,3 +310,12 @@ Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit
 - Gästeliste, Food, Service und geöffnete Tools behalten die volle Breite. Cocktailkacheln im schmaleren Barpegel stehen in zwei Spalten.
 - DOM-/Lesereihenfolge, mobile Styles unter 1024 Pixeln, Navigation und Datenlogik unverändert. Kein separater Ansichtsregler.
 - Validierung: Produktionsbuild bestanden; bestehendes CSS bytegleich erhalten und neue Regeln ausschließlich ab 1024 Pixeln. Lokaler visueller Browsertest durch gesperrten Chromium-Start nicht möglich.
+
+
+### 19.11.2026 — Mobile-first, kleine Anpassungen für iPad quer
+- Bestehende Zweispaltenansicht ab 1024 Pixeln bleibt erhalten; keine separate Desktop-Version.
+- Abendumsatz und Included Drinks nutzen auf breiten Displays horizontale Anordnung mit dem Wert rechts, statt unnötig hoher Karten.
+- Food zeigt Küchenpegel/Umsatz/Bestellungen links und Snack-Bestseller rechts. Nur zwei Präsentationswrapper ergänzt; unter 1024 Pixeln mit display:contents layoutneutral.
+- Veranstaltungsauswahl in Service & Door maximal 600 Pixel breit.
+- Datenabrufe, Berechnungen, Interaktionen, DOM-Lesereihenfolge und mobile CSS-Regeln unverändert.
+- Validierung: Produktionsbuild und git diff --check erfolgreich; bestehendes CSS unverändert, Food-Komponente nach Entfernen der zwei Wrapper bytegleich. Visueller Gerätetest steht aus (lokaler Browserstart blockiert).

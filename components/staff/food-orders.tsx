@@ -69,7 +69,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
       {example ? <small>Beispieldaten</small> : loading && feed ? <small>Wird aktualisiert …</small> : null}</div>
     <h2 id="food-title">Food Orders</h2>
     {!feed && loading && !message && <TicketLoader label="Bestellungen werden geladen"/>}
-    {feed && <>
+    {feed && <div className="food-layout"><div className="food-current">
       <div className="kitchen-load" data-level={kitchenLevel}>
         <div className="food-share"><span>Küchenpegel · geschätzt</span>
           <strong role="status">{kitchenLabels[kitchenLevel]}</strong></div>
@@ -86,6 +86,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
           <small><time dateTime={order.at}>{time.format(new Date(order.at))}</time> · {euro.format(order.cents / 100)}</small>
         </li>)}
       </ul> : <p>Heute noch keine Bar Snacks verkauft.</p>}
+      </div>
       {!!feed.bestsellers?.length && <div className="food-ranking">
         <h3>Snack-Bestseller des Abends</h3>
         <ol aria-label="Meistverkaufte Snacks nach Stückzahl">
@@ -95,7 +96,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
           </li>)}
         </ol>
       </div>}
-    </>}
+    </div>}
     {!example && message && <p role="status">{message}</p>}
     {!feed && message === "Food Orders derzeit nicht abrufbar." && paymentSnacks.length > 0 &&
       <ul className="cocktail-tiles" aria-label="Snacks aus letzten Zahlungen">

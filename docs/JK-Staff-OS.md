@@ -276,3 +276,6 @@ Export enthält nur Datum, Veranstaltung, Buchungsname, Ticketkategorie, Persone
 
 ### Barpegel und Inklusivleistungen · 18.11.2026
 Auf Philipps Wunsch verwenden die Barpegel-Statuswörter (Ruhig, Zieht an, Viel los und fehlende Daten) Poly Sans Bulky. Service-Inklusivleistungen, insbesondere VIP-Crémant, sind wieder hellgrau (#eeefed, Schrift #424944). Bezahlte Wein-/Flaschen-Add-ons bleiben Rosé, Speisen Salbei-Mint. Diese Farbkorrektur ersetzt die vorherige Rosé-Regel für inkludierte Getränke.
+
+### Service-Pills und Namen · 18.11.2026
+Pills erhalten 8 px Abstand innerhalb und zwischen unmittelbar benachbarten Produkt-/Inklusivgruppen; leere Gruppen werden nicht gerendert. Buchungsnamen werden ausschließlich zur Anzeige in Gästeliste und Vorbestellungen normalisiert: reine Groß-/Kleinschreibungs-Wörter in normale Anfangsgroßschreibung, gemischte Schreibweisen bleiben erhalten. Bindestriche, Apostrophe und Umlaute unterstützt. Originaldaten, Buchungs-IDs und CSV bleiben unverändert. Produktionsbuild und gezielte Namensprüfungen bestanden.

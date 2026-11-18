@@ -202,6 +202,8 @@
 .service-person { justify-content:space-between; }
 .staff-service article h4 { font-size:12px; margin:9px 0 4px; }
 .service-pills span { padding:5px 11px; background:#eeefed; color:#424944; border-radius:14px; }
+.service-pills { gap:8px; }
+.service-pills + .service-pills { margin-top:8px; }
 .service-pills [data-kind="wine"] { background:#f5dce2; color:#652c41; }
 .service-pills [data-kind="food"] { background:#dcefe4; color:#244c39; }
 

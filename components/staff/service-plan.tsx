@@ -3,6 +3,7 @@ import { TicketLoader } from "./ticket-loader";
 import { useEffect, useState } from "react";
 import { Check, ClipboardList } from "lucide-react";
 import type { Booking, TicketNight } from "@/lib/staff/tickets";
+import { displayBookingName } from "@/lib/staff/display-name";
 
 import { ticketCategory, combine, includedSupply, packageSize, type Supply } from "@/lib/staff/entitlements";
 
@@ -36,7 +37,7 @@ function guestCount(tickets:string[]) {
 }
 
 function BookingName({row}:{row:Booking}) {
-  return <div className="booking-name"><strong>{row.name}</strong>{row.checkedIn &&
+  return <div className="booking-name"><strong>{displayBookingName(row.name)}</strong>{row.checkedIn &&
     <span className="checkin-pill"><Check size={13} aria-hidden="true"/>Checked in</span>}</div>;
 }
 
@@ -55,6 +56,7 @@ function GuestList({rows}:{rows:Booking[]}) {
 }
 
 function Pills({items}:{items:Supply[]}) {
+  if (!items.length) return null;
   return <div className="service-pills">{combine(items).map(item =>
     <span key={item.kind+item.label} data-kind={item.kind}>{item.quantity} × {item.label}{item.kind==="included" ? " inklusive" : ""}</span>
   )}</div>;

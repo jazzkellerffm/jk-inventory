@@ -37,6 +37,7 @@ export function FormatPerformance({example=false}:{example?:boolean}){
   void refresh();const timer=setInterval(()=>{if(document.visibilityState==="visible")void refresh();},300000);return()=>{controller.abort();clearInterval(timer);};
  },[active,example,month,retry]);
  const shown=feed&&(example||feed.month===month)?feed:null;
+ const cancelled=(shown?.cancelled??[]).filter(n=>n.format===format);
  const completed=(shown?.nights??[]).filter(n=>n.format===format&&n.date<shown!.today).sort((a,b)=>a.date.localeCompare(b.date));
  const upcoming=(shown?.upcoming??[]).filter(n=>n.format===format).sort((a,b)=>a.date.localeCompare(b.date));
  const rows=mode==="month"?completed:mode==="last"?completed.slice(-1):upcoming.slice(0,1);
@@ -63,6 +64,7 @@ export function FormatPerformance({example=false}:{example?:boolean}){
   {failed&&<p role="status">Daten gerade nicht erreichbar. {shown?"Letzter geladener Stand bleibt sichtbar.":"Bitte erneut versuchen."}</p>}
   {!shown&&!failed?<TicketLoader label="Abende und Buchungen werden geladen"/>:shown&&<>
    <p className={styles.scope}>{mode==="month"?`${rows.length} abgeschlossene Abende · Durchschnitt je Abend`:rows.length?date(rows[0].date)+(mode==="next"?" · Aktueller Buchungsstand":" · Abgeschlossen"):"In diesem Zeitraum ist noch kein Abend verfügbar."}</p>
+   {mode==="month"&&<p className={styles.note}>Abgesagte Abende: <strong>{cancelled.length}</strong>{cancelled.length>0?` · ${cancelled.map(n=>weekdayDate(n.date)).join(" · ")} · Nicht in den Statistiken enthalten.`:""}</p>}
    {mode!=="next"&&!shown.revenueAvailable&&<p className={styles.note}>Historische SumUp-Umsätze konnten nicht geladen werden. Gäste und Drinks bleiben verfügbar.</p>}
    <dl className={styles.metrics}>{(["guests","drinks","cents"] as const).map(key=><div key={key}><dt>{labels[key]}{mode==="month"?" · Ø / Abend":""}</dt><dd>{display(mode==="next"&&key==="cents"?null:stats[key],key)}</dd></div>)}</dl>
    {mode==="month"&&<section className={styles.history}>

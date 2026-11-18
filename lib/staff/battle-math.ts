@@ -1,6 +1,6 @@
 import { includedDrinks, packageSize, ticketCategory, ticketCategories } from "./entitlements";
 export type Format = "jam" | "nyjb";
-export type BattleEvent = { id:string; name:string; status:string; created_at?:number; start:{date:string;unix:number} };
+export type BattleEvent = { id:string; name:string; status:string; unavailable_status?:string|null; created_at?:number; start:{date:string;unix:number} };
 export type BattleTicket = {id:string;event_id:string;status:string;description:string;add_on_id?:string};
 export type BattleOrder = {id:string;status:string;created_at:number|string;total?:number;transactions?:{amount:number;payment_method:string;pending:boolean}[];line_items:{type:string;value:number;quantity:number;description:string;event_summary?:{event_id:string};fulfilments?:{reference_id:string}[]}[]};
 export type TicketMix = Record<typeof ticketCategories[number],number>;
@@ -61,4 +61,14 @@ export function latestCompletedPair(nights:BattleNight[],today:string){
   if(partners.length===1&&completed.filter(n=>n.format==="jam"&&n.date===jam.date).length===1)return [jam,partners[0]] as const;
  }
  return null;
+}
+
+// Explicit cancellation labels only: closed sales, sold out and zero revenue are not cancellations.
+export function isCancelledEvent(event:BattleEvent):boolean {
+ // Confirmed by Philipp on 18.11.2026; Ticket Tailor only records close_sales here.
+ if(event.id==="ev_8985314"&&event.start.date==="2026-09-03")return true;
+ return [event.status,event.unavailable_status].some(value=>typeof value==="string"&&/\b(cancelled|canceled|abgesagt|ausgefallen)\b/i.test(value));
+}
+export function partitionPerformanceEvents(events:BattleEvent[]){
+ return {active:events.filter(e=>!isCancelledEvent(e)&&["published","close_sales","sales_closed"].includes(e.status)),cancelled:events.filter(isCancelledEvent)};
 }

@@ -1,6 +1,6 @@
 import "server-only";
 import { serviceDate, serviceStart } from "./service-day";
-import { eventFormat, summarizeBattleEvent, type BattleEvent, type BattleTicket, type BattleOrder, type BattleNight } from "./battle-math";
+import { partitionPerformanceEvents, eventFormat, summarizeBattleEvent, type BattleEvent, type BattleTicket, type BattleOrder, type BattleNight } from "./battle-math";
 import { readBattleRevenue } from "./sumup";
 async function pages<T extends {id:string}>(resource:string,filters:Record<string,string>,auth:string){
  const rows=new Map<string,T>();const query=new URLSearchParams({...filters,limit:"100"});const cursors=new Set<string>();
@@ -12,7 +12,7 @@ async function pages<T extends {id:string}>(resource:string,filters:Record<strin
   if(!cursor||cursors.has(cursor))throw Error("Incomplete ticket data");cursors.add(cursor);query.set("starting_after",cursor);
  }throw Error("Ticket page limit");
 }
-export type BattleFeed={month:string;today:string;asOf:number;nights:BattleNight[];upcoming:BattleNight[];revenueAvailable:boolean};
+export type BattleFeed={month:string;today:string;asOf:number;nights:BattleNight[];upcoming:BattleNight[];revenueAvailable:boolean;cancelled?:{id:string;date:string;format:"jam"|"nyjb"}[]};
 let cache:{key:string;month:string;until:number;data:Promise<BattleFeed>}|undefined;
 export function readBattle(key:string,month:string,merchant?:string,token?:string){
  if(cache?.key===key&&cache.month===month&&cache.until>Date.now())return cache.data;
@@ -21,7 +21,7 @@ export function readBattle(key:string,month:string,merchant?:string,token?:strin
 async function collect(key:string,month:string,merchant?:string,token?:string):Promise<BattleFeed>{
  const now=Date.now(),today=serviceDate(now),endDate=new Date(now+42*86400000).toISOString().slice(0,10);
  const auth="Basic "+Buffer.from(key+":").toString("base64");
- const events=(await pages<BattleEvent>("events",{},auth)).filter(e=>e.start?.date&&["published","close_sales","sales_closed"].includes(e.status));
+ const {active:events,cancelled}=partitionPerformanceEvents((await pages<BattleEvent>("events",{},auth)).filter(e=>e.start?.date));
  const selected=events.filter(e=>(e.start.date.startsWith(month)&&!!eventFormat(e))||(e.start.date>=today&&e.start.date<endDate));
  const start=serviceStart(Date.parse(month+"-01T12:00:00Z"));
  const end=Math.min(serviceStart(now),serviceStart(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5)),1,12)));
@@ -38,5 +38,5 @@ async function collect(key:string,month:string,merchant?:string,token?:string):P
   if(revenue&&night.date<today&&night.date.startsWith(month)&&events.filter(e=>e.start.date===night.date).length===1)night.cents=revenue[night.date]??0;
  }
  nights.sort((a,b)=>a.date.localeCompare(b.date));
- return {month,today,asOf:now,nights:nights.filter(n=>n.format&&n.date.startsWith(month)),upcoming:nights.filter(n=>n.date>=today),revenueAvailable:revenue!==null};
+ return {month,today,asOf:now,cancelled:cancelled.filter(e=>e.start.date.startsWith(month)&&eventFormat(e)).map(e=>({id:e.id,date:e.start.date,format:eventFormat(e)!})),nights:nights.filter(n=>n.format&&n.date.startsWith(month)),upcoming:nights.filter(n=>n.date>=today),revenueAvailable:revenue!==null};
 }

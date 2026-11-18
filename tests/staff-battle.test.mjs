@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {eventFormat,summarizeBattleEvent,ranking,risingEvents,summarizeMix,latestCompletedPair} from '../lib/staff/battle-math.ts';
+import {isCancelledEvent,partitionPerformanceEvents,eventFormat,summarizeBattleEvent,ranking,risingEvents,summarizeMix,latestCompletedPair} from '../lib/staff/battle-math.ts';
 const now=Date.parse('2026-11-17T21:00:00Z')/1000;
 const event={id:'ev_jam',name:'The Famous Jazz Jam Session',status:'published',start:{date:'2026-11-18',unix:now+86400}};
 const ticket=(id,label,status='valid')=>({id,event_id:event.id,status,description:label});
@@ -70,4 +70,19 @@ test('VIP breakdown preserves sizes and separate categories without duplicate or
  assert.deepEqual(n.vipPackages,[{category:'VIP',size:2,count:2},{category:'VIP',size:3,count:1},{category:'VIP',size:4,count:1},{category:'Worldstar VIP',size:2,count:1}]);
  assert.equal(n.vipPackages.reduce((sum,p)=>sum+p.count,0),n.vipTables+n.worldstarTables);
  assert.equal(n.vipPackages.reduce((sum,p)=>sum+p.count*p.size,0),n.guests);
+});
+
+test('explicit cancellations and confirmed September exception are separated before all performance calculations',()=>{
+ for(const label of ['Cancelled – sorry','CANCELLED','Canceled','Abgesagt','Ausgefallen'])assert.equal(isCancelledEvent({...event,unavailable_status:label}),true);
+ for(const label of ['Sold out','FULLY BOOKED','Ticket sales closed',null])assert.equal(isCancelledEvent({...event,unavailable_status:label}),false);
+ assert.equal(isCancelledEvent({...event,status:'close_sales'}),false);
+ const sep={...event,id:'ev_8985314',start:{date:'2026-09-03'}};
+ assert.equal(isCancelledEvent(sep),true);
+ const result=partitionPerformanceEvents([event,sep,{...event,id:'cancel',unavailable_status:'CANCELLED'},{...event,id:'draft',status:'draft'}]);
+ assert.deepEqual(result.active.map(e=>e.id),[event.id]);
+ assert.deepEqual(result.cancelled.map(e=>e.id),[sep.id,'cancel']);
+ const nights=result.active.map(e=>({...summarizeBattleEvent(e,[],[],now),guests:40,cents:100000}));
+ assert.equal(ranking(nights)[0].count,1);
+ assert.equal(ranking(nights)[0].cents,100000);
+ assert.equal(summarizeMix(nights).guests,40);
 });

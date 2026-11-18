@@ -37,7 +37,7 @@ export async function csvPages<T extends {id:string}>(resource:string,eventId:st
  const rows:T[]=[],ids=new Set<string>(),cursors=new Set<string>();let cursor='';
  for(let page=0;page<1000;page++){
   const q=new URLSearchParams({event_id:eventId,limit:'100',...(cursor?{starting_after:cursor}:{})});
-  const r=await request(`https://api.tickettailor.com/v1/${resource}?${q}`,{headers:{Authorization:auth},cache:'no-store',signal:AbortSignal.timeout(10000)});
+  const r=await request(`https://api.tickettailor.com/${resource==='orders'?'v2':'v1'}/${resource}?${q}`,{headers:{Authorization:auth},cache:'no-store',signal:AbortSignal.timeout(10000)});
   if(!r.ok)throw new Error('Abruf fehlgeschlagen');
   const p=await r.json();if(!Array.isArray(p.data)||!p.links||!('next' in p.links))throw new Error('Unvollständige Antwort');
   for(const row of p.data){if(!row.id||ids.has(row.id))throw new Error('Überlappende Ergebnisseiten');ids.add(row.id);rows.push(row);}

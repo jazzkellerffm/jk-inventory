@@ -12,11 +12,11 @@ export type BookingAlert = { id: string; at: number; label: string; eventId?: st
 type BookingLine = { ticket: string; eventId?: string; event?: string; date?: string };
 export type TicketFeed = { ticketActivity?: TicketActivity; monthlyGuests: { count: number; unknownPackages: number }; bookingDay?: { count: number; recent: { id: string; at: number; lines: BookingLine[] }[] }; bookingAlerts?: BookingAlert[]; monthlyNights?: NightCounts; foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
 
-async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string) {
+async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string, version = "v1") {
   const rows = new Map<string,T>();
   const query = new URLSearchParams({ ...filters, limit: "100" });
   while (true) {
-    const response = await fetch("https://api.tickettailor.com/v1/" + resource + "?" + query, {
+    const response = await fetch("https://api.tickettailor.com/" + version + "/" + resource + "?" + query, {
       headers: { Authorization: auth, Accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout(6000),
     });
     if (!response.ok) throw new Error("Ticket Tailor unavailable");
@@ -134,16 +134,17 @@ export type Booking = {
 export async function readServicePlan(key: string, eventId: string): Promise<Booking[]> {
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
   const [orders, tickets] = await Promise.all([
-    pages<ServiceOrder>("orders", {event_id:eventId}, auth),
+    pages<ServiceOrder>("orders", {event_id:eventId}, auth, "v2"),
     pages<Ticket & { order_id?: string; full_name?: string; checked_in?: boolean|string }>("issued_tickets", {event_id:eventId,status:"valid"}, auth),
   ]);
-  // Read authoritative order details: list responses are not sufficient for add-ons.
+  // v2 includes product lines and multi-event checkouts. Only fetch missing orders.
+  const listedIds = new Set(orders.map(order => order.id));
   const orderIds = [...new Set(tickets.filter(t => t.event_id === eventId && t.status === "valid" && !t.add_on_id)
-    .map(t => t.order_id).filter((id): id is string => Boolean(id)))];
+    .map(t => t.order_id).filter((id): id is string => Boolean(id)))].filter(id => !listedIds.has(id));
   const byOrder = new Map(orders.map(order => [order.id,order]));
   for (let offset=0; offset<orderIds.length; offset+=4) {
     const details = await Promise.all(orderIds.slice(offset,offset+4).map(async id => {
-      const response = await fetch("https://api.tickettailor.com/v1/orders/"+encodeURIComponent(id), {
+      const response = await fetch("https://api.tickettailor.com/v2/orders/"+encodeURIComponent(id), {
         headers:{Authorization:auth,Accept:"application/json"},cache:"no-store",signal:AbortSignal.timeout(6000),
       });
       if(!response.ok) throw new Error("Order details unavailable: HTTP "+response.status);
@@ -153,7 +154,6 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
     }));
     for(const order of details)byOrder.set(order.id,order);
   }
-  console.info("staff-service-shape", JSON.stringify({eventId, orders:byOrder.size, products:[...byOrder.values()].flatMap(o=>o.line_items.filter(l=>l.type!=="ticket").map(l=>({type:l.type,item:l.item_id,event:l.event_summary?.event_id,directEvent:l.event_id,quantity:l.quantity}))), sample:[...byOrder.values()].slice(0,1).map(o=>({status:o.status,lines:o.line_items.map(l=>({type:l.type,event:l.event_summary?.event_id,directEvent:l.event_id}))}))}));
   const bookings = new Map<string,Booking>();
   for (const ticket of tickets) {
     if (ticket.event_id !== eventId || ticket.status !== "valid" || ticket.add_on_id) continue;
@@ -169,11 +169,15 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
     const booking: Booking = {id,name,tickets:[description],extras:[],checkedIn};
     bookings.set(id,booking);
     if (!order) continue;
+    if (!Array.isArray(order.line_items)) throw new Error("Incomplete v2 order");
     const ids = new Set(order.line_items.map(line => line.event_summary?.event_id || line.event_id).filter(Boolean));
-    booking.extras = order.line_items.filter(line =>
-      ["product","add_on"].includes(line.type) && line.quantity > 0 &&
-      ((line.event_summary?.event_id || line.event_id) === eventId || (!(line.event_summary?.event_id || line.event_id) && ids.size === 1 && ids.has(eventId)))
-    ).map(line => paidSupply(line.description,line.quantity));
+    booking.extras = order.line_items.filter(line => ["product","add_on"].includes(line.type) && line.quantity > 0)
+      .filter(line => {
+        const assigned = line.event_summary?.event_id || line.event_id;
+        if (assigned) return assigned === eventId;
+        if (ids.size !== 1 || !ids.has(eventId)) throw new Error("Ambiguous product event");
+        return true;
+      }).map(line => paidSupply(line.description,line.quantity));
   }
   return [...bookings.values()].sort((a,b)=>a.name.localeCompare(b.name,"de"));
 }

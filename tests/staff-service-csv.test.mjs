@@ -14,7 +14,7 @@ test('missing orders and unknown packages fail closed',()=>{
  assert.throws(()=>serviceCsv(event,[{...ticket,description:'Unknown'}],[order],'now'));
 });
 test('all pages fetched and failed pages reject',async()=>{
- let calls=0;const request=async()=>new Response(JSON.stringify(++calls===1?{data:[{id:'a'}],links:{next:'?starting_after=a'}}:{data:[{id:'b'}],links:{next:null}}));
+ let calls=0;const request=async url=>{assert.ok(String(url).includes('/v2/orders?'));return new Response(JSON.stringify(++calls===1?{data:[{id:'a'}],links:{next:'?starting_after=a'}}:{data:[{id:'b'}],links:{next:null}}));};
  assert.equal((await csvPages('orders','ev_1','test',request)).length,2);assert.equal(calls,2);
  await assert.rejects(csvPages('orders','ev_1','test',async()=>new Response('',{status:503})));
 });

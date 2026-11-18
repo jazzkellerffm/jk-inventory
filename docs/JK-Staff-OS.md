@@ -244,3 +244,7 @@ Regressionstests prüfen drei Linkformate, Mehrseitensumme, Deduplizierung, Zuor
 Jam & NYJB trennt Absagen bereits vor Ticket-/Umsatzzuordnung von aktiven Events. Eindeutige Wörter im Ticket-Tailor-Status oder `unavailable_status`: cancelled, canceled, abgesagt, ausgefallen (Großschreibung egal). Sold out, close_sales, sales_closed und 0 € sind ausdrücklich keine Absageindikatoren. Absagen fehlen in Durchschnitten, Diagrammen, Ticketmix, VIP-Auswertung, kommenden Abenden und Wochenpaarvergleichen; der Monatsbereich zeigt separat Anzahl und Daten abgesagter Abende je Format.
 
 Reale Ticket-Tailor-Prüfung: Jam 02.09.2026 (`ev_8956423`, „Cancelled – sorry“) und 21.10.2026 (`ev_9116869`, „CANCELLED“). NYJB 03.09.2026 (`ev_8985314`) hat nur close_sales ohne Absagetext; exakte Event-ID-/Datum-Ausnahme aufgrund Philipps ausdrücklicher Bestätigung. Keine pauschalen Ausschlüsse weiterer September-/Oktober-Termine. Ticket Tailor selbst bleibt unverändert. Die dokumentierte NYJB-Absage 25.06. mit „Cancelled – worldcup“ wird ebenfalls automatisch erkannt, wenn der Monat angezeigt wird. Unklare Texte wie „World Cup 1st Game“ werden nicht als Absage interpretiert.
+
+### Bestätigte NYJB-Absage 11.06.2026
+
+Philipp hat den Ausfall am 11.06.2026 ausdrücklich bestätigt. `ev_8170032` mit Datum 2026-06-11 ist nun als genaue Ausnahme ausgeschlossen und zählt separat als Absage. Der Ticket-Tailor-Hinweis „World Cup 1st Game“ allein bleibt für andere Events kein automatischer Absageindikator. Diese Bestätigung ersetzt die zuvor dokumentierte Unklarheit für diesen Termin.

@@ -78,6 +78,8 @@ test('explicit cancellations and confirmed September exception are separated bef
  assert.equal(isCancelledEvent({...event,status:'close_sales'}),false);
  const sep={...event,id:'ev_8985314',start:{date:'2026-09-03'}};
  assert.equal(isCancelledEvent(sep),true);
+ assert.equal(isCancelledEvent({...event,id:"ev_8170032",start:{date:"2026-06-11"},unavailable_status:"World Cup 1st Game"}),true);
+ assert.equal(isCancelledEvent({...event,unavailable_status:"World Cup 1st Game"}),false);
  const result=partitionPerformanceEvents([event,sep,{...event,id:'cancel',unavailable_status:'CANCELLED'},{...event,id:'draft',status:'draft'}]);
  assert.deepEqual(result.active.map(e=>e.id),[event.id]);
  assert.deepEqual(result.cancelled.map(e=>e.id),[sep.id,'cancel']);

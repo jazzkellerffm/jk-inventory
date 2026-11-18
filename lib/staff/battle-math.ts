@@ -65,7 +65,8 @@ export function latestCompletedPair(nights:BattleNight[],today:string){
 
 // Explicit cancellation labels only: closed sales, sold out and zero revenue are not cancellations.
 export function isCancelledEvent(event:BattleEvent):boolean {
- // Confirmed by Philipp on 18.11.2026; Ticket Tailor only records close_sales here.
+ // Confirmed by Philipp on 18.11.2026; provider labels alone are ambiguous.
+ if(event.id==="ev_8170032"&&event.start.date==="2026-06-11")return true;
  if(event.id==="ev_8985314"&&event.start.date==="2026-09-03")return true;
  return [event.status,event.unavailable_status].some(value=>typeof value==="string"&&/\b(cancelled|canceled|abgesagt|ausgefallen)\b/i.test(value));
 }

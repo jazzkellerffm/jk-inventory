@@ -137,7 +137,22 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
     pages<ServiceOrder>("orders", {event_id:eventId}, auth),
     pages<Ticket & { order_id?: string; full_name?: string; checked_in?: boolean|string }>("issued_tickets", {event_id:eventId,status:"valid"}, auth),
   ]);
+  // Read authoritative order details: list responses are not sufficient for add-ons.
+  const orderIds = [...new Set(tickets.filter(t => t.event_id === eventId && t.status === "valid" && !t.add_on_id)
+    .map(t => t.order_id).filter((id): id is string => Boolean(id)))];
   const byOrder = new Map(orders.map(order => [order.id,order]));
+  for (let offset=0; offset<orderIds.length; offset+=4) {
+    const details = await Promise.all(orderIds.slice(offset,offset+4).map(async id => {
+      const response = await fetch("https://api.tickettailor.com/v1/orders/"+encodeURIComponent(id), {
+        headers:{Authorization:auth,Accept:"application/json"},cache:"no-store",signal:AbortSignal.timeout(6000),
+      });
+      if(!response.ok) throw new Error("Order details unavailable");
+      const order:ServiceOrder=await response.json();
+      if(order.id!==id || !Array.isArray(order.line_items)) throw new Error("Incomplete order details");
+      return order;
+    }));
+    for(const order of details)byOrder.set(order.id,order);
+  }
   const bookings = new Map<string,Booking>();
   for (const ticket of tickets) {
     if (ticket.event_id !== eventId || ticket.status !== "valid" || ticket.add_on_id) continue;
@@ -153,10 +168,10 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
     const booking: Booking = {id,name,tickets:[description],extras:[],checkedIn};
     bookings.set(id,booking);
     if (!order) continue;
-    const ids = new Set(order.line_items.map(line => line.event_summary?.event_id).filter(Boolean));
+    const ids = new Set(order.line_items.map(line => line.event_summary?.event_id || line.event_id).filter(Boolean));
     booking.extras = order.line_items.filter(line =>
       ["product","add_on"].includes(line.type) && line.quantity > 0 &&
-      (line.event_summary?.event_id === eventId || (!line.event_summary?.event_id && ids.size === 1 && ids.has(eventId)))
+      ((line.event_summary?.event_id || line.event_id) === eventId || (!(line.event_summary?.event_id || line.event_id) && ids.size === 1 && ids.has(eventId)))
     ).map(line => paidSupply(line.description,line.quantity));
   }
   return [...bookings.values()].sort((a,b)=>a.name.localeCompare(b.name,"de"));

@@ -115,7 +115,7 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
     {view === "Vorbestellungen" && supplies.length > 0 && <div className="service-prep">
       <h3>Für die Vorbereitung</h3><Pills items={supplies}/>
       {bottles > 0 && <small>{bottles} {bottles===1 ? "Flasche" : "Flaschen"} insgesamt bereitstellen</small>}</div>}
-    {visible?.length===0 && <p>{view === "Vorbestellungen" ? "Keine Vorbestellungen oder Flaschen- und Glasleistungen für diesen Abend." : "Keine Buchungen für diesen Termin."}</p>}
+    {!error && visible?.length===0 && <p>{view === "Vorbestellungen" ? "Keine Vorbestellungen oder Flaschen- und Glasleistungen für diesen Abend." : "Keine Buchungen für diesen Termin."}</p>}
     {view==="Gästeliste" && rows && rows.length>0 && <GuestList rows={rows}/>}
     {view==="Vorbestellungen" && visible?.map(row=>{
       const included = row.tickets.flatMap(includedSupply);

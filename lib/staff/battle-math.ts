@@ -4,7 +4,8 @@ export type BattleEvent = { id:string; name:string; status:string; created_at?:n
 export type BattleTicket = {id:string;event_id:string;status:string;description:string;add_on_id?:string};
 export type BattleOrder = {id:string;status:string;created_at:number|string;total?:number;transactions?:{amount:number;payment_method:string;pending:boolean}[];line_items:{type:string;value:number;quantity:number;description:string;event_summary?:{event_id:string};fulfilments?:{reference_id:string}[]}[]};
 export type TicketMix = Record<typeof ticketCategories[number],number>;
-export type BattleNight = {id:string;name:string;date:string;format:Format|null;packages:number;guests:number;drinks:number;unknown:number;recent:number;previous:number;cents:number|null;complete:boolean;isNew:boolean;mix:TicketMix;vipTables:number;worldstarTables:number};
+export type VipPackage = {category:"VIP"|"Worldstar VIP";size:number;count:number};
+export type BattleNight = {id:string;name:string;date:string;format:Format|null;packages:number;guests:number;drinks:number;unknown:number;recent:number;previous:number;cents:number|null;complete:boolean;isNew:boolean;mix:TicketMix;vipTables:number;worldstarTables:number;vipPackages?:VipPackage[]};
 export function eventFormat(event:BattleEvent):Format|null {
  const weekday=new Date(event.start.date+"T12:00:00Z").getUTCDay();
  if(weekday===3 && /\bjazz\s+jam\s+session\b/i.test(event.name))return "jam";
@@ -14,9 +15,9 @@ export function eventFormat(event:BattleEvent):Format|null {
 export function summarizeBattleEvent(event:BattleEvent,tickets:BattleTicket[],orders:BattleOrder[],now:number):BattleNight {
  const valid=new Map(tickets.filter(t=>t.event_id===event.id&&t.status==="valid"&&!t.add_on_id).map(t=>[t.id,t]));
  const mix=Object.fromEntries(ticketCategories.map(c=>[c,0])) as TicketMix;
- const result:BattleNight={id:event.id,name:event.name,date:event.start.date,format:eventFormat(event),packages:0,guests:0,drinks:0,unknown:0,recent:0,previous:0,cents:null,complete:true,mix,vipTables:0,worldstarTables:0,isNew:!!event.created_at&&event.created_at>now-14*86400};
+ const result:BattleNight={id:event.id,name:event.name,date:event.start.date,format:eventFormat(event),packages:0,guests:0,drinks:0,unknown:0,recent:0,previous:0,cents:null,complete:true,mix,vipTables:0,worldstarTables:0,vipPackages:[],isNew:!!event.created_at&&event.created_at>now-14*86400};
  // Guest and entitlement counts match the existing valid-issued-ticket display.
- for(const t of valid.values()){const size=packageSize(t.description);result.guests+=size;const category=ticketCategory(t.description);result.mix[category]+=size;if(category==="VIP")result.vipTables++;if(category==="Worldstar VIP")result.worldstarTables++;result.drinks+=includedDrinks(t.description);if(!size)result.unknown++;}
+ for(const t of valid.values()){const size=packageSize(t.description);result.guests+=size;const category=ticketCategory(t.description);result.mix[category]+=size;if(category==="VIP")result.vipTables++;if(category==="Worldstar VIP")result.worldstarTables++;if(category==="VIP"||category==="Worldstar VIP"){const group=result.vipPackages!.find(p=>p.category===category&&p.size===size);if(group)group.count++;else result.vipPackages!.push({category,size,count:1});}result.drinks+=includedDrinks(t.description);if(!size)result.unknown++;}
  const counted=new Set<string>();
  for(const order of orders){
   if(!["completed","paid"].includes(order.status))continue;

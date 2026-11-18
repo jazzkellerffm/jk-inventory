@@ -63,3 +63,11 @@ test('comparison uses consecutive completed nights, rejects live or ambiguous pa
  assert.equal(latestCompletedPair([jam,nyjb,{...nyjb,id:'duplicate'}],'2026-11-13'),null);
  assert.equal(latestCompletedPair([jam,{...nyjb,date:'2026-11-19'}],'2026-11-20'),null);
 });
+
+test('VIP breakdown preserves sizes and separate categories without duplicate or void packages',()=>{
+ const a=ticket('a','VIP - 2 Guests');
+ const n=summarizeBattleEvent(event,[a,a,ticket('b','VIP - 2 Guests'),ticket('c','VIP - 3 Guests'),ticket('d','VIP - 4 Guests'),ticket('e','Worldstar VIP - 2 Guests'),ticket('v','VIP - 4 Guests','voided')],[],now);
+ assert.deepEqual(n.vipPackages,[{category:'VIP',size:2,count:2},{category:'VIP',size:3,count:1},{category:'VIP',size:4,count:1},{category:'Worldstar VIP',size:2,count:1}]);
+ assert.equal(n.vipPackages.reduce((sum,p)=>sum+p.count,0),n.vipTables+n.worldstarTables);
+ assert.equal(n.vipPackages.reduce((sum,p)=>sum+p.count*p.size,0),n.guests);
+});

@@ -222,3 +222,9 @@ Historische SumUp-Daten waren bereits vorgesehen, aktuell im Nutzer-Screenshot j
 ### Originalmotive im Performance-Kopf · 18.11.2026
 
 Auf Nutzerwunsch größere plakative Bildköpfe (16:10 plus kompakte Performance-Zeile) statt kleiner Logozelle. Jam verwendet unverändert `/JKOS/EXPERIENCE_ASSETS/jam/artwork/jamsession-wide.png`, NYJB `/JKOS/REUSABLE_ARTWORK/nyjb-classic-4x3.jpg`, lokal unter `public/branding/*-performance.*`. Eingebettete Originalschrift/Logos bleiben sichtbar; kein doppeltes Titel-Overlay. Responsive CSS-Ausschnitte mit motivspezifischem Fokus. NYJB-Pflaumengrau ausdrücklich bestätigt; Diagramme, Navigation, Datenlogik unverändert. Alternative bei späterer Ablehnung: gleich großer Farbkopf mit weißem Original-SVG, nicht zurück zur kleinen Zelle.
+
+### Eventfarben, reine Bildköpfe und VIP-Größen · 18.11.2026
+
+Performance-Farbstreifen vollständig entfernt, große Gustavo-Titel oberhalb der reinen 3:2-Bildfläche. Jam: Lavendel (#eee9f5 / #d7cbea / #aa92ca), Violett #66518e; NYJB: warmes Pflaumenlila (#eeebf0 / #d5cbd9 / #b399ab), dunkel #805d72. Interne aktive Umschalter und Hauptschrift verwenden die Eventfamilie; globale Navbar bleibt unverändert. Vergleichszeilen behalten unabhängig von der Auswahl ihre festen, beschrifteten Formatfarben. Kompaktere Statistikabstände bei unverändertem Seitenraster.
+
+VIP-Abende zeigen nun je Datum Anzahl und Größe der gültigen Pakete, z.B. 2 × VIP für 2; Worldstar VIP separat, Tische und VIP-Gäste insgesamt ergänzend. Gruppierung direkt aus vorhandener Ticketkategorie und packageSize, keine neuen Annahmen oder Doppelzählung. Unbekannte Größen bleiben ausdrücklich unbekannt. Optionales zusätzliches vipPackages-Feld für kompatible API-Antworten. Test deckt Größen 2/3/4, getrennte Kategorien, Deduplizierung und ungültige Tickets ab.

@@ -38,7 +38,8 @@ function parseItems(products: unknown): ReceiptItem[] {
   return products.flatMap(product => {
     const name = typeof product?.name === "string" ? product.name.trim() : "";
     const quantity = Number(product?.quantity);
-    return name ? [{ name, quantity: quantity > 0 && Number.isFinite(quantity) ? quantity : null }] : [];
+    const catalogItem = product?.type === "CATALOG" || (Array.isArray(product?.categories) && product.categories.length > 0);
+    return name ? [{ name, quantity: quantity > 0 && Number.isFinite(quantity) ? quantity : null, catalogItem }] : [];
   });
 }
 
@@ -219,14 +220,23 @@ async function rankSales(merchant:string,token:string,start:number,now:number):P
   const totals = new Map<string,{name:string;quantity:number}>();
   const countedSales = new Set<string>();
   let incomplete=0;
+  let excluded=0;
   for (const payment of payments) {
     if (payment.saleId && countedSales.has(payment.saleId)) continue;
     if (payment.saleId) countedSales.add(payment.saleId);
-    if (!payment.itemsComplete || payment.items.some(item => !countable(item))) {
+    // Free payments remain revenue, but are not individual catalogue products.
+    const rankedItems = payment.items.filter(item => item.catalogItem === true && !generic.test(item.name));
+    if (payment.items.length && rankedItems.length < payment.items.length) excluded++;
+    if (!payment.items.length) {
+      if (generic.test(payment.summary ?? "")) excluded++;
+      else incomplete++;
+      continue;
+    }
+    if (rankedItems.some(item => !countable(item))) {
       incomplete++;
       continue;
     }
-    for (const {name,quantity} of payment.items) {
+    for (const {name,quantity} of rankedItems) {
       if (quantity===null) continue;
       const key=name.normalize("NFC").toLocaleLowerCase("de");
       const entry=totals.get(key);
@@ -235,7 +245,7 @@ async function rankSales(merchant:string,token:string,start:number,now:number):P
     }
   }
   const products=[...totals.values()].sort((a,b)=>b.quantity-a.quantity || a.name.localeCompare(b.name,"de")).slice(0,10);
-  return {products: incomplete ? [] : products,incomplete,asOf:new Date(now).toISOString()};
+  return {products: incomplete ? [] : products,incomplete,excluded,asOf:new Date(now).toISOString()};
 }
 
 const rankings = new Map<string, { until: number; data: Promise<BestsellerFeed> }>();

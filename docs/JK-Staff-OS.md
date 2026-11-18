@@ -283,3 +283,8 @@ Pills erhalten 8 px Abstand innerhalb und zwischen unmittelbar benachbarten Prod
 ### Erster Praxistest und vorgemerkte Ideen · 18.11.2026
 Philipp bestätigt im laufenden Betrieb: SumUp und Included Drinks laufen gut. Jetzt ausschließlich Snack-Bestseller-Überschrift und Listentexte auf Poly Sans Bulky angepasst; keine Monitor- oder Datenlogik geändert.
 Für später, ausdrücklich NICHT umgesetzt: Countdown bis Einlass/Show mit Gästezahl und wenigen Zusatzinfos (Platzierung noch offen); optional Included-Cocktails/Mocktails als andersfarbige Kacheln im Stream letzter Getränkebestellungen. Wein/Bier für diese Idee ausnehmen. Motivation: Pausen meist erst nach erstem Gästeschwung; bestehendes Verhalten zunächst im echten Betrieb beobachten. Dies ist keine Änderung der bestehenden Barpegel-Formel oder Quellen.
+
+
+### Bestseller: freie Zahlungen (18.11.2026)
+
+Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit eindeutiger Menge. Freie Positionen (CUSTOM, etwa Custom amount, Drinks oder Bier ohne Artikelzuordnung) bleiben im Umsatz und Zahlungsstream, werden aber aus der Rangliste ausgeschlossen und blockieren sie nicht. Gemischte Verkäufe behalten ihre zugeordneten Artikel. Ein kompakter Hinweis erklärt ausgeschlossene freie Zahlungen. Echte fehlende Artikelmengen und nicht identifizierbare Abruflücken bleiben weiterhin als unvollständig markiert. Keine Änderung an Barpegel, Food-Berechnung oder Umsatzlogik.

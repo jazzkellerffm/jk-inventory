@@ -74,12 +74,13 @@ export function Bestsellers({example}:{example:boolean}) {
     {feed && !feed.incomplete && <ol>{feed.products.slice(0,limit).map((p,i)=><li key={p.name}>
       <span>{i+1}</span><div><b>{p.name}</b><div className="best-track"><i style={{width:100*p.quantity/feed.products[0].quantity+"%"}}/></div></div><strong>{p.quantity} ×</strong>
     </li>)}</ol>}
-    {feed && !feed.products.length && !feed.incomplete && <p>In diesem Zeitraum noch keine Artikel verkauft.</p>}
+    {feed && !feed.products.length && !feed.incomplete && <p>In diesem Zeitraum noch keine zugeordneten Artikel verkauft.</p>}
     {!example && message && <p role="status">{message}</p>}
     {!!feed?.incomplete && <div className="bestseller-unavailable" role="status">
       <b>Für diesen Zeitraum fehlt eine verlässliche Artikelübersicht.</b>
       <p>Bei {feed.incomplete} Zahlungen fehlen eindeutige Artikel oder Stückzahlen. Deshalb zeigen wir hier keine Rangliste.</p>
     </div>}
+    {!!feed?.excluded && !feed.incomplete && <small>Freie Zahlungen ohne zugeordneten Artikel sind nicht enthalten.</small>}
     <small>Verkaufte Stückzahl · Tageswechsel 03:00 Uhr</small>
   </section>;
 }

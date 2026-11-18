@@ -54,7 +54,7 @@ function normalizeSale(raw: RawSale, id: string): ItemSale {
     if (!name) continue;
     const categories = Array.isArray(line.categories) ? line.categories.flatMap(category =>
       typeof category?.name === "string" ? [category.name] : []) : [];
-    items.push({ name, quantity, categories });
+    items.push({ name, quantity, categories, catalogItem: line.type === "CATALOG" || categories.length > 0 });
   }
   if (!references.length) console.info("SumUp sale reference shape", { payments: raw.payments.length,
     successful: raw.payments.filter(payment => payment.status === "SUCCESSFUL").length,

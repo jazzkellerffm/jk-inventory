@@ -231,3 +231,30 @@ test('repeated transaction cursor is rejected',async t=>{
  t.mock.method(globalThis,'fetch',async()=>Response.json({items:[],links:[{rel:'next',href:'newest_ref=same'}]}));
  await assert.rejects(readBattleRevenue('merchant','token',now-3600000,now),/Incomplete SumUp history/);
 });
+
+
+test('Free payments never block catalogue rankings or disappear from revenue and stream', async t => {
+  mockApi(t, { payments: [payment('catalog'), payment('custom'), payment('mixed')], sales: [
+    sale('catalog', ['catalog'], [line('Mojito', 3)]),
+    sale('custom', ['custom'], [line('Custom amount', 1, { type: 'CUSTOM' })]),
+    sale('mixed', ['mixed'], [line('Nachos con Salsa', 2, { categories: [{ name: 'Bar Snacks' }] }),
+      line('DRINKS', 1, { type: 'CUSTOM' }), line('drinks', 1, { type: 'CUSTOM' }),
+      line('Bier', 1, { type: 'CUSTOM' }), line('Adrianos Sonderzahlung', 1, { type: 'CUSTOM' })]),
+  ] });
+  const ranking = await readBestsellers('free-payments', 'test');
+  assert.equal(ranking.incomplete, 0);
+  assert.equal(ranking.excluded, 2);
+  assert.deepEqual(ranking.products, [{ name: 'Mojito', quantity: 3 }, { name: 'Nachos con Salsa', quantity: 2 }]);
+  const feed = await readBarFeed('free-payments', 'test');
+  assert.equal(feed.eveningCents, 4500);
+  assert.equal(feed.payments.length, 3);
+  assert.ok(feed.payments.some(p => p.items.some(i => i.name === 'Custom amount')));
+});
+
+test('Only free payments produce an empty catalogue ranking, not an unavailable ranking', async t => {
+  mockApi(t, { payments: [payment('free', 1, { product_summary: 'CUSTOM AMOUNT' })], receipt: [] });
+  const ranking = await readBestsellers('only-free', 'test');
+  assert.equal(ranking.incomplete, 0);
+  assert.equal(ranking.excluded, 1);
+  assert.deepEqual(ranking.products, []);
+});

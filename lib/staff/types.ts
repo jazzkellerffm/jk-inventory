@@ -1,4 +1,4 @@
-export type ReceiptItem = { name: string; quantity: number | null; categories?: string[] };
+export type ReceiptItem = { name: string; quantity: number | null; categories?: string[]; catalogItem?: boolean };
 export type Payment = { id: string; at: string; amount: number; currency: string; summary?: string; items: ReceiptItem[] };
 export type BarFeed = {
   asOf: string;
@@ -27,4 +27,4 @@ export type StaffBoard = {
   shifts: Shift[];
   scheduleError: boolean;
 };
-export type BestsellerFeed = { products:{name:string;quantity:number}[]; incomplete:number; asOf:string };
+export type BestsellerFeed = { products:{name:string;quantity:number}[]; incomplete:number; excluded?:number; asOf:string };

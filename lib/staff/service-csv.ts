@@ -1,12 +1,18 @@
-import { packageSize } from './entitlements';
+import { packageSize, ticketCategory, ticketCategories } from './entitlements';
 
 export type CsvTicket = {id:string;event_id:string;status:string;description:string;order_id?:string;full_name?:string;add_on_id?:string};
 export type CsvOrder = {id:string;status?:string;buyer_details?:{name?:string;first_name?:string;last_name?:string};line_items:{type:string;description:string;quantity:number;event_id?:string;event_summary?:{event_id:string}|null}[]};
-export function serviceCsv(event:{id:string;name:string;start:{date:string}},tickets:CsvTicket[],orders:CsvOrder[],at:string){
+export function serviceCsv(event:{id:string;name:string;start:{date:string}},tickets:CsvTicket[],orders:CsvOrder[]){
  const byOrder=new Map(orders.map(o=>[o.id,o]));
  const seen=new Set<string>(), emitted=new Set<string>();
  const valid=tickets.filter(t=>t.event_id===event.id&&t.status==='valid'&&!t.add_on_id);
- const rows:unknown[][]=[['Datum','Veranstaltung','Abrufzeit','Buchungs-ID','Buchungsname','Gastname','Ticket-ID','Ticketkategorie / Paket','Paketanzahl','Personenzahl','Vorbestellungen der Buchung','Zuordnung']];
+ const bookingName=(t:CsvTicket)=>{
+  const b=t.order_id?byOrder.get(t.order_id)?.buyer_details:undefined;
+  return b?.name?.trim()||[b?.first_name,b?.last_name].filter(Boolean).join(' ').trim()||t.full_name?.trim()||'Buchungsname fehlt';
+ };
+ valid.sort((a,b)=>ticketCategories.indexOf(ticketCategory(a.description))-ticketCategories.indexOf(ticketCategory(b.description))
+  ||bookingName(a).localeCompare(bookingName(b),'de')||(a.order_id||a.id).localeCompare(b.order_id||b.id)||a.id.localeCompare(b.id));
+ const rows:unknown[][]=[['Datum','Veranstaltung','Buchungsname','Ticketkategorie','Personenzahl','Vorbestellungen der Buchung']];
  for(const t of valid){
   if(seen.has(t.id))throw new Error('Doppelte Ticket-ID');seen.add(t.id);
   const size=packageSize(t.description);if(!size)throw new Error('Unbekannte Paketgröße');
@@ -24,8 +30,7 @@ export function serviceCsv(event:{id:string;name:string;start:{date:string}},tic
    }).map(l=>{if(!Number.isInteger(l.quantity))throw new Error('Ungültige Menge');return `${l.quantity} × ${l.description}`;}).join('; ');
    emitted.add(o.id);
   }
-  const b=o?.buyer_details;const name=b?.name||[b?.first_name,b?.last_name].filter(Boolean).join(' ');
-  rows.push([event.start.date,event.name,at,o?.id||'',name||'',t.full_name||'',t.id,t.description,1,size,extras,o?'Vorbestellungen gelten für die Buchung; nur einmal aufgeführt':'Manuell ausgestelltes Ticket ohne Bestellung']);
+  rows.push([event.start.date,event.name,bookingName(t),t.description,size,extras]);
  }
  for(const o of orders){
   if(!emitted.has(o.id)&&o.line_items.some(l=>['product','add_on'].includes(l.type)&&l.quantity>0&&(l.event_summary?.event_id||l.event_id)===event.id))throw new Error('Vorbestellung ohne gültiges Ticket muss geprüft werden');

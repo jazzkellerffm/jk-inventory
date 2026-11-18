@@ -64,13 +64,27 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
   const id=night.id;
   const [rows,setRows] = useState<Booking[] | null>(()=>example ? demoBookings(night) : null);
   const [error,setError] = useState(false);
+  const [refreshing,setRefreshing]=useState(false);
+  const [exporting,setExporting]=useState(false);
+  const [exportError,setExportError]=useState("");
+  async function download(){
+    setExporting(true);setExportError("");
+    try{
+      const res=await fetch("/api/staff/service/csv?event="+encodeURIComponent(id),{cache:"no-store"});
+      if(!res.ok){const data=await res.json();throw new Error(data.error||"CSV-Export fehlgeschlagen.");}
+      const blob=await res.blob(),url=URL.createObjectURL(blob),a=document.createElement("a");
+      a.href=url;a.download=res.headers.get("Content-Disposition")?.match(/filename="([^"]+)"/)?.[1]||"JK-Gaesteliste.csv";
+      document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }catch(e){setExportError(e instanceof Error?e.message:"CSV-Export fehlgeschlagen.");}
+    finally{setExporting(false);}
+  }
   useEffect(()=>{
     if (example) return;
     const controller=new AbortController();
     let busy=false;
     async function update() {
       if (busy || document.hidden) return;
-      busy=true;
+      busy=true;setRefreshing(true);
       try {
         const res=await fetch("/api/staff/service?event="+encodeURIComponent(id),{cache:"no-store",signal:controller.signal});
         if(res.status===401) { window.location.replace("/staff"); return; }
@@ -78,7 +92,7 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
         const data:Booking[]=await res.json();
         if(!controller.signal.aborted){setRows(data);setError(false);}
       } catch {if(!controller.signal.aborted)setError(true);}
-      finally {busy=false;}
+      finally {busy=false;if(!controller.signal.aborted)setRefreshing(false);}
     }
     void update();
     const timer=setInterval(update,60000);
@@ -92,6 +106,10 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
     <div className="service-switch" role="group" aria-label="Ansicht">{["Vorbestellungen","Gästeliste"].map(label =>
       <button type="button" key={label} aria-pressed={view===label} onClick={()=>setView(label)}>{label}</button>)}</div>
     {rows && rows.length>0 && <p className="checkin-total">{rows.filter(row=>row.checkedIn).length} von {rows.length} Buchungen eingecheckt</p>}
+    {!example && <button type="button" onClick={download} disabled={exporting}>Aktuelle CSV herunterladen</button>}
+    {exporting && <TicketLoader label="Aktuelle Gästeliste wird erstellt"/>}
+    {exportError && <p role="alert">{exportError}</p>}
+    {refreshing && rows && !error && <TicketLoader label="Buchungen werden aktualisiert"/>}
     {error && <p role="status">Aktualisierung fehlgeschlagen.</p>}
     {!rows && !error && <TicketLoader label="Buchungen werden geladen"/>}
     {view === "Vorbestellungen" && supplies.length > 0 && <div className="service-prep">

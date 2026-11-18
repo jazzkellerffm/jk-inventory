@@ -248,3 +248,8 @@ Reale Ticket-Tailor-Prüfung: Jam 02.09.2026 (`ev_8956423`, „Cancelled – sor
 ### Bestätigte NYJB-Absage 11.06.2026
 
 Philipp hat den Ausfall am 11.06.2026 ausdrücklich bestätigt. `ev_8170032` mit Datum 2026-06-11 ist nun als genaue Ausnahme ausgeschlossen und zählt separat als Absage. Der Ticket-Tailor-Hinweis „World Cup 1st Game“ allein bleibt für andere Events kein automatischer Absageindikator. Diese Bestätigung ersetzt die zuvor dokumentierte Unklarheit für diesen Termin.
+
+
+## Service CSV · 18.11.2026
+Eigenexport über geschützten GET /api/staff/service/csv?event=ev_…; keine dokumentierte fertige CSV-API gefunden. Frische Events/Orders/Issued Tickets, alle Ergebnisseiten, kein Cache. Eine Zeile je gültigem Paket, Personenlogik aus entitlements; manuelle Tickets ohne Bestellung zählen mit. Vorbestellungen über Buchungs-ID nur einmal ausgegeben, Namen separat. UTF-8-BOM, Semikolon, CRLF, CSV-Escaping und Formelschutz. Bei fehlenden Orders, unbekannten Paketgrößen, mehrdeutiger Add-on-Zuordnung, Vorbestellungen ohne gültiges Ticket oder ungeklärter Erstattung mit Add-ons wird der Export vollständig abgebrochen. Kein stiller Teil-Export. Keine Änderung der bisherigen Service-Gästelistenlogik.
+Live-Datenabgleich über TT: Jam 18.11. ev_9116873: 21 Bestellungen, 25 gültige Pakete, 55 Gäste, 1 Hummus Plate. Personen zusätzlich gegen Event-Ticketinventar geprüft (55). Beide API-Listen endeten mit next=null. Synthetische Tests: mehrere Seiten, API-Fehler, Teilstornierung, manuelle Tickets, mehrere Ticketarten, einmalige Add-ons, unbekannte Pakete, fehlende Orders und Dubletten. Der Browserdownload in der angemeldeten Produktion wurde nicht getestet. Service aktualisiert mit bestehendem TicketLoader, Fehler bleiben sichtbar.

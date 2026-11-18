@@ -459,3 +459,26 @@
 
 /* Unconfirmed assignments stay legible and retain their station colour. */
 .roster-role[data-tentative="true"] { opacity:.72; outline:1px dashed currentColor; outline-offset:-1px; }
+
+/* Wide workspace only: retain the phone layout and DOM reading order. */
+@media (min-width: 1024px) {
+  .staff-shell:has(> .staff-dashboard) { max-width:1320px; padding-inline:32px; }
+  .staff-dashboard { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-items:start; }
+  .staff-dashboard > * { grid-column:1 / -1; min-width:0; }
+  .staff-dashboard > .staff-panel,
+  .staff-dashboard > .perf-panel,
+  .staff-dashboard > .shift-line { margin-block:0; }
+  .staff-dashboard > .staff-activity,
+  .staff-dashboard > .bar-load,
+  .staff-dashboard > .staff-feed,
+  .staff-dashboard > .staff-orders,
+  .staff-dashboard > #bar-evenings,
+  .staff-dashboard > .staff-bestsellers { grid-column:auto; }
+  .staff-dashboard > .staff-heading { margin-block:30px 0; }
+  .staff-dashboard > .staff-alert-controls { margin:0; }
+  .staff-dashboard .staff-activity { column-gap:20px; }
+  .staff-dashboard .bar-load .cocktail-tiles { grid-auto-flow:row; grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-columns:auto; gap:10px; }
+  .staff-dashboard .bar-load .cocktail-tiles li { min-width:0; overflow-wrap:anywhere; }
+  .staff-dashboard > .staff-tools-title { margin:8px 0 0; }
+  .staff-dashboard .staff-modules > details[open] { grid-column:1 / -1; }
+}

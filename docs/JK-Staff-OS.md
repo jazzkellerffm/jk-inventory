@@ -303,3 +303,10 @@ Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit
 - Geöffnetes Modul: Aktualisierung und Servercache 60 Sekunden. Stand und Abruffehler bleiben sichtbar.
 - Integrationstest deckt Jam, NYJB, zukünftige Termine, nach Mitternacht und 03:00-Wechsel ab. 46 Staff-Tests sowie Produktionsbuild bestanden.
 - Idee, noch nicht umgesetzt: Cocktailvergleich mit verkaufter Menge, Menge pro gebuchtem Gast, tatsächlichem Cocktailumsatz und Umsatzanteil. Eingelöste Included Drinks separat ausweisen; gebuchte Ansprüche sind keine konsumierten Cocktails. Keine Umsatzschätzung aus Gesamtbons.
+
+
+### 18.11.2026 — iPad quer und Desktop
+- Ab 1024 CSS-Pixeln: bis 1320 Pixel breite Arbeitsfläche, zwei Spalten für Baraktivität/Barpegel, Zahlungen/Included-Drinks und Abendhistorie/Bestseller.
+- Gästeliste, Food, Service und geöffnete Tools behalten die volle Breite. Cocktailkacheln im schmaleren Barpegel stehen in zwei Spalten.
+- DOM-/Lesereihenfolge, mobile Styles unter 1024 Pixeln, Navigation und Datenlogik unverändert. Kein separater Ansichtsregler.
+- Validierung: Produktionsbuild bestanden; bestehendes CSS bytegleich erhalten und neue Regeln ausschließlich ab 1024 Pixeln. Lokaler visueller Browsertest durch gesperrten Chromium-Start nicht möglich.

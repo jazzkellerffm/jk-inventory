@@ -121,7 +121,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const message = stale ? "SumUp ist gerade nicht erreichbar." : board?.feedState === "setup" ? "SumUp ist noch nicht verbunden." : "Zahlungen werden geladen …";
   return <div className="staff-shell">
     <Masthead signedIn={!example} demo={!!example}/>
-    <main>
+    <main className="staff-dashboard">
       <div id="bar-monitor" className="staff-heading"><div><h1>Bar-Monitor<span>.</span></h1></div>
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>

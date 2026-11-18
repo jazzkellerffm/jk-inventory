@@ -22,3 +22,11 @@ test('ambiguous extras and duplicate tickets reject',()=>{
  assert.throws(()=>serviceCsv(event,[ticket,ticket],[order],'now'));
  assert.throws(()=>serviceCsv(event,[ticket],[{...order,line_items:[...order.line_items,{type:'ticket',quantity:1,description:'Club',event_id:'ev_2'}]}],'now'));
 });
+
+test('Crémant group packages count guests in the actual CSV',()=>{
+ const tickets=[{...ticket,id:'c1',description:'Club - Cremant for 2'},{...ticket,id:'c2',description:'Club - Crémant for 2'}];
+ const csv=serviceCsv(event,tickets,[order],'now');
+ const lines=csv.trim().split('\r\n').slice(1);
+ assert.equal(lines.length,2);
+ assert.equal(lines.reduce((sum,line)=>sum+Number(line.split(';')[9].replaceAll('"','')),0),4);
+});

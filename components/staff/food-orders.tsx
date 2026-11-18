@@ -62,7 +62,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
     ? 100 * feed.totalCents / eveningCents : null;
   const busyKitchen = feed && (feed.recentHummus >= 2 || feed.recentPortions >= 3);
   const kitchenLevel = !feed || message ? "unknown" : busyKitchen ? "busy"
-    : feed.recentIncomplete ? "unknown" : feed.recentPortions ? "active" : "quiet";
+    : feed.recentPortions ? "active" : feed.recentIncomplete ? "unknown" : "quiet";
   const kitchenLabels = {unknown:"Daten fehlen", busy:"Viel los", active:"Neue Bestellung", quiet:"Ruhig"};
   return <section id="food-orders" className="staff-panel food-panel" aria-labelledby="food-title">
     <div className="staff-section-head"><span className="staff-eyebrow"><Utensils size={16}/> SumUp · Bar Snacks</span>
@@ -74,7 +74,8 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
         <div className="food-share"><span>Küchenpegel · geschätzt</span>
           <strong role="status">{kitchenLabels[kitchenLevel]}</strong></div>
         <div className="load-meter" aria-hidden="true"/>
-        {kitchenLevel !== "unknown" && <small>{feed.recentPortions} {feed.recentPortions === 1 ? "Portion" : "Portionen"} in 10 Min.</small>}
+        {kitchenLevel !== "unknown" && <small>{feed.recentIncomplete ? "Mindestens " : ""}{feed.recentPortions} {feed.recentPortions === 1 ? "Portion" : "Portionen"} in 10 Min.</small>}
+        {!message && feed.recentIncomplete && <small>Einige Artikel haben keine Kategorie; weitere Snacks sind möglich.</small>}
       </div>
       <div className="food-total"><MaskedRevenue label="Snack-Umsatz" cents={feed.totalCents}/></div>
       <div className="food-share"><span>Anteil am SumUp-Abendumsatz</span>

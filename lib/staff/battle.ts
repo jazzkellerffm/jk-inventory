@@ -16,7 +16,7 @@ export type BattleFeed={month:string;today:string;asOf:number;nights:BattleNight
 let cache:{key:string;month:string;until:number;data:Promise<BattleFeed>}|undefined;
 export function readBattle(key:string,month:string,merchant?:string,token?:string){
  if(cache?.key===key&&cache.month===month&&cache.until>Date.now())return cache.data;
- const data=collect(key,month,merchant,token);cache={key,month,until:Date.now()+300000,data};data.catch(()=>{if(cache?.data===data)cache=undefined;});return data;
+ const data=collect(key,month,merchant,token);cache={key,month,until:Date.now()+60000,data};data.catch(()=>{if(cache?.data===data)cache=undefined;});return data;
 }
 async function collect(key:string,month:string,merchant?:string,token?:string):Promise<BattleFeed>{
  const now=Date.now(),today=serviceDate(now),endDate=new Date(now+42*86400000).toISOString().slice(0,10);
@@ -24,7 +24,7 @@ async function collect(key:string,month:string,merchant?:string,token?:string):P
  const {active:events,cancelled}=partitionPerformanceEvents((await pages<BattleEvent>("events",{},auth)).filter(e=>e.start?.date));
  const selected=events.filter(e=>(e.start.date.startsWith(month)&&!!eventFormat(e))||(e.start.date>=today&&e.start.date<endDate));
  const start=serviceStart(Date.parse(month+"-01T12:00:00Z"));
- const end=Math.min(serviceStart(now),serviceStart(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5)),1,12)));
+ const end=Math.min(now,serviceStart(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5)),1,12)));
  const revenuePromise=merchant&&token?readBattleRevenue(merchant,token,start,end).catch(error=>{console.warn("Staff format revenue unavailable",{month,reason:error instanceof Error?error.message:"Unknown error"});return null;}):Promise.resolve(null);
  const nights:BattleNight[]=[];
  // Bound provider concurrency; only the opened Tools module triggers this request.
@@ -35,7 +35,7 @@ async function collect(key:string,month:string,merchant?:string,token?:string):P
  const revenue=await revenuePromise;
  for(const night of nights){
   // A whole-night SumUp total cannot be attributed to one event if dates overlap.
-  if(revenue&&night.date<today&&night.date.startsWith(month)&&events.filter(e=>e.start.date===night.date).length===1)night.cents=revenue[night.date]??0;
+  if(revenue&&night.date<=today&&night.date.startsWith(month)&&events.filter(e=>e.start.date===night.date).length===1)night.cents=revenue[night.date]??0;
  }
  nights.sort((a,b)=>a.date.localeCompare(b.date));
  return {month,today,asOf:now,cancelled:cancelled.filter(e=>e.start.date.startsWith(month)&&eventFormat(e)).map(e=>({id:e.id,date:e.start.date,format:eventFormat(e)!})),nights:nights.filter(n=>n.format&&n.date.startsWith(month)),upcoming:nights.filter(n=>n.date>=today),revenueAvailable:revenue!==null};

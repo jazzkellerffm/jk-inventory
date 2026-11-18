@@ -295,3 +295,11 @@ Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit
 - Wirklich fehlende Katalogdaten und Abruffehler bleiben als unvollständig erkennbar.
 - Den dauerhaften Hinweis „Positionen ohne Kategorie sind ausgenommen“ bei Snack-Bestsellern entfernt.
 - 45 Staff-Tests und Produktionsbuild erfolgreich, einschließlich gemischter Verkäufe, freier Beträge, fehlender Katalogdaten und fehlgeschlagener Zahlungen.
+
+### 18.11.2026 — Live-Umsatz für Jam und NYJB
+- Beide Formate zeigen im Modus „Heute Abend“ den laufenden SumUp-Abendumsatz und Umsatz pro gebuchtem Gast, als live gekennzeichnet.
+- Der Abruf endet jetzt beim aktuellen Zeitpunkt statt am Beginn des Betriebsabends. Zukünftige Termine erhalten weiterhin keinen Umsatz; bei mehreren Events am gleichen Datum bleibt die Zuordnung gesperrt.
+- Nach Mitternacht bleibt der Umsatz bis 03:00 Europe/Berlin beim vorherigen Betriebsdatum. Erst danach fließt der Abend in Monatsdurchschnitt und abgeschlossene Wochenvergleiche ein.
+- Geöffnetes Modul: Aktualisierung und Servercache 60 Sekunden. Stand und Abruffehler bleiben sichtbar.
+- Integrationstest deckt Jam, NYJB, zukünftige Termine, nach Mitternacht und 03:00-Wechsel ab. 46 Staff-Tests sowie Produktionsbuild bestanden.
+- Idee, noch nicht umgesetzt: Cocktailvergleich mit verkaufter Menge, Menge pro gebuchtem Gast, tatsächlichem Cocktailumsatz und Umsatzanteil. Eingelöste Included Drinks separat ausweisen; gebuchte Ansprüche sind keine konsumierten Cocktails. Keine Umsatzschätzung aus Gesamtbons.

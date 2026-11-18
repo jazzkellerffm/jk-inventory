@@ -88,3 +88,40 @@ test('explicit cancellations and confirmed September exception are separated bef
  assert.equal(ranking(nights)[0].cents,100000);
  assert.equal(summarizeMix(nights).guests,40);
 });
+
+test('Live revenue for Jam and NYJB belongs to today until 03:00, future nights stay empty', async t => {
+ const {readBattle}=await import('../lib/staff/battle.ts');
+ let clock=Date.parse('2026-11-18T22:08:00Z');
+ t.mock.method(Date,'now',()=>clock);
+ const events=[
+  {...event,start:{date:'2026-11-18',unix:1795032000}},
+  {...event,id:'ev_nyjb',name:'New York Jazz Bar',start:{date:'2026-11-19',unix:1795118400}}
+ ];
+ t.mock.method(globalThis,'fetch',async input=>{
+  const url=new URL(input);
+  if(url.pathname.endsWith('/events'))return Response.json({data:events});
+  if(url.pathname.endsWith('/issued_tickets')||url.pathname.endsWith('/orders'))return Response.json({data:[]});
+  if(url.pathname.endsWith('/transactions/history'))return Response.json({items:[
+   {transaction_id:'jam',timestamp:'2026-11-18T22:00:00Z',type:'PAYMENT',status:'SUCCESSFUL',currency:'EUR',amount:100},
+   {transaction_id:'late',timestamp:'2026-11-19T00:30:00Z',type:'PAYMENT',status:'SUCCESSFUL',currency:'EUR',amount:20},
+   {transaction_id:'nyjb',timestamp:'2026-11-19T22:00:00Z',type:'PAYMENT',status:'SUCCESSFUL',currency:'EUR',amount:200}
+  ]});
+  throw Error('Unexpected '+url.pathname);
+ });
+ let feed=await readBattle('live-jam','2026-11','merchant','token');
+ assert.equal(feed.nights.find(n=>n.format==='jam').cents,10000);
+ assert.equal(feed.nights.find(n=>n.format==='nyjb').cents,null);
+ clock=Date.parse('2026-11-19T01:00:00Z');
+ feed=await readBattle('live-late','2026-11','merchant','token');
+ assert.equal(feed.today,'2026-11-18');
+ assert.equal(feed.nights.find(n=>n.format==='jam').cents,12000);
+ clock=Date.parse('2026-11-19T02:00:00Z');
+ feed=await readBattle('live-rollover','2026-11','merchant','token');
+ assert.equal(feed.today,'2026-11-19');
+ assert.equal(feed.upcoming.some(n=>n.format==='jam'),false);
+ clock=Date.parse('2026-11-19T22:08:00Z');
+ feed=await readBattle('live-nyjb','2026-11','merchant','token');
+ assert.equal(feed.today,'2026-11-19');
+ assert.equal(feed.nights.find(n=>n.format==='nyjb').cents,20000);
+ assert.equal(feed.upcoming.some(n=>n.format==='jam'),false);
+});

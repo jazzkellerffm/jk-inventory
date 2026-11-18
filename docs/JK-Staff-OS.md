@@ -232,3 +232,9 @@ VIP-Abende zeigen nun je Datum Anzahl und Größe der gültigen Pakete, z.B. 2 �
 ### Einheitliche Schriftfarbe und Buchungslisten · 18.11.2026
 - Pro Event ein gemeinsamer dunkler Textton (`--paper`), auch für große Gästezahlen und Titel; Akzentfarben bleiben für Balken und aktive Schalter erhalten.
 - „Buchungen in Bewegung“ folgt der Ticket-Tailor-Gästeliste: Wochentag und Datum, Eventname links, Gästezahl und neue Gäste rechts. Dünne 9-px-Balken bleiben erhalten, dunkler Abschnitt zeigt weiterhin die letzten sieben Tage (nicht 24 Stunden). Der vorherige Sieben-Tage-Zeitraum steht unter dem Balken. Keine zusätzlichen Trennlinien zwischen den Abenden.
+
+### Vollständige SumUp-Paginierung · 18.11.2026
+
+Bestätigte Code-Ursache für unvollständige historische Abendumsätze: SumUp liefert `links[].href` üblicherweise als reine Query-Zeichenfolge. Die bisherige URL-Auswertung verlor dabei die Query und beendete den Abruf nach der ersten Seite. Dadurch konnten Teilbeträge oder scheinbare Nullumsätze in Jam & NYJB erscheinen. Der gemeinsame History-Reader verarbeitet nun reine Queries, `?`-Queries und absolute/relative URL-Links. Ungültige oder wiederholte Cursor sowie Fehler auf Folgeseiten verwerfen den Abruf statt unvollständige Summen auszugeben. Zahlungs-Deduplizierung und Betriebsabendgrenze 03:00 Europe/Berlin bleiben erhalten.
+
+Regressionstests prüfen drei Linkformate, Mehrseitensumme, Deduplizierung, Zuordnung nach Mitternacht und Folgeseitenfehler. 31 Staff-Tests und Produktionsbuild erfolgreich. Reale korrigierte Beträge für 12.11., 21.10. und 17.09. sind noch nicht unabhängig mit SumUp abgeglichen; keine verifizierten Ersatzwerte behaupten. Offizielle Referenz: https://developer.sumup.com/api/transactions/list/ . Keine Designänderung.

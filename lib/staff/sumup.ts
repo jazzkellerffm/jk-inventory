@@ -112,7 +112,17 @@ async function history(merchant: string, token: string, since: number, now: numb
         summary: typeof row.product_summary === "string" ? row.product_summary.trim() : undefined, items: [] });
     }
     const next = page.links?.find((link: { rel: string }) => link.rel === "next");
-    cursor = next ? new URL(next.href, api + path).searchParams.toString() : "";
+    if (!next) { cursor = ""; continue; }
+    if (typeof next.href !== "string" || !next.href.trim()) throw new Error("Invalid SumUp pagination");
+    // SumUp normally returns a bare query string, not a relative URL.
+    const href = next.href.trim();
+    cursor = href.startsWith("?") ? href.slice(1)
+      : href.startsWith("/") || /^https?:\/\//.test(href)
+        ? new URL(href, api).searchParams.toString()
+        : new URLSearchParams(href).toString();
+    if (!cursor || !new URLSearchParams(cursor).has("newest_ref") && !new URLSearchParams(cursor).has("oldest_ref")) {
+      throw new Error("Invalid SumUp pagination");
+    }
   }
   return [...payments.values()].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 }

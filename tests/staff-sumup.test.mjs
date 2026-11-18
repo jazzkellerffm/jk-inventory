@@ -204,3 +204,30 @@ test('failed historical window rejects partial revenue rather than treating it a
  let calls=0;t.mock.method(globalThis,'fetch',async()=>++calls===1?Response.json({items:[]}):new Response('',{status:503}));
  await assert.rejects(readBattleRevenue('merchant','token',Date.parse('2026-11-01Z'),Date.parse('2026-11-18Z')),/SumUp HTTP 503/);
 });
+
+for (const form of ['bare', 'question', 'absolute']) {
+ test(`historical payments follow ${form} pagination links and count each payment once`, async t => {
+  const start=Date.parse('2026-11-12T02:00:00Z'),end=Date.parse('2026-11-13T02:00:00Z');
+  let calls=0;
+  const a=payment('a',1,{timestamp:'2026-11-12T23:00:00Z',amount:17});
+  const b=payment('b',1,{timestamp:'2026-11-13T01:00:00Z',amount:600});
+  const query='limit=100&newest_ref=page2&order=descending';
+  t.mock.method(globalThis,'fetch',async input=>{
+   const url=new URL(input);calls++;
+   if(!url.searchParams.has('newest_ref'))return Response.json({items:[a],links:[{rel:'next',href:form==='bare'?query:form==='question'?'?'+query:'https://api.sumup.com'+url.pathname+'?'+query}]});
+   assert.equal(url.searchParams.get('newest_ref'),'page2');
+   return Response.json({items:[a,b]});
+  });
+  assert.deepEqual(await readBattleRevenue('merchant','token',start,end),{'2026-11-12':61700});
+  assert.equal(calls,2);
+ });
+}
+test('failed or looping transaction pages never return partial revenue',async t=>{
+ let calls=0;
+ t.mock.method(globalThis,'fetch',async()=>++calls===1?Response.json({items:[payment('partial')],links:[{rel:'next',href:'newest_ref=page2'}]}):new Response('',{status:503}));
+ await assert.rejects(readBattleRevenue('merchant','token',now-3600000,now),/503/);
+});
+test('repeated transaction cursor is rejected',async t=>{
+ t.mock.method(globalThis,'fetch',async()=>Response.json({items:[],links:[{rel:'next',href:'newest_ref=same'}]}));
+ await assert.rejects(readBattleRevenue('merchant','token',now-3600000,now),/Incomplete SumUp history/);
+});

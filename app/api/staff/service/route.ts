@@ -9,5 +9,5 @@ export async function GET(request: Request) {
   const key = process.env.TICKET_TAILOR_API_KEY;
   if (!key) return Response.json({}, {status:503, headers});
   try { return Response.json(await readServicePlan(key,id), {headers}); }
-  catch { return Response.json({}, {status:503, headers}); }
+  catch (error) { console.error("staff-service-failed", id, error instanceof Error ? error.message : "Unknown error"); return Response.json({}, {status:503, headers}); }
 }

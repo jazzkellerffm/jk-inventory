@@ -146,13 +146,14 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
       const response = await fetch("https://api.tickettailor.com/v1/orders/"+encodeURIComponent(id), {
         headers:{Authorization:auth,Accept:"application/json"},cache:"no-store",signal:AbortSignal.timeout(6000),
       });
-      if(!response.ok) throw new Error("Order details unavailable");
+      if(!response.ok) throw new Error("Order details unavailable: HTTP "+response.status);
       const order:ServiceOrder=await response.json();
       if(order.id!==id || !Array.isArray(order.line_items)) throw new Error("Incomplete order details");
       return order;
     }));
     for(const order of details)byOrder.set(order.id,order);
   }
+  console.info("staff-service-shape", JSON.stringify({eventId, orders:byOrder.size, products:[...byOrder.values()].flatMap(o=>o.line_items.filter(l=>l.type!=="ticket").map(l=>({type:l.type,item:l.item_id,event:l.event_summary?.event_id,directEvent:l.event_id,quantity:l.quantity}))), sample:[...byOrder.values()].slice(0,1).map(o=>({status:o.status,lines:o.line_items.map(l=>({type:l.type,event:l.event_summary?.event_id,directEvent:l.event_id}))}))}));
   const bookings = new Map<string,Booking>();
   for (const ticket of tickets) {
     if (ticket.event_id !== eventId || ticket.status !== "valid" || ticket.add_on_id) continue;

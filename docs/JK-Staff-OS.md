@@ -279,3 +279,7 @@ Auf Philipps Wunsch verwenden die Barpegel-Statuswörter (Ruhig, Zieht an, Viel 
 
 ### Service-Pills und Namen · 18.11.2026
 Pills erhalten 8 px Abstand innerhalb und zwischen unmittelbar benachbarten Produkt-/Inklusivgruppen; leere Gruppen werden nicht gerendert. Buchungsnamen werden ausschließlich zur Anzeige in Gästeliste und Vorbestellungen normalisiert: reine Groß-/Kleinschreibungs-Wörter in normale Anfangsgroßschreibung, gemischte Schreibweisen bleiben erhalten. Bindestriche, Apostrophe und Umlaute unterstützt. Originaldaten, Buchungs-IDs und CSV bleiben unverändert. Produktionsbuild und gezielte Namensprüfungen bestanden.
+
+### Erster Praxistest und vorgemerkte Ideen · 18.11.2026
+Philipp bestätigt im laufenden Betrieb: SumUp und Included Drinks laufen gut. Jetzt ausschließlich Snack-Bestseller-Überschrift und Listentexte auf Poly Sans Bulky angepasst; keine Monitor- oder Datenlogik geändert.
+Für später, ausdrücklich NICHT umgesetzt: Countdown bis Einlass/Show mit Gästezahl und wenigen Zusatzinfos (Platzierung noch offen); optional Included-Cocktails/Mocktails als andersfarbige Kacheln im Stream letzter Getränkebestellungen. Wein/Bier für diese Idee ausnehmen. Motivation: Pausen meist erst nach erstem Gästeschwung; bestehendes Verhalten zunächst im echten Betrieb beobachten. Dies ist keine Änderung der bestehenden Barpegel-Formel oder Quellen.

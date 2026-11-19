@@ -64,7 +64,7 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
   const highest = categories[0].count;
   const max=Math.max(1,...nights.map(n=>n.guests));
   const pct=total?Math.round(recent/total*100):0;
-  if (!feed) return <details className="staff-panel perf-panel" id="performance">
+  if (!feed) return <details className="staff-panel perf-panel" id="performance" onToggle={e=>setOpened(e.currentTarget.open)}>
     <summary>Venue Performance</summary>
     {state === "loading" || refreshing ? <TicketLoader label="Venue Performance wird geladen"/> :
       <p role="status">{state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : "Verkaufsdaten derzeit nicht verfügbar."}</p>}

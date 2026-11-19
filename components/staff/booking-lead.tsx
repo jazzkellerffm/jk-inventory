@@ -11,11 +11,28 @@ export function BookingLead({ enabled, example }: { enabled: boolean; example: b
   useEffect(() => {
     if (!enabled || example) return;
     const abort = new AbortController();
+    let disposed = false;
+    const timeout = setTimeout(() => {
+      setFailed(true);
+      abort.abort();
+    }, 45_000);
     setFailed(false);
     fetch('/api/staff/booking-lead', { signal: abort.signal, cache: 'no-store' })
-      .then(r => { if (!r.ok) throw Error(); return r.json(); }).then(setFeed)
-      .catch(() => { if (!abort.signal.aborted) setFailed(true); });
-    return () => abort.abort();
+      .then(r => { if (!r.ok) throw Error(); return r.json(); })
+      .then((data: LeadFeed) => {
+        if (!data.month || !['all', 'jam', 'nyjb', 'weekend', 'friday', 'saturday'].every(key => {
+          const group = data.groups?.[key as keyof LeadFeed['groups']];
+          return group && Array.isArray(group.bins) && group.bins.length === leadLabels.length;
+        })) throw Error('Incomplete booking lead response');
+        if (!disposed && !abort.signal.aborted) setFeed(data);
+      })
+      .catch(() => { if (!disposed) setFailed(true); })
+      .finally(() => clearTimeout(timeout));
+    return () => {
+      disposed = true;
+      clearTimeout(timeout);
+      abort.abort();
+    };
   }, [enabled, example, retry]);
   const data = feed?.groups[group === 'weekend' ? weekend : group];
   const total = data?.bins.reduce((a,b) => a+b, 0) ?? 0;

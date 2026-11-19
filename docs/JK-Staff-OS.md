@@ -346,3 +346,7 @@ Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit
 
 ### 19.11.2026 — Kompakte Weekend-Auswahl
 - Im Buchungsvorlauf ersetzt ein natives Auswahlfeld (Freitag + Samstag / Freitag / Samstag) die zweite Pillenleiste. Mehr Abstand zur Gäste-/Abendanzahl. Hauptauswahl, Balken und Berechnungen unverändert.
+
+### Frühbuchungsanzeige: Laden (19.11.2026)
+
+Der Öffnungszustand von Venue Performance wird auch vor Eintreffen des Ticket-Feeds erfasst. So startet der separate Frühbuchungsabruf auch beim frühzeitigen Öffnen. Nach 45 Sekunden ohne vollständige Antwort erscheint „Erneut laden“ statt eines endlosen Ladebalkens; Schließen und Unmount brechen laufende Anfragen sauber ab. Datenberechnung und Filter bleiben unverändert.

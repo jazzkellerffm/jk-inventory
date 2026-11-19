@@ -324,7 +324,7 @@ test('Evening comparison keeps midnight sales live until Berlin 03:00 and finali
 
 test('Booking lead counts valid guests by Berlin calendar days and excludes cancelled or unfinished evenings', async () => {
   const { addLeadEvent, emptyLead } = await import('../lib/staff/booking-lead.ts');
-  const feed = { month:'2026-11', groups:{all:emptyLead(),jam:emptyLead(),nyjb:emptyLead()} };
+  const feed = { month:'2026-11', groups:{all:emptyLead(),jam:emptyLead(),nyjb:emptyLead(),weekend:emptyLead(),friday:emptyLead(),saturday:emptyLead()} };
   const event = {id:'ev-lead', name:'The Famous Jazz Jam Session',status:'published',start:{date:'2026-11-18',unix:Date.parse('2026-11-18T20:00:00Z')/1000}};
   const days = [0,1,3,4,7,8,14,15];
   const orders = days.map((d,i)=>({id:'o'+i,created_at:Date.parse('2026-11-18T10:00:00Z')/1000-d*86400}));
@@ -339,4 +339,20 @@ test('Booking lead counts valid guests by Berlin calendar days and excludes canc
   assert.equal(feed.groups.all.excludedGuests,2);
   assert.deepEqual(feed.groups.jam,feed.groups.all);
   assert.equal(feed.groups.nyjb.nights,0);
+});
+
+
+test('Weekend booking lead combines Friday and Saturday, excluding Sunday and cancelled dates', async () => {
+  const { addLeadEvent, emptyLead } = await import('../lib/staff/booking-lead.ts');
+  const feed = { month:'2026-11', groups:Object.fromEntries(['all','jam','nyjb','weekend','friday','saturday'].map(k=>[k,emptyLead()])) };
+  for (const [date,size,status] of [['2026-11-13',2,'published'],['2026-11-14',3,'published'],['2026-11-15',4,'published'],['2026-11-06',4,'cancelled']]) {
+    const event={id:date,name:'Concert',status,start:{date,unix:Date.parse(date+'T20:00:00Z')/1000}};
+    addLeadEvent(feed,event,[{id:'t'+date,event_id:date,status:'valid',description:'Premium '+size+' Guests',order_id:'o'}],[{id:'o',created_at:Date.parse(date+'T10:00:00Z')/1000}],'2026-11-19');
+  }
+  assert.deepEqual(feed.groups.weekend.bins,[5,0,0,0,0]);
+  assert.equal(feed.groups.weekend.nights,2);
+  assert.equal(feed.groups.friday.bins[0],2);
+  assert.equal(feed.groups.saturday.bins[0],3);
+  assert.equal(feed.groups.all.bins[0],9);
+  assert.equal(feed.groups.all.nights,3);
 });

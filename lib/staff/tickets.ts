@@ -246,7 +246,7 @@ async function collectBookingLead(key: string, today: string) {
   const { emptyLead, addLeadEvent } = await import('./booking-lead');
   const { partitionPerformanceEvents } = await import('./battle-math');
   const auth = 'Basic ' + Buffer.from(key + ':').toString('base64');
-  const feed = { month: today.slice(0,7), groups: { all: emptyLead(), jam: emptyLead(), nyjb: emptyLead() } };
+  const feed = { month: today.slice(0,7), groups: { all: emptyLead(), jam: emptyLead(), nyjb: emptyLead(), weekend: emptyLead(), friday: emptyLead(), saturday: emptyLead() } };
   const { active } = partitionPerformanceEvents(await pages<EventRow>('events', {}, auth));
   const events = active.filter(e => e.start?.date?.startsWith(feed.month) && e.start.date < today);
   for (let i=0; i<events.length; i+=3) {

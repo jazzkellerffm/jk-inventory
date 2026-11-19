@@ -337,3 +337,9 @@ Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit
 - Prozentanteile beziehen sich auf zuordenbare Gäste. Fehlendes Kaufdatum und unbekannte Paketgrößen werden separat ausgewiesen; keine Schätzung aus Ausstellungsdaten.
 - Eigener authentifizierter Endpunkt, Abruf erst bei geöffnetem Venue Performance, 15-Minuten-Cache mit Betriebsdatum als Schlüssel. API-Fehler geben keine Teilgrafik aus. Bestehende Datenlogik bleibt unverändert.
 - 48 Staff-Tests und Produktionsbuild erfolgreich; realer Geräte-/Datenabgleich noch ausstehend.
+
+### 19.11.2026 — Weekend im Buchungsvorlauf
+- Hauptauswahl Alle / Jam / NYJB / Weekend; Weekend mit Fr + Sa / Freitag / Samstag.
+- Zuordnung nach Veranstaltungsdatum (Freitag und Samstag), unabhängig vom Eventnamen. Sonntag nur unter Alle. Bestehende Gültigkeits-, Absage- und Paketlogik unverändert.
+- Keine zusätzlichen API-Abfragen: vorhandene Daten werden gleichzeitig in die drei neuen Gruppen aggregiert.
+- Test prüft kombinierte und getrennte Gästezahlen, Sonntag und abgesagte Freitage.

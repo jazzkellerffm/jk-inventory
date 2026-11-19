@@ -5,7 +5,8 @@ import { TicketLoader } from './ticket-loader';
 export function BookingLead({ enabled, example }: { enabled: boolean; example: boolean }) {
   const [feed, setFeed] = useState<LeadFeed|null>(null);
   const [failed, setFailed] = useState(false);
-  const [group, setGroup] = useState<'all'|'jam'|'nyjb'>('all');
+  const [group, setGroup] = useState<'all'|'jam'|'nyjb'|'weekend'>('all');
+  const [weekend, setWeekend] = useState<'weekend'|'friday'|'saturday'>('weekend');
   const [retry, setRetry] = useState(0);
   useEffect(() => {
     if (!enabled || example) return;
@@ -16,14 +17,17 @@ export function BookingLead({ enabled, example }: { enabled: boolean; example: b
       .catch(() => { if (!abort.signal.aborted) setFailed(true); });
     return () => abort.abort();
   }, [enabled, example, retry]);
-  const data = feed?.groups[group];
+  const data = feed?.groups[group === 'weekend' ? weekend : group];
   const total = data?.bins.reduce((a,b) => a+b, 0) ?? 0;
   return <section className="mt-4 border-t border-[var(--line)] pt-4">
     <h3 className="font-poly-bulky">Wie früh buchen unsere Gäste?</h3>
     <p className="text-sm text-[var(--muted)]">Abgeschlossene Abende{feed && ' · ' + new Intl.DateTimeFormat('de-DE', {month:'long',year:'numeric'}).format(new Date(feed.month+'-15T12:00:00Z'))}</p>
     <div className="service-switch week-switch" role="group" aria-label="Buchungsvorlauf nach Format">
-      {(['all','jam','nyjb'] as const).map(g => <button type="button" key={g} aria-pressed={group===g} onClick={()=>setGroup(g)}>{g==='all'?'Alle':g==='jam'?'Jam':'NYJB'}</button>)}
+      {(['all','jam','nyjb','weekend'] as const).map(g => <button type="button" key={g} aria-pressed={group===g} onClick={()=>setGroup(g)}>{g==='all'?'Alle':g==='jam'?'Jam':g==='nyjb'?'NYJB':'Weekend'}</button>)}
     </div>
+    {group === 'weekend' && <div className="service-switch week-switch" role="group" aria-label="Weekend nach Wochentag">
+      {(['weekend','friday','saturday'] as const).map(g => <button type="button" key={g} aria-pressed={weekend===g} onClick={()=>setWeekend(g)}>{g==='weekend'?'Fr + Sa':g==='friday'?'Freitag':'Samstag'}</button>)}
+    </div>}
     {example ? <p>Im Livebetrieb verfügbar.</p> : failed ? <p role="status">Buchungsvorlauf derzeit nicht verfügbar. <button type="button" onClick={()=>setRetry(v=>v+1)}>Erneut laden</button></p> : !data ? <TicketLoader label="Buchungsvorlauf wird geladen"/> : <>
       <p className="text-sm text-[var(--muted)]">{total} zugeordnete Gäste · {data.nights} abgeschlossene Abende</p>
       {total > 0 ? <dl className="mt-3 space-y-3">{leadLabels.map((label,i)=><div key={label}>

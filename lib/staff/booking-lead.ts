@@ -3,7 +3,7 @@ import { ticketDay } from './ticket-weeks';
 import { eventFormat, isCancelledEvent, type BattleEvent } from './battle-math';
 export const leadLabels = ['Am Veranstaltungstag', '1–3 Tage vorher', '4–7 Tage vorher', '8–14 Tage vorher', 'Mehr als 14 Tage vorher'];
 export type LeadSummary = { bins: number[]; nights: number; excludedGuests: number; unknownPackages: number };
-export type LeadFeed = { month: string; groups: Record<'all'|'jam'|'nyjb', LeadSummary> };
+export type LeadFeed = { month: string; groups: Record<'all'|'jam'|'nyjb'|'weekend'|'friday'|'saturday', LeadSummary> };
 export type LeadTicket = { id: string; event_id: string; status: string; description: string; order_id?: string; add_on_id?: string };
 export type LeadOrder = { id: string; created_at: number|string };
 export function emptyLead(): LeadSummary { return { bins: [0,0,0,0,0], nights: 0, excludedGuests: 0, unknownPackages: 0 }; }
@@ -11,6 +11,8 @@ export function addLeadEvent(feed: LeadFeed, event: BattleEvent, tickets: LeadTi
   if (isCancelledEvent(event) || event.start.date >= today || !event.start.date.startsWith(feed.month)) return;
   const format = eventFormat(event);
   const groups = [feed.groups.all, ...(format ? [feed.groups[format]] : [])];
+  const weekday = new Date(event.start.date + 'T12:00:00Z').getUTCDay();
+  if (weekday === 5 || weekday === 6) groups.push(feed.groups.weekend, feed.groups[weekday === 5 ? 'friday' : 'saturday']);
   groups.forEach(g => g.nights++);
   const byOrder = new Map(orders.map(o => [o.id, o]));
   const seen = new Set<string>();

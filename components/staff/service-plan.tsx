@@ -140,7 +140,7 @@ export function ServicePlan({nights,example,defaultId}:{nights:TicketNight[];exa
   const id=night?.id;
   return <details id="service-door" className="staff-panel staff-service" onToggle={e=>setOpen(e.currentTarget.open)}>
     <summary><ClipboardList size={20}/> Service &amp; Door</summary>
-    {open && id && <><label>Veranstaltung<select value={id} onChange={e=>setSelected(e.target.value)}>
+    {open && id && <><label className="service-event-field">Veranstaltung<select value={id} onChange={e=>setSelected(e.target.value)}>
       {nights.map(n=><option key={n.id} value={n.id}>{date.format(n.start*1000)} · {n.name}</option>)}</select></label>
       <List key={id} night={night} example={example} view={view} setView={setView}/></>}
     {open && !id && <p>Der Plan erscheint, sobald Termine aus Ticket Tailor vorliegen.</p>}

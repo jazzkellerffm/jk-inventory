@@ -185,6 +185,9 @@
 .staff-service[open] summary::after { content:"−"; }
 .staff-service label { display:block; margin:16px 0; }
 .staff-service select { display:block; width:100%; margin-top:6px; border:1px solid var(--line); border-radius:8px; padding:8px; }
+/* Long native option labels must not contribute to Safari's page width. */
+.staff-service .service-event-field { min-width:0; max-width:100%; contain:inline-size; }
+.staff-service .service-event-field select { box-sizing:border-box; width:0; min-width:100%; max-width:100%; font-size:16px; text-overflow:ellipsis; }
 .staff-service article { border-top:1px solid var(--line); padding:12px 0; }
 .staff-service article strong { font-size:20px; }
 .staff-service article b { display:block; color:var(--accent); }

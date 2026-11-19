@@ -69,7 +69,7 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
   </details>;
   const monthLabel = new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric", timeZone:"Europe/Berlin"}).format(feed.asOf * 1000);
   return <details className="staff-panel perf-panel" id="performance"><summary>Venue Performance</summary>
-    <div className="service-switch week-switch" role="group" aria-label="Performance-Woche">{[0,1,2,3].map(i=><button key={i} type="button" aria-pressed={i===week} onClick={()=>setWeek(i)}>{i===0?"Aktuell":"Woche "+(i+1)}</button>)}</div>
+    <div className="service-switch week-switch" role="group" aria-label="Performance-Woche">{[0,1,2,3].map(i=><button key={i} type="button" aria-pressed={i===week} onClick={()=>setWeek(i)}>{i===0?"Aktuell":"+"+i+" Wo."}</button>)}</div>
     <p>{example?"Beispieldaten":"Ticket Tailor"} · {weekDay(now,week*7).split("-").reverse().join(".")}{refreshing && " · Wird aktualisiert …"}</p>
     {state === "unavailable" && !refreshing && <small>Letzte Aktualisierung fehlgeschlagen.</small>}
     {!nights.length ? <p>Keine Termine in dieser Woche.</p> :

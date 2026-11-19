@@ -323,3 +323,10 @@ Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit
 ### 19.11.2026 — Vergleichslabels in PolySans Bulky
 - Im gemeinsamen Jam/NYJB-Vergleich sind Gebuchte Gäste, Gebuchte Included Drinks und SumUp-Abendumsatz jetzt in PolySans Bulky (700) gesetzt. Gilt für beide Formatansichten; keine Datenänderung.
 - Vorschlag, noch nicht umgesetzt: laufenden Betriebsabend im Barumsatz-Vergleich als Live-Balken bis zum Abschluss um 03:00 Uhr anzeigen.
+
+### 19.11.2026 — Live-Balken und einheitliche Wochenwahl
+- Venue Performance: Aktuell / +1 Wo. / +2 Wo. / +3 Wo., identisch zur Buchungsvorschau; Wochenberechnung unverändert.
+- Barumsatz im Vergleich ergänzt den laufenden Betriebsabend, sobald Zahlungen vorhanden sind. Live-Label und dezentes Pulsieren; reduced-motion wird respektiert.
+- Aktueller Abend wird separat im Minutenabstand geladen, abgeschlossene Historie weiterhin zehn Minuten gecacht. Erfolgreiche EUR-Zahlungen, gleiche bestehende Umsatzlogik, keine Artikeldetailabfragen.
+- Um 03:00 Europe/Berlin wechselt der Cache-Schlüssel: vorheriger Abend abgeschlossen, neue Zahlungen beim neuen Betriebsdatum. Anzeige beim nächsten Minutenabruf aktualisiert.
+- Bei Abruffehlern bleibt der letzte Stand mit Fehlermeldung; Live-Animation ausgesetzt. Test für Mitternacht, 03:00-Wechsel, Bereichsgrenzen und erfolglose Zahlungen ergänzt.

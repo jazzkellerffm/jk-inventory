@@ -10,3 +10,8 @@
 .panel p { margin: 12px 0 4px; }
 
 .chart button small { font-size: clamp(9px, 2.6vw, 12px); white-space: nowrap; }
+
+.liveLabel { display: inline-block; margin-left: 6px; padding: 3px 8px; border-radius: 99px; background: #ead1cd; color: #78463f; font: 700 11px var(--font-poly), sans-serif; vertical-align: middle; }
+.chart .liveBar i { background: #a46760; animation: evening-pulse 2.8s ease-in-out infinite; }
+@keyframes evening-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .chart .liveBar i { animation: none; } }

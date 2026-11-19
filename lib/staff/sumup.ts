@@ -266,8 +266,11 @@ export function readBestsellers(merchant: string, token: string, period: Bestsel
 
 let eveningHistory: { merchant: string; end: number; expires: number; payments: Promise<Payment[]> } | undefined;
 
+let liveEvening: { merchant: string; start: number; expires: number; payments: Promise<Payment[]> } | undefined;
+
 export async function readBarEvenings(merchant: string, token: string) {
-  const end = serviceStart(Date.now());
+  const now = Date.now();
+  const end = serviceStart(now);
   if (!eveningHistory || eveningHistory.merchant !== merchant || eveningHistory.end !== end || eveningHistory.expires <= Date.now()) {
     let start = end;
     for (let i = 0; i < 14; i++) start = serviceStart(start - 1);
@@ -275,8 +278,14 @@ export async function readBarEvenings(merchant: string, token: string) {
     eveningHistory = { merchant, end, expires: Date.now() + 10 * minute, payments };
     payments.catch(() => { if (eveningHistory?.payments === payments) eveningHistory = undefined; });
   }
+  if (!liveEvening || liveEvening.merchant !== merchant || liveEvening.start !== end || liveEvening.expires <= now) {
+    const payments = history(merchant, token, end, now);
+    liveEvening = { merchant, start: end, expires: now + minute, payments };
+    payments.catch(() => { if (liveEvening?.payments === payments) liveEvening = undefined; });
+  }
+  const [completed, current] = await Promise.all([eveningHistory.payments, liveEvening.payments]);
   const groups = new Map<string, Payment[]>();
-  for (const payment of await eveningHistory.payments) {
+  for (const payment of [...completed, ...current]) {
     if (payment.currency !== "EUR" || payment.amount <= 0) continue;
     const date = serviceDate(Date.parse(payment.at));
     const rows = groups.get(date);
@@ -290,7 +299,7 @@ export async function readBarEvenings(merchant: string, token: string) {
   }
   return { nights: [...groups.keys()].sort().map(date => {
     const rows = groups.get(date)!;
-    return { date, payments: rows.length, cents: rows.reduce((sum, row) => sum + Math.round(row.amount * 100), 0) };
+    return { date, live: date === serviceDate(now), payments: rows.length, cents: rows.reduce((sum, row) => sum + Math.round(row.amount * 100), 0) };
   }) };
 }
 

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ReceiptText } from "lucide-react";
 import styles from "./bar-evenings.module.css";
 
-type Night = { date: string; payments: number; cents: number };
+type Night = { date: string; payments: number; cents: number; live?: boolean };
 const amount = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" });
 const dateLabel = new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 const demo = [54400, 82200, 116500, 142300, 72600, 91400, 137500, 123700].map((cents, i) => ({
@@ -34,7 +34,7 @@ export function BarEvenings({ example }: { example: boolean }) {
       .catch(() => { if (!abort.signal.aborted) setFailed(true); })
       .finally(() => { if (!abort.signal.aborted) setLoading(false); }); };
     void refresh();
-    const timer = setInterval(refresh, 600000);
+    const timer = setInterval(refresh, 60000);
     return () => { abort.abort(); clearInterval(timer); };
   }, [example]);
   useEffect(() => {
@@ -46,15 +46,15 @@ export function BarEvenings({ example }: { example: boolean }) {
     <h2 id="bar-evenings-title">Barumsatz im Vergleich</h2>
     {failed && nights && <p role="status">Aktualisierung fehlgeschlagen. Letzter geladener Stand.</p>}
     {!nights && loading && !failed ? <TicketLoader label="Barabende werden geladen"/> : night && nights ? <>
-      <div className={styles.summary} aria-live="polite"><b>{dateLabel.format(new Date(night.date))}</b><strong>{amount.format(night.cents / 100)}</strong></div>
+      <div className={styles.summary} aria-live="polite"><b>{dateLabel.format(new Date(night.date))} {night.live && !failed && <span className={styles.liveLabel}>Live</span>}</b><strong>{amount.format(night.cents / 100)}</strong></div>
       <div className={styles.chart} ref={chart} aria-label="Barabende auswählen">{nights.map(n =>
-        <button type="button" key={n.date} aria-pressed={night.date === n.date} onClick={() => select(n.date)}
-          aria-label={dateLabel.format(new Date(n.date)) + ", " + amount.format(n.cents / 100)}>
+        <button type="button" key={n.date} className={n.live && !failed ? styles.liveBar : undefined} aria-pressed={night.date === n.date} onClick={() => select(n.date)}
+          aria-label={dateLabel.format(new Date(n.date)) + ", " + amount.format(n.cents / 100) + (n.live ? ", laufender Abend" : "")}>
           <i style={{ height: Math.max(2, n.cents / peak * 80) }} />
           <small>{n.date.slice(8)}.{n.date.slice(5,7)}.</small>
         </button>)}</div>
       <p>{night.payments} {night.payments === 1 ? "Zahlung" : "Zahlungen"}</p>
-      <small>Abgeschlossene Barabende · Tageswechsel um 03:00 Uhr</small>
-    </> : <p>{failed ? "SumUp ist gerade nicht erreichbar." : nights ? "Keine Zahlungen in den letzten 14 abgeschlossenen Tagen." : "Barabende werden geladen …"}</p>}
+      <small>{night.live ? "Laufender Abend · Abschluss um 03:00 Uhr" : "Abgeschlossene Barabende · Tageswechsel um 03:00 Uhr"}</small>
+    </> : <p>{failed ? "SumUp ist gerade nicht erreichbar." : nights ? "Keine Zahlungen in den letzten 14 Tagen." : "Barabende werden geladen …"}</p>}
   </section>;
 }

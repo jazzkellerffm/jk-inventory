@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readBarFeed, readBestsellers, readBattleRevenue } from '../lib/staff/sumup.ts';
+import { readBarFeed, readBestsellers, readBattleRevenue, readBarEvenings } from '../lib/staff/sumup.ts';
 import { readSales } from '../lib/staff/sumup-sales.ts';
 import { barLoadLevel, prepWeight, isFreshSnapshot } from '../lib/staff/bar-workload.ts';
 import { serviceStart } from '../lib/staff/service-day.ts';
@@ -289,4 +289,35 @@ test('Kitchen ignores free amounts but keeps genuine missing category warnings',
   feed = await readFood('food-custom','test');
   assert.equal(feed.recentIncomplete, true);
   assert.equal(feed.recentPortions, 2);
+});
+
+
+test('Evening comparison keeps midnight sales live until Berlin 03:00 and finalizes without duplicates', async t => {
+  let clock = Date.parse('2026-11-19T00:30:00Z');
+  t.mock.method(Date, 'now', () => clock);
+  const rows = [
+    payment('previous', 1, { timestamp: '2026-11-17T21:00:00Z', amount: 10 }),
+    payment('evening', 1, { timestamp: '2026-11-18T21:00:00Z', amount: 20 }),
+    payment('midnight', 1, { timestamp: '2026-11-19T00:00:00Z', amount: 5 }),
+    payment('failed', 1, { timestamp: '2026-11-19T00:00:00Z', status: 'FAILED', amount: 99 }),
+    payment('boundary', 1, { timestamp: '2026-11-19T02:00:00Z', amount: 3 }),
+  ];
+  t.mock.method(globalThis, 'fetch', async input => {
+    const url = new URL(String(input));
+    assert.ok(url.pathname.endsWith('/transactions/history'));
+    // Include overlapping rows to verify defensive half-open range filtering.
+    return Response.json({ items: rows });
+  });
+  let feed = await readBarEvenings('live-history-test', 'test');
+  assert.deepEqual(feed.nights, [
+    { date: '2026-11-17', live: false, payments: 1, cents: 1000 },
+    { date: '2026-11-18', live: true, payments: 2, cents: 2500 },
+  ]);
+  clock = Date.parse('2026-11-19T02:01:00Z');
+  feed = await readBarEvenings('live-history-test', 'test');
+  assert.deepEqual(feed.nights, [
+    { date: '2026-11-17', live: false, payments: 1, cents: 1000 },
+    { date: '2026-11-18', live: false, payments: 2, cents: 2500 },
+    { date: '2026-11-19', live: true, payments: 1, cents: 300 },
+  ]);
 });

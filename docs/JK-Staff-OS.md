@@ -319,3 +319,7 @@ Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit
 - Veranstaltungsauswahl in Service & Door maximal 600 Pixel breit.
 - Datenabrufe, Berechnungen, Interaktionen, DOM-Lesereihenfolge und mobile CSS-Regeln unverändert.
 - Validierung: Produktionsbuild und git diff --check erfolgreich; bestehendes CSS unverändert, Food-Komponente nach Entfernen der zwei Wrapper bytegleich. Visueller Gerätetest steht aus (lokaler Browserstart blockiert).
+
+### 19.11.2026 — Vergleichslabels in PolySans Bulky
+- Im gemeinsamen Jam/NYJB-Vergleich sind Gebuchte Gäste, Gebuchte Included Drinks und SumUp-Abendumsatz jetzt in PolySans Bulky (700) gesetzt. Gilt für beide Formatansichten; keine Datenänderung.
+- Vorschlag, noch nicht umgesetzt: laufenden Betriebsabend im Barumsatz-Vergleich als Live-Balken bis zum Abschluss um 03:00 Uhr anzeigen.

@@ -78,7 +78,7 @@
 .movers article p{margin:5px 0 0;font-size:15px;line-height:1.4}.movers small{display:block;line-height:1.5}
 .race h3{display:flex;align-items:center;gap:12px}.race h3 svg{width:24px;height:36px}
 .race .raceResult{font:700 20px/1.45 var(--font-poly),sans-serif;max-width:none;margin:20px 0}
-.raceMetric{margin:18px 0}.raceMetric h4{font-size:13px;font-weight:400;color:var(--muted);margin:0 0 12px}
+.raceMetric{margin:18px 0}.raceMetric h4{font-family:var(--font-poly),sans-serif;font-size:13px;font-weight:700;color:var(--muted);margin:0 0 12px}
 .raceRow{display:grid;grid-template-columns:38px minmax(0,1fr) 72px;align-items:center;gap:12px;margin:12px 0;font-size:12px}
 .raceRow b{text-align:right;font:700 17px var(--font-poly),sans-serif;font-variant-numeric:tabular-nums}
 .raceRow[data-format=jam]{--format-soft:#eee9f5;--format-light:#d7cbea;--format-mid:#aa92ca}

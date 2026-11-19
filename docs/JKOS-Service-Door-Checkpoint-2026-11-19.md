@@ -89,3 +89,10 @@ Der Aufklapper heißt jetzt „Ticketgrößen“. Die bisherige Paket-Aufzählun
 - Gästeliste und Vorbestellungen: Name links in einer flexiblen Spalte, Gästezahl stets rechts oben. Lange Namen brechen vollständig um; Schriftgröße bleibt erhalten. Buchungsanzahl und Check-in-Hinweise stehen unter dem Namen. Ungeklärte Gästezahlen dürfen innerhalb ihrer rechten Spalte umbrechen.
 - Ansichtsschalter links und dezenter Download-Button rechts in einer gemeinsamen Leiste. Sichtbar nur Download-Icon und „CSV“, vollständige Beschriftung für Screenreader. Mindestens 44px Touchhöhe. Bei Platzmangel bricht CSV rechts in die nächste Zeile um.
 - Check-in-Zähler darunter; reservierte kompakte Aktualisierungszeile. Keine Änderung an Download-Funktion, Datenberechnung oder Safari-Select.
+
+## Engere Abstände im Service-Bereich (19.11.2026)
+
+- Geschlossene Gesamtübersicht ohne zusätzlichen unteren Summary-Abstand; Abstand zur Ansichtsleiste von 16 auf 6px reduziert. Geöffnet bleiben 8px Abstand vor den Kategorien.
+- Statuszeile behält 16px feste Mindesthöhe statt 20px, bei weiterhin lesbarem Text und unveränderter Lade-/Fehlerlogik. Der obere Abstand der Vorbereitungskarte sinkt von 16 auf 6px. So bleibt beim üblichen Hintergrundladen die Position stabil.
+- Ausschließlich CSS-Abstände angepasst; Komponente, CSV, Buchungsgruppierung und Safari-Auswahl unverändert. Kategorie-Pillen sind nur eine Idee für später und nicht umgesetzt.
+- Diff- und Safari-CSS-Vergleich geprüft; visuelle iPhone-Prüfung steht aus.

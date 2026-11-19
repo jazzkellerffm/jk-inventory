@@ -466,7 +466,7 @@
 .roster-role[data-tentative="true"] { opacity:.72; outline:1px dashed currentColor; outline-offset:-1px; }
 
 /* Compact booked categories; the native event select above is unchanged. */
-.service-ticket-summary { margin:16px 0; }
+.service-ticket-summary { margin:16px 0 6px; }
 .service-ticket-totals { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:10px; font-size:14px; }
 .service-ticket-totals strong { font-size:20px; }
 .service-ticket-totals>span { color:var(--muted); }
@@ -496,7 +496,8 @@
 .service-refresh-status { flex:1; min-width:145px; min-height:20px; font-size:12px; color:var(--muted); }
 
 /* Disclosure below the untouched event picker. */
-.staff-service .service-ticket-disclosure>.service-ticket-totals { display:flex; flex-wrap:wrap; gap:6px 12px; min-height:44px; margin:0 0 10px; font-size:14px; }
+.staff-service .service-ticket-disclosure>.service-ticket-totals { display:flex; flex-wrap:wrap; gap:6px 12px; min-height:44px; margin:0; font-size:14px; }
+.staff-service .service-ticket-disclosure[open]>.service-ticket-totals { margin-bottom:8px; }
 .staff-service .service-ticket-disclosure>.service-ticket-totals::after { content:none; }
 .service-ticket-disclosure>.service-ticket-totals::-webkit-details-marker { display:none; }
 .service-ticket-totals>svg { flex:none; margin-left:auto; transition:transform .15s; }
@@ -516,6 +517,7 @@
 .service-view-toolbar>.service-switch { flex:0 1 auto; min-width:0; }
 .service-view-toolbar>.service-csv-button { display:inline-flex; align-items:center; justify-content:center; gap:5px; flex:none; margin-left:auto; min-height:44px; padding:4px 6px; border:0; background:transparent; font-size:12px; }
 .service-view-toolbar>.service-csv-button svg { flex:none; }
-.service-meta-row { margin:4px 0; }
+.service-meta-row { margin:4px 0 0; }
 .service-meta-row>.checkin-total { margin:0; }
-.service-meta-row>.service-refresh-status { display:block; min-height:20px; }
+.service-meta-row>.service-refresh-status { display:block; min-height:16px; line-height:16px; }
+.staff-service .service-prep { margin-top:6px; }

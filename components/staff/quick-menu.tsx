@@ -64,8 +64,8 @@ export function QuickMenu() {
     }
     function alignService() {
       if (!serviceTarget?.open) return;
-      // Scroll by coordinates: do not ask Safari to reveal the entire expanding details.
-      window.scrollTo({ top: window.scrollY + serviceTarget.getBoundingClientRect().top, left: window.scrollX, behavior: "instant" });
+      // The native jump can hit the page end before the service bookings render.
+      serviceTarget.scrollIntoView({ block: "start", behavior: "instant" });
       serviceScrollY = pageScrollY();
       if (serviceTarget.getBoundingClientRect().top <= 1) serviceResize.disconnect();
       didNavigate = true;
@@ -125,16 +125,7 @@ export function QuickMenu() {
     function onMenuClick(event: MouseEvent) {
       if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const link = event.target instanceof Element ? event.target.closest("a") : null;
-      if (!link) return;
-      if (link.hash === "#service-door") {
-        // One scroll owner while the panel opens and bookings arrive. A native
-        // fragment jump after this handler would run a second reveal in Safari.
-        event.preventDefault();
-        if (window.location.hash !== link.hash) {
-          window.history.pushState(null, "", link.hash);
-        }
-      }
-      onNavigate(link.hash);
+      if (link) onNavigate(link.hash);
     }
     function onHashChange() { onNavigate(window.location.hash); }
     const nav = menu.current;

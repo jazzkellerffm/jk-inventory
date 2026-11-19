@@ -358,3 +358,11 @@ Service-Panel, Veranstaltungsauswahl und flexible Buchungsinhalte bleiben auf di
 ### Service-Navigation auf iPhone (Nachbesserung 19.11.2026)
 
 Die Breitenbegrenzung allein hat den gemeldeten Zoom-Effekt nicht behoben. Beim Service-Klick wird nun der native Anker-Sprung unterdrückt; der Hash wird per History gesetzt und der Bereich ausschließlich per Scrollkoordinate angesteuert. Kein scrollIntoView auf dem gesamten aufklappenden Bereich. Nachladen wird weiter per ResizeObserver berücksichtigt. Pinch-Zoom bleibt erlaubt; Safari-Gerätebestätigung steht aus.
+
+### Aktueller Layoutstand: Rücknahme der iPad-Anpassung (19.11.2026)
+
+Auf Wunsch von Philipp ist die Darstellung wieder auf dem Stand vor den beiden Tablet-Layout-Commits 9ee43df und ee29c39 (Basis 252a7a0). Die zusätzlichen Dashboard-Spalten, Food-Wrapper und breiten Umsatz-/Included-Drinks-Anordnungen sind zurückgenommen. Auch die beiden erfolglosen Service-Breiten- und Navigationsversuche sind auf diesen Ausgangsstand zurückgesetzt.
+
+Spätere Funktionen bleiben erhalten: Live-Abendumsatzbalken mit 03-Uhr-Abschluss, vereinheitlichte Wochenbeschriftung, PolySans-Bulky-Vergleichslabels, Frühbuchungsauswertung einschließlich Weekend-Auswahl Freitag/Samstag und deren Ladefehlerkorrektur. Datenlogik und APIs unverändert. Die obigen Tablet- und Service-Nachbesserungsnotizen beschreiben damit historische, nicht mehr aktive Änderungen.
+
+Build und vorhandene Staff-Tests werden vor Veröffentlichung geprüft. Die Bestätigung, ob die Verkleinerung nach dem Laden der Service-Daten auf dem echten iPhone verschwunden ist, steht noch aus. iPad-Optimierungen erst wieder separat in einer Vorschau prüfen.

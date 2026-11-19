@@ -97,7 +97,7 @@ Spalten in dieser Reihenfolge:
 
 Keine separate Gastnamenspalte, Paketanzahl, IDs oder Abrufzeit. Bei manuellen Tickets ohne Käuferdaten wird der Ticketname als Buchungsname verwendet. Eine Zeile je gültigem Paket bleibt erhalten; volle Ticketbeschreibung und berechnete Personenanzahl. Sortierung: Club → Club Plus → Premium → VIP → Worldstar VIP → weitere Kategorien, innerhalb der Kategorie alphabetisch nach Buchungsname. Vorbestellungen nach Sortierung nur auf der ersten Zeile derselben Buchung ausgeben; sie gehören zur Buchung, nicht zu einer angenommenen Einzelperson.
 
-UTF-8-BOM, Semikolon, CRLF, korrektes CSV-Escaping und Formelschutz für Excel/Numbers. Bei unvollständiger Pagination, API-Fehler, fehlender Bestellung, unbekannter Paketgröße oder ungeklärter Produkt-/Erstattungszuordnung keinen scheinbar vollständigen Export ausgeben.
+UTF-8-BOM, Komma als Spaltentrenner (wie der Ticket-Tailor-Doorlist-Export), CRLF, korrektes CSV-Escaping und Formelschutz für Excel/Numbers. Bei unvollständiger Pagination, API-Fehler, fehlender Bestellung, unbekannter Paketgröße oder ungeklärter Produkt-/Erstattungszuordnung keinen scheinbar vollständigen Export ausgeben.
 
 ### Nachweis und Grenzen
 
@@ -107,3 +107,7 @@ Tests decken Mehrpersonenpakete, mehrere Ticketarten, Teilstornierungen, manuell
 
 ### Farbkorrektur · 18.11.2026
 Neueste Vorgabe: VIP-Crémant und sonstige Inklusivleistungen wieder Hellgrau (#eeefed, Text #424944). Rosé gilt weiterhin für bezahlte Wein-/Flaschen-Add-ons, Salbei-Mint für Essen. Diese Regel ersetzt die vorstehende Rosé-Zuordnung inkludierter Getränke.
+
+### CSV-Kompatibilität · 19.11.2026
+
+Anitas Excel öffnet den Ticket-Tailor-Export mit Komma korrekt, den bisherigen JKOS-Export mit Semikolon dagegen als eine Spalte. Deshalb den JKOS-Spaltentrenner auf Komma vereinheitlicht. Die sechs Spalten, Sortierung, Personenberechnung, einmalige Add-ons, UTF-8-BOM und Formelschutz bleiben erhalten. Keine Änderung an API-Versionen oder Safari-Auswahl. Ein echter Excel-Mac-Öffnungstest steht noch aus.

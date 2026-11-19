@@ -7,7 +7,7 @@ const order={id:'or_1',buyer_details:{name:'Müller'},line_items:[{type:'ticket'
 test('groups, multiple ticket types, partial cancellation and manual tickets',()=>{
  const csv=serviceCsv(event,[ticket,{...ticket,id:'it_2',description:'Club – 2 Guests'},{...ticket,id:'it_3',status:'voided'},{...ticket,id:'it_4',order_id:undefined}], [order]);
  assert.ok(csv.startsWith('\uFEFF'));assert.equal(csv.split('2 × Hummus Plate').length-1,1);
- assert.equal(csv.split('\r\n').length,5);assert.ok(!csv.includes('it_3'));assert.ok(csv.includes('Müller'));assert.ok(csv.includes('"3";""'));assert.ok(csv.includes('Gast'));
+ assert.equal(csv.split('\r\n').length,5);assert.ok(!csv.includes('it_3'));assert.ok(csv.includes('Müller'));assert.ok(csv.includes('"3",""'));assert.ok(csv.includes('Gast'));
 });
 test('missing orders and unknown packages fail closed',()=>{
  assert.throws(()=>serviceCsv(event,[ticket],[]));
@@ -28,13 +28,20 @@ test('Crémant group packages count guests in the actual CSV',()=>{
  const csv=serviceCsv(event,tickets,[order]);
  const lines=csv.trim().split('\r\n').slice(1);
  assert.equal(lines.length,2);
- assert.equal(lines.reduce((sum,line)=>sum+Number(line.split(';')[4].replaceAll('"','')),0),4);
+ assert.equal(lines.reduce((sum,line)=>sum+Number(line.split(',')[4].replaceAll('"','')),0),4);
 });
 
  test('Anita export has six columns and orders categories before names',()=>{
  const labels=['Worldstar VIP - 2 Guests','Premium - 3 Guests','Club Plus - 2 Guests','VIP Table - 2 Guests','Club - 2 Guests'];
  const ts=labels.map((description,i)=>({...ticket,id:'sort'+i,order_id:undefined,description,full_name:'Name'}));
  const csv=serviceCsv(event,ts,[]);const rows=csv.trim().split('\r\n');
- assert.equal(rows[0].replace(/^\uFEFF/,''),'"Datum";"Veranstaltung";"Buchungsname";"Ticketkategorie";"Personenzahl";"Vorbestellungen der Buchung"');
- assert.deepEqual(rows.slice(1).map(r=>r.split(';')[3].replaceAll('"','')),[labels[4],labels[2],labels[1],labels[3],labels[0]]);
+ assert.equal(rows[0].replace(/^\uFEFF/,''),'"Datum","Veranstaltung","Buchungsname","Ticketkategorie","Personenzahl","Vorbestellungen der Buchung"');
+ assert.deepEqual(rows.slice(1).map(r=>r.split(',')[3].replaceAll('"','')),[labels[4],labels[2],labels[1],labels[3],labels[0]]);
  });
+
+test('comma export quotes embedded punctuation, Unicode and newlines and protects formulas',()=>{
+ const csv=serviceCsv({...event,name:'Jazz, "Live"\nAbend'},[{...ticket,order_id:undefined,full_name:'Müller, Ana'}],[]);
+ assert.ok(csv.includes('"Jazz, ""Live""\nAbend","Müller, Ana"'));
+ const safe=serviceCsv(event,[{...ticket,order_id:undefined,full_name:'=HYPERLINK("test")'}],[]);
+ assert.ok(safe.includes(`"'=HYPERLINK(""test"")"`));
+});

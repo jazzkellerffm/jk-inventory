@@ -36,7 +36,7 @@ export function serviceCsv(event:{id:string;name:string;start:{date:string}},tic
   if(!emitted.has(o.id)&&o.line_items.some(l=>['product','add_on'].includes(l.type)&&l.quantity>0&&(l.event_summary?.event_id||l.event_id)===event.id))throw new Error('Vorbestellung ohne gültiges Ticket muss geprüft werden');
  }
  const escape=(v:unknown)=>{let s=String(v??'');if(/^[\s]*[=+@-]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};
- return '\uFEFF'+rows.map(row=>row.map(escape).join(';')).join('\r\n')+'\r\n';
+ return '\uFEFF'+rows.map(row=>row.map(escape).join(',')).join('\r\n')+'\r\n';
 }
 export async function csvPages<T extends {id:string}>(resource:string,eventId:string,auth:string,request:typeof fetch=fetch):Promise<T[]>{
  const rows:T[]=[],ids=new Set<string>(),cursors=new Set<string>();let cursor='';

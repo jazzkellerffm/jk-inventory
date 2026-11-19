@@ -354,3 +354,7 @@ Der Öffnungszustand von Venue Performance wird auch vor Eintreffen des Ticket-F
 ### Service & Door: mobile Breiten (19.11.2026)
 
 Service-Panel, Veranstaltungsauswahl und flexible Buchungsinhalte bleiben auf die verfügbare Breite begrenzt. Lange Namen und Bezeichnungen können umbrechen. Das native Veranstaltungsfeld hat mindestens 16px Schriftgröße, um den automatischen Fokus-Zoom auf iOS zu vermeiden. Keine Änderungen an Datenlogik oder Tablet-Breakpoints. Direkte iPhone-Safari-Prüfung steht aus.
+
+### Service-Navigation auf iPhone (Nachbesserung 19.11.2026)
+
+Die Breitenbegrenzung allein hat den gemeldeten Zoom-Effekt nicht behoben. Beim Service-Klick wird nun der native Anker-Sprung unterdrückt; der Hash wird per History gesetzt und der Bereich ausschließlich per Scrollkoordinate angesteuert. Kein scrollIntoView auf dem gesamten aufklappenden Bereich. Nachladen wird weiter per ResizeObserver berücksichtigt. Pinch-Zoom bleibt erlaubt; Safari-Gerätebestätigung steht aus.

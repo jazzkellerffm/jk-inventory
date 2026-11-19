@@ -185,9 +185,15 @@
 .staff-service[open] summary::after { content:"−"; }
 .staff-service label { display:block; margin:16px 0; }
 .staff-service select { display:block; width:100%; margin-top:6px; border:1px solid var(--line); border-radius:8px; padding:8px; }
-/* Long native option labels must not contribute to Safari's page width. */
-.staff-service .service-event-field { min-width:0; max-width:100%; contain:inline-size; }
-.staff-service .service-event-field select { box-sizing:border-box; width:0; min-width:100%; max-width:100%; font-size:16px; text-overflow:ellipsis; }
+/* Wrap event titles as normal text; avoid native select sizing on iOS. */
+.service-event-field { min-width:0; max-width:100%; margin:16px 0; }
+.service-event-trigger { display:flex; align-items:center; gap:8px; width:100%; min-width:0; margin-top:6px; padding:8px; border:1px solid var(--line); border-radius:8px; background:#fff; color:inherit; font:inherit; text-align:left; }
+.service-event-trigger span { flex:1; min-width:0; overflow-wrap:anywhere; }
+.service-event-trigger svg { flex:none; }
+.service-event-choices { max-height:320px; overflow-y:auto; margin-top:6px; border:1px solid var(--line); border-radius:8px; }
+.service-event-choices button { display:block; width:100%; padding:10px; border:0; border-bottom:1px solid var(--line); background:#fff; color:inherit; font:inherit; text-align:left; white-space:normal; overflow-wrap:anywhere; }
+.service-event-choices button[aria-pressed="true"] { background:#e4eee6; font-weight:700; }
+.service-event-trigger:focus-visible,.service-event-choices button:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
 .staff-service article { border-top:1px solid var(--line); padding:12px 0; }
 .staff-service article strong { font-size:20px; }
 .staff-service article b { display:block; color:var(--accent); }

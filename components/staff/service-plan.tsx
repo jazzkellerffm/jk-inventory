@@ -1,7 +1,7 @@
 "use client";
 import { TicketLoader } from "./ticket-loader";
 import { useEffect, useState } from "react";
-import { Check, ClipboardList } from "lucide-react";
+import { Check, ChevronDown, ClipboardList } from "lucide-react";
 import type { Booking, TicketNight } from "@/lib/staff/tickets";
 import { displayBookingName } from "@/lib/staff/display-name";
 
@@ -136,12 +136,26 @@ export function ServicePlan({nights,example,defaultId}:{nights:TicketNight[];exa
   const [view,setView] = useState("Vorbestellungen");
   const [open,setOpen]=useState(false);
   const [selected,setSelected]=useState("");
+  const [choosingEvent,setChoosingEvent]=useState(false);
   const night=nights.find(n=>n.id===(selected || defaultId)) ?? nights[0];
   const id=night?.id;
   return <details id="service-door" className="staff-panel staff-service" onToggle={e=>setOpen(e.currentTarget.open)}>
     <summary><ClipboardList size={20}/> Service &amp; Door</summary>
-    {open && id && <><label className="service-event-field">Veranstaltung<select value={id} onChange={e=>setSelected(e.target.value)}>
-      {nights.map(n=><option key={n.id} value={n.id}>{date.format(n.start*1000)} · {n.name}</option>)}</select></label>
+    {open && id && <><div className="service-event-field">
+      <span id="service-event-label">Veranstaltung</span>
+      <button type="button" className="service-event-trigger" aria-labelledby="service-event-label service-event-value"
+        aria-expanded={choosingEvent} aria-controls="service-event-choices" onClick={()=>setChoosingEvent(!choosingEvent)}>
+        <span id="service-event-value">{date.format(night.start*1000)} · {night.name}</span><ChevronDown size={18} aria-hidden="true"/>
+      </button>
+      {choosingEvent && <div id="service-event-choices" className="service-event-choices" onKeyDown={e=>{
+        if(e.key==="Escape"){setChoosingEvent(false);e.currentTarget.parentElement?.querySelector<HTMLButtonElement>(".service-event-trigger")?.focus();}
+      }}>
+        {nights.map(n=><button type="button" key={n.id} aria-pressed={n.id===id} onClick={e=>{
+          setSelected(n.id);setChoosingEvent(false);
+          e.currentTarget.closest(".service-event-field")?.querySelector<HTMLButtonElement>(".service-event-trigger")?.focus();
+        }}>{date.format(n.start*1000)} · {n.name}</button>)}
+      </div>}
+    </div>
       <List key={id} night={night} example={example} view={view} setView={setView}/></>}
     {open && !id && <p>Der Plan erscheint, sobald Termine aus Ticket Tailor vorliegen.</p>}
   </details>;

@@ -179,12 +179,13 @@
 }
 @media (prefers-reduced-motion:reduce) { .ticket-fill { transition:none; } }
 
-.staff-service { margin-top:16px; background:var(--card); }
+.staff-service { width:100%; max-width:100%; margin-top:16px; background:var(--card); overflow-wrap:anywhere; }
 .staff-service summary { display:flex; align-items:center; gap:10px; font-size:22px; }
 .staff-service summary::after { content:"+"; margin-left:auto; }
 .staff-service[open] summary::after { content:"−"; }
-.staff-service label { display:block; margin:16px 0; }
-.staff-service select { display:block; width:100%; margin-top:6px; border:1px solid var(--line); border-radius:8px; padding:8px; }
+.staff-service label { display:block; min-width:0; max-width:100%; margin:16px 0; }
+/* Constrain native selects on iOS even when event option labels are long. */
+.staff-service select { display:block; width:100%; min-width:0; max-width:100%; font-size:16px; margin-top:6px; border:1px solid var(--line); border-radius:8px; padding:8px; }
 .staff-service article { border-top:1px solid var(--line); padding:12px 0; }
 .staff-service article strong { font-size:20px; }
 .staff-service article b { display:block; color:var(--accent); }
@@ -200,6 +201,7 @@
 .service-prep h3 { margin:0 0 8px; }
 .service-prep small { display:block; margin-top:8px; }
 .service-person { justify-content:space-between; }
+.staff-service .service-person > *, .staff-service .service-pills > span { min-width:0; max-width:100%; }
 .staff-service article h4 { font-size:12px; margin:9px 0 4px; }
 .service-pills span { padding:5px 11px; background:#eeefed; color:#424944; border-radius:14px; }
 .service-pills { gap:8px; }

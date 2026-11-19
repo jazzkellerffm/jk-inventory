@@ -1,7 +1,7 @@
 "use client";
 import { TicketLoader } from "./ticket-loader";
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, ClipboardList } from "lucide-react";
+import { Check, ChevronDown, ClipboardList, Download } from "lucide-react";
 import type { Booking, TicketNight } from "@/lib/staff/tickets";
 import { groupServiceBookings, type DisplayBooking } from "@/lib/staff/service-display-groups";
 import { serviceTicketSummary } from "@/lib/staff/service-ticket-summary";
@@ -93,7 +93,7 @@ function GuestList({rows}:{rows:Booking[]}) {
       if (!entries.length) return null;
       return <section key={label}><header><strong>{label}</strong><span>{guestCount(entries.flatMap(row=>row.tickets))}</span></header>
         {entries.map(row=><article key={row.id}><div className="service-person"><BookingName row={row}/>
-          <span>{guestCount(row.tickets)}</span></div><small>{row.tickets.join(" · ")}</small>
+          <span className={row.tickets.some(t=>!packageSize(t)) ? "service-guests-unknown" : undefined}>{guestCount(row.tickets)}</span></div><small>{row.tickets.join(" · ")}</small>
           {row.extras.length>0 && <><h4>Vorbestellungen der Buchung</h4><Pills items={row.extras}/></>}
           <Pills items={row.tickets.flatMap(includedSupply)}/></article>)}</section>;
     })}</div>;
@@ -150,11 +150,16 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
   const bottles = supplies.reduce((total,item) => total + (item.label.startsWith("Flasche ") ? item.quantity : 0),0);
   return <>
     {rows && <TicketSummary rows={rows}/>}
-    <div className="service-switch" role="group" aria-label="Ansicht">{["Vorbestellungen","Gästeliste"].map(label =>
-      <button type="button" key={label} aria-pressed={view===label} onClick={()=>setView(label)}>{label}</button>)}</div>
-    {rows && rows.length>0 && <p className="checkin-total">{rows.filter(row=>row.checkedIn).length} von {rows.length} Buchungen eingecheckt</p>}
-    <div className="service-actions">
-      {!example && <button className="service-csv-button" type="button" onClick={download} disabled={exporting}>{exporting ? "CSV wird erstellt …" : "CSV herunterladen"}</button>}
+    <div className="service-view-toolbar">
+      <div className="service-switch" role="group" aria-label="Ansicht">{["Vorbestellungen","Gästeliste"].map(label =>
+        <button type="button" key={label} aria-pressed={view===label} onClick={()=>setView(label)}>{label}</button>)}</div>
+      {!example && <button className="service-csv-button" type="button" onClick={download} disabled={exporting}
+        aria-label={exporting ? "CSV wird erstellt" : "Aktuelle Gästeliste als CSV herunterladen"} title="Gästeliste als CSV herunterladen">
+        <Download size={16} aria-hidden="true"/> CSV
+      </button>}
+    </div>
+    <div className="service-meta-row">
+      {rows && rows.length>0 && <p className="checkin-total">{rows.filter(row=>row.checkedIn).length} von {rows.length} Buchungen eingecheckt</p>}
       <span className="service-refresh-status" role="status">{exporting ? "Gästeliste wird erstellt …" : error ? "Aktualisierung fehlgeschlagen." : refreshing && rows ? "Aktualisiert …" : ""}</span>
     </div>
     {exportError && <p role="alert">{exportError}</p>}

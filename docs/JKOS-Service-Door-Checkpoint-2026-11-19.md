@@ -83,3 +83,9 @@ Der Aufklapper heißt jetzt „Ticketgrößen“. Die bisherige Paket-Aufzählun
 - Live-Ursache verifiziert: Freya hatte zwei separate Bestellungen für denselben Abend mit identischem Namen und E-Mail (2 + 1 Gäste). Andrea hatte drei Dreiertickets in einer einzigen Bestellung (9 Gäste).
 - Tests für Nachbuchungen, Namensgleichheit ohne Identitätsbeleg, teilweise eingecheckte Gruppen und unveränderte Originaldaten ergänzt.
 - Safari-Auswahl und ihre CSS-Regeln erneut unverändert geprüft.
+
+## Namen, Gästezahl und CSV-Leiste (19.11.2026)
+
+- Gästeliste und Vorbestellungen: Name links in einer flexiblen Spalte, Gästezahl stets rechts oben. Lange Namen brechen vollständig um; Schriftgröße bleibt erhalten. Buchungsanzahl und Check-in-Hinweise stehen unter dem Namen. Ungeklärte Gästezahlen dürfen innerhalb ihrer rechten Spalte umbrechen.
+- Ansichtsschalter links und dezenter Download-Button rechts in einer gemeinsamen Leiste. Sichtbar nur Download-Icon und „CSV“, vollständige Beschriftung für Screenreader. Mindestens 44px Touchhöhe. Bei Platzmangel bricht CSV rechts in die nächste Zeile um.
+- Check-in-Zähler darunter; reservierte kompakte Aktualisierungszeile. Keine Änderung an Download-Funktion, Datenberechnung oder Safari-Select.

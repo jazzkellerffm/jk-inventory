@@ -505,3 +505,17 @@
 .service-csv-button { min-height:36px; padding:4px 9px; font-size:12px; border-radius:999px; }
 .booking-name>small { color:var(--muted); font-size:12px; }
 @media (prefers-reduced-motion:reduce) { .service-ticket-totals>svg { transition:none; } }
+
+/* Stable guest-count column and compact export beside the view switch. */
+.staff-service .service-person { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:6px 12px; }
+.staff-service .booking-name { display:flex; flex-direction:column; align-items:flex-start; min-width:0; gap:4px; }
+.staff-service .booking-name>strong { max-width:100%; overflow-wrap:anywhere; }
+.staff-service .service-person>span { white-space:nowrap; text-align:right; font-variant-numeric:tabular-nums; }
+.staff-service .service-person>.service-guests-unknown { max-width:9rem; white-space:normal; overflow-wrap:anywhere; }
+.service-view-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 8px; }
+.service-view-toolbar>.service-switch { flex:0 1 auto; min-width:0; }
+.service-view-toolbar>.service-csv-button { display:inline-flex; align-items:center; justify-content:center; gap:5px; flex:none; margin-left:auto; min-height:44px; padding:4px 6px; border:0; background:transparent; font-size:12px; }
+.service-view-toolbar>.service-csv-button svg { flex:none; }
+.service-meta-row { margin:4px 0; }
+.service-meta-row>.checkin-total { margin:0; }
+.service-meta-row>.service-refresh-status { display:block; min-height:20px; }

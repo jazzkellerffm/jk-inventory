@@ -472,11 +472,11 @@
 .service-ticket-totals>span { color:var(--muted); }
 .service-ticket-totals .service-single-count { padding:3px 8px; border-radius:8px; background:#e4eee6; color:var(--accent); font-weight:700; }
 .service-ticket-rows { list-style:none; margin:0; padding:4px 12px; border:1px solid var(--line); border-radius:12px; background:#f4f7f3; }
-.service-ticket-rows li { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:2px 12px; padding:8px 0; font-size:15px; }
+.service-ticket-rows li { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:4px 8px; padding:8px 0; font-size:15px; }
 .service-ticket-rows li+li { border-top:1px solid var(--line); }
 .service-ticket-rows li>span { font-variant-numeric:tabular-nums; }
 .service-ticket-rows small { font-size:13px; color:var(--muted); }
-.service-ticket-unknown { flex-basis:100%; }
+.service-ticket-unknown { grid-column:1 / -1; }
 .staff-service .service-package-details>summary { display:flex; align-items:center; gap:8px; min-height:44px; font-size:14px; color:var(--muted); }
 .staff-service .service-package-details>summary::-webkit-details-marker { display:none; }
 .staff-service .service-package-details>summary::after { content:"+"; margin-left:auto; }
@@ -521,3 +521,8 @@
 .service-meta-row>.checkin-total { margin:0; }
 .service-meta-row>.service-refresh-status { display:block; min-height:16px; line-height:16px; }
 .staff-service .service-prep { margin-top:6px; }
+
+/* Booked categories: emphasize people, keep ticket counts secondary. */
+.service-ticket-rows li>strong { min-width:0; overflow-wrap:anywhere; font-family:var(--font-poly-bulky-only),sans-serif; font-weight:400; }
+.service-ticket-rows .service-category-guests { padding:4px 9px; border-radius:999px; background:#dcefe4; color:#244c39; font-family:var(--font-poly-bulky-only),sans-serif; font-weight:400; white-space:nowrap; }
+.service-ticket-rows .service-category-tickets { font-weight:400; white-space:nowrap; text-align:right; font-variant-numeric:tabular-nums; }

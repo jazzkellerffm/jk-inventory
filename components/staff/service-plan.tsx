@@ -54,7 +54,8 @@ function TicketSummary({rows}:{rows:Booking[]}) {
     </summary>
     <ul className="service-ticket-rows">{summary.map(item=><li key={item.category}>
       <strong>{item.category}</strong>
-      <span>{item.guests}{item.unknown>0 ? "+" : ""} {item.guests===1 && !item.unknown ? "Gast" : "Gäste"} <small>· {item.tickets} {item.tickets===1 ? "Ticket" : "Tickets"}</small></span>
+      <span className="service-category-guests">{item.guests}{item.unknown>0 ? "+" : ""} {item.guests===1 && !item.unknown ? "Gast" : "Gäste"}</span>
+      <small className="service-category-tickets">{item.tickets} {item.tickets===1 ? "Ticket" : "Tickets"}</small>
       {item.unknown>0 && <small className="service-ticket-unknown">{item.unknown} {item.unknown===1 ? "Paketgröße" : "Paketgrößen"} ungeklärt</small>}
     </li>)}</ul>
     <details className="service-package-details">

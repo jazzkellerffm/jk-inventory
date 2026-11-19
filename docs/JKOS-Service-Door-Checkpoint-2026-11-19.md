@@ -96,3 +96,9 @@ Der Aufklapper heißt jetzt „Ticketgrößen“. Die bisherige Paket-Aufzählun
 - Statuszeile behält 16px feste Mindesthöhe statt 20px, bei weiterhin lesbarem Text und unveränderter Lade-/Fehlerlogik. Der obere Abstand der Vorbereitungskarte sinkt von 16 auf 6px. So bleibt beim üblichen Hintergrundladen die Position stabil.
 - Ausschließlich CSS-Abstände angepasst; Komponente, CSV, Buchungsgruppierung und Safari-Auswahl unverändert. Kategorie-Pillen sind nur eine Idee für später und nicht umgesetzt.
 - Diff- und Safari-CSS-Vergleich geprüft; visuelle iPhone-Prüfung steht aus.
+
+## Kategoriezeilen mit Gäste-Pillen (19.11.2026)
+
+- Kategorie links in PolySans Bulky, Gästezahl in hellgrüner Pille ebenfalls Bulky. Ticketanzahl rechts kleiner, normale Schrift ohne weitere Pille.
+- Drei Spalten je Zeile halten Zahlen geordnet; lange Kategorien umbrechen links. Trennlinien und kompakte Abstände bleiben erhalten. Ungeklärte Paketgrößen stehen weiterhin in einer eigenen Hinweiszeile.
+- Keine Änderung an Berechnungen, Safari-Auswahl, CSV oder Aufklappverhalten.

@@ -183,14 +183,13 @@
 .staff-service summary { display:flex; align-items:center; gap:10px; font-size:22px; }
 .staff-service summary::after { content:"+"; margin-left:auto; }
 .staff-service[open] summary::after { content:"−"; }
-.staff-service label { display:block; margin:16px 0; }
-.staff-service select { display:block; width:100%; margin-top:6px; border:1px solid var(--line); border-radius:8px; padding:8px; }
-/* Keep the native picker out of intrinsic sizing: long option labels must
-   never widen the page in Safari. The wrapper reserves the control height. */
-.staff-service .service-event-field { min-width:0; max-width:100%; }
-.service-event-control { display:block; position:relative; width:100%; min-width:0; height:44px; margin-top:6px; }
-.staff-service .service-event-control select { position:absolute; inset:0; box-sizing:border-box; width:100%; min-width:0; max-width:100%; height:100%; margin:0; font-size:16px; text-overflow:ellipsis; }
-.staff-service .service-event-control select:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+/* Safari can include native option text in scrollable overflow even when the
+   select's box fits. Clip at the select itself, not at the page or panel.
+   Keep it in normal flow so its native popup has a stable anchor. */
+.staff-service .service-event-field { min-width:0; max-width:100%; margin:16px 0; }
+.service-event-field label { display:block; margin:0 0 6px; }
+.staff-service select { display:block; box-sizing:border-box; width:100%; min-width:0; max-width:100%; min-height:44px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; border:1px solid var(--line); border-radius:8px; padding:8px; background:#fff; color:inherit; font:inherit; font-size:16px; }
+.staff-service select:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .staff-service article { border-top:1px solid var(--line); padding:12px 0; }
 .staff-service article strong { font-size:20px; }
 .staff-service article b { display:block; color:var(--accent); }

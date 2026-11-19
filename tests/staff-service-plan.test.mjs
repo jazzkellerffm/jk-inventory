@@ -34,3 +34,30 @@ test('evening summary retains booked VIPs and unknown sizes without inventing gu
  const result=serviceTicketSummary(['VIP Table - 2 Guests','Worldstar VIP - 2 Guests','Club - Cremant for 2','Premium size unknown']);
  assert.deepEqual(result.map(x=>[x.category,x.guests,x.unknown]),[['Club',2,0],['Premium',0,1],['VIP',2,0],['Worldstar VIP',2,0]]);
 });
+
+import {groupServiceBookings} from '../lib/staff/service-display-groups.ts';
+test('separate orders with same buyer name and email share a display group; source orders remain separate',async()=>{
+ const original=globalThis.fetch;
+ const orders=[{...order,id:'or_a',buyer_details:{name:'Freya Example',email:'same@example.test'}},
+ {...order,id:'or_b',buyer_details:{name:' FREYA  EXAMPLE ',email:'SAME@example.test'}},
+ {...order,id:'or_c',buyer_details:{name:'Freya Example',email:'other@example.test'}},
+ {...order,id:'or_d',buyer_details:{name:'Freya Example'}}];
+ const issued=orders.map((o,i)=>({id:'it_'+i,event_id:'ev_1',status:'valid',order_id:o.id,description:i===1?'Club - 1 Guest (Single)':'Club - 2 Guests',checked_in:i===0}));
+ globalThis.fetch=async url=>page(String(url).includes('/v2/orders?')?orders:issued);
+ try {
+  const rows=await readServicePlan('test','ev_1');assert.equal(rows.length,4);
+  assert.equal(rows.find(r=>r.id==='or_a').displayGroupId,rows.find(r=>r.id==='or_b').displayGroupId);
+  const grouped=groupServiceBookings(rows);assert.equal(grouped.length,3);
+  const merged=grouped.find(r=>r.bookingCount===2);
+  assert.deepEqual([...merged.tickets].sort(),['Club - 1 Guest (Single)','Club - 2 Guests']);
+  assert.equal(merged.checkedIn,false);assert.equal(merged.checkedInBookings,1);
+  assert.equal(merged.extras.length,2);assert.equal(rows[0].tickets.length,1);
+  assert.ok(!JSON.stringify(rows).includes('@example.test'));
+ } finally {globalThis.fetch=original;}
+});
+test('display groups never merge just by name and mark complete check-in only when all orders checked in',()=>{
+ const base={name:'Example',tickets:['Club - 2 Guests'],extras:[],checkedIn:true};
+ assert.equal(groupServiceBookings([{...base,id:'a'},{...base,id:'b'}]).length,2);
+ const result=groupServiceBookings([{...base,id:'a',displayGroupId:'a'},{...base,id:'b',displayGroupId:'a'}]);
+ assert.equal(result.length,1);assert.equal(result[0].checkedIn,true);assert.equal(result[0].bookingCount,2);
+});

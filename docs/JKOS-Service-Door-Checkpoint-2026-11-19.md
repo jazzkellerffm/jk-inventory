@@ -71,3 +71,15 @@ Der Checkpoint ist ein unveränderter Referenzbranch vor den folgenden Ergänzun
 ## Ticketgrößen als Tabelle (19.11.2026)
 
 Der Aufklapper heißt jetzt „Ticketgrößen“. Die bisherige Paket-Aufzählung wurde durch eine kompakte Tabelle ersetzt: gebuchte Kategorien als Zeilen, tatsächlich vorkommende Größen als Spalten (Einzel, 2er, 3er usw.). Werte sind Ticket-/Paketanzahlen, keine Gästezahlen. Nicht gebuchte Kombinationen zeigen „–“, unbekannte Größen bleiben explizit unter der Tabelle vermerkt. Zusätzliche Größen wie 5er werden dynamisch aufgenommen; bei vielen Spalten scrollt nur die Tabelle horizontal. Obere Zusammenfassung und Safari-Auswahl unverändert.
+
+## Gesamtzeile aufklappbar und Nachbuchungen (19.11.2026)
+
+- Gäste/Buchungen/Einzeltickets bilden den zunächst geschlossenen Aufklapper mit Chevron. Dahinter liegen Kategorien und Ticketgrößen.
+- Ticketgrößen in PolySans Bulky, 17px. CSV-Button als kleinere 36px-Pille.
+- Service-Daten behalten jede Bestell-ID und deren Check-in-Status. Zusätzlich weist der Server übereinstimmendem normalisiertem vollständigem Namen UND E-Mail desselben Events eine gemeinsame `displayGroupId` zu. Die E-Mail wird nicht an den Browser gegeben; die Gruppen-ID ist die erste Bestell-ID.
+- Gästeliste fasst diese Bestellungen je Kategorie zusammen; Vorbestellungen ebenfalls als gemeinsame Anzeige. Tickets, Gäste und Add-ons werden addiert. „2 Buchungen“ kennzeichnet den Zusammenschluss. Die Gesamtzahl der Buchungen und der Check-in-Zähler beruhen weiter auf den Originalbestellungen.
+- Gemischter Check-in wird als „1 von 2 Buchungen eingecheckt“ gezeigt, nicht als vollständig eingecheckt. Die bestehende Check-in-Auswertung innerhalb einer einzelnen Bestellung bleibt unverändert.
+- Fehlende E-Mail oder verschiedene E-Mail-Adressen: keine automatische Gruppierung nur nach Namen. CSV bleibt auf Ticket-/Bestellebene.
+- Live-Ursache verifiziert: Freya hatte zwei separate Bestellungen für denselben Abend mit identischem Namen und E-Mail (2 + 1 Gäste). Andrea hatte drei Dreiertickets in einer einzigen Bestellung (9 Gäste).
+- Tests für Nachbuchungen, Namensgleichheit ohne Identitätsbeleg, teilweise eingecheckte Gruppen und unveränderte Originaldaten ergänzt.
+- Safari-Auswahl und ihre CSS-Regeln erneut unverändert geprüft.

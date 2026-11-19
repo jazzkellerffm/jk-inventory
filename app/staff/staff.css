@@ -494,3 +494,14 @@
 .service-csv-button { min-height:44px; padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px; color:var(--muted); }
 .service-csv-button:disabled { opacity:.65; cursor:wait; }
 .service-refresh-status { flex:1; min-width:145px; min-height:20px; font-size:12px; color:var(--muted); }
+
+/* Disclosure below the untouched event picker. */
+.staff-service .service-ticket-disclosure>.service-ticket-totals { display:flex; flex-wrap:wrap; gap:6px 12px; min-height:44px; margin:0 0 10px; font-size:14px; }
+.staff-service .service-ticket-disclosure>.service-ticket-totals::after { content:none; }
+.service-ticket-disclosure>.service-ticket-totals::-webkit-details-marker { display:none; }
+.service-ticket-totals>svg { flex:none; margin-left:auto; transition:transform .15s; }
+.service-ticket-disclosure[open]>.service-ticket-totals>svg { transform:rotate(180deg); }
+.staff-service .service-package-details>summary { font-family:var(--font-poly-bulky-only),sans-serif; font-weight:400; font-size:17px; }
+.service-csv-button { min-height:36px; padding:4px 9px; font-size:12px; border-radius:999px; }
+.booking-name>small { color:var(--muted); font-size:12px; }
+@media (prefers-reduced-motion:reduce) { .service-ticket-totals>svg { transition:none; } }

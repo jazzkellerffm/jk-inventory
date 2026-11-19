@@ -124,11 +124,11 @@ type ServiceOrder = {
   created_at: number | string;
   id: string;
   status: string;
-  buyer_details?: { name?: string; first_name?: string; last_name?: string };
+  buyer_details?: { name?: string; first_name?: string; last_name?: string; email?: string };
   line_items: { item_id?: string; event_id?: string; type: string; description: string; quantity: number; event_summary?: { event_id: string; name?: string; start_date?: string } | null }[];
 };
 export type Booking = {
-  id: string; name: string; tickets: string[]; extras: Supply[]; checkedIn: boolean;
+  id: string; name: string; tickets: string[]; extras: Supply[]; checkedIn: boolean; displayGroupId?: string;
 };
 
 export async function readServicePlan(key: string, eventId: string): Promise<Booking[]> {
@@ -178,6 +178,17 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
         if (ids.size !== 1 || !ids.has(eventId)) throw new Error("Ambiguous product event");
         return true;
       }).map(line => paidSupply(line.description,line.quantity));
+  }
+  // Group for display only. Keep each source order and its check-in state intact.
+  const buyers = new Map<string,string>();
+  for (const booking of bookings.values()) {
+    const email = byOrder.get(booking.id)?.buyer_details?.email?.trim().toLowerCase();
+    if (!email || booking.name === "Buchungsname fehlt") continue;
+    const name = booking.name.normalize("NFC").trim().replace(/\s+/gu," ").toLocaleLowerCase("de");
+    const identity = JSON.stringify([email,name]);
+    const firstId = buyers.get(identity) ?? booking.id;
+    buyers.set(identity,firstId);
+    booking.displayGroupId = firstId;
   }
   return [...bookings.values()].sort((a,b)=>a.name.localeCompare(b.name,"de"));
 }

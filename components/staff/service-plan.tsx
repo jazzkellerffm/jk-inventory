@@ -1,8 +1,9 @@
 "use client";
 import { TicketLoader } from "./ticket-loader";
 import { useEffect, useState } from "react";
-import { Check, ClipboardList } from "lucide-react";
+import { Check, ChevronDown, ClipboardList } from "lucide-react";
 import type { Booking, TicketNight } from "@/lib/staff/tickets";
+import { groupServiceBookings, type DisplayBooking } from "@/lib/staff/service-display-groups";
 import { serviceTicketSummary } from "@/lib/staff/service-ticket-summary";
 import { displayBookingName } from "@/lib/staff/display-name";
 
@@ -44,11 +45,13 @@ function TicketSummary({rows}:{rows:Booking[]}) {
   const sizes=[...new Set(summary.flatMap(item=>item.packages.map(p=>p.size)))].sort((a,b)=>a-b);
   const singles=summary.reduce((sum,item)=>sum+item.singles,0);
   return <section className="service-ticket-summary" aria-label="Gebuchte Tickets für diesen Abend">
-    <div className="service-ticket-totals">
+    <details className="service-ticket-disclosure">
+    <summary className="service-ticket-totals">
       <strong>{guestCount(tickets)}</strong>
       <span>{rows.length} {rows.length===1 ? "Buchung" : "Buchungen"}</span>
       {singles>0 && <span className="service-single-count">{singles} {singles===1 ? "Einzelticket" : "Einzeltickets"}</span>}
-    </div>
+      <ChevronDown size={18} aria-hidden="true"/>
+    </summary>
     <ul className="service-ticket-rows">{summary.map(item=><li key={item.category}>
       <strong>{item.category}</strong>
       <span>{item.guests}{item.unknown>0 ? "+" : ""} {item.guests===1 && !item.unknown ? "Gast" : "Gäste"} <small>· {item.tickets} {item.tickets===1 ? "Ticket" : "Tickets"}</small></span>
@@ -68,19 +71,25 @@ function TicketSummary({rows}:{rows:Booking[]}) {
       </div>}
       {summary.filter(item=>item.unknown>0).map(item=><p className="service-size-note" key={item.category}>{item.category}: {item.unknown} {item.unknown===1 ? "Ticketgröße" : "Ticketgrößen"} ungeklärt.</p>)}
     </details>
+    </details>
   </section>;
 }
 
-function BookingName({row}:{row:Booking}) {
-  return <div className="booking-name"><strong>{displayBookingName(row.name)}</strong>{row.checkedIn &&
-    <span className="checkin-pill"><Check size={13} aria-hidden="true"/>Checked in</span>}</div>;
+function BookingName({row}:{row:Booking | DisplayBooking}) {
+  const count="bookingCount" in row ? row.bookingCount : 1;
+  const checked="checkedInBookings" in row ? row.checkedInBookings : Number(row.checkedIn);
+  return <div className="booking-name"><strong>{displayBookingName(row.name)}</strong>
+    {count>1 && <small>{count} Buchungen</small>}
+    {row.checkedIn ? <span className="checkin-pill"><Check size={13} aria-hidden="true"/>Checked in</span> :
+      checked>0 && <span className="checkin-pill">{checked} von {count} Buchungen eingecheckt</span>}
+  </div>;
 }
 
 function GuestList({rows}:{rows:Booking[]}) {
   return <div className="door-guests"><h3>{guestCount(rows.flatMap(row=>row.tickets))} insgesamt</h3>
     {categories.map(label=>{
-      const entries=rows.map(row=>({...row,tickets:row.tickets.filter(t=>category(t)===label)}))
-        .filter(row=>row.tickets.length).sort((a,b)=>a.name.localeCompare(b.name,"de"));
+      const entries=groupServiceBookings(rows.map(row=>({...row,tickets:row.tickets.filter(t=>category(t)===label)}))
+        .filter(row=>row.tickets.length));
       if (!entries.length) return null;
       return <section key={label}><header><strong>{label}</strong><span>{guestCount(entries.flatMap(row=>row.tickets))}</span></header>
         {entries.map(row=><article key={row.id}><div className="service-person"><BookingName row={row}/>
@@ -137,7 +146,7 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
     return ()=>{controller.abort();clearInterval(timer);document.removeEventListener("visibilitychange",update);};
   },[id,example]);
   const supplies = rows?.flatMap(row => [...row.extras,...row.tickets.flatMap(includedSupply)]) ?? [];
-  const visible = rows?.filter(row => view === "Gästeliste" || row.extras.length || row.tickets.some(ticket=>includedSupply(ticket).length));
+  const visible = rows ? groupServiceBookings(rows).filter(row => view === "Gästeliste" || row.extras.length || row.tickets.some(ticket=>includedSupply(ticket).length)) : undefined;
   const bottles = supplies.reduce((total,item) => total + (item.label.startsWith("Flasche ") ? item.quantity : 0),0);
   return <>
     {rows && <TicketSummary rows={rows}/>}

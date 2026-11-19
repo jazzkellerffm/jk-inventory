@@ -14,7 +14,7 @@ Dieser Arbeitsbereich erstellt auf Anfrage eine aktuelle operative Übersicht f�
 - Aktuelle Bestellungen, ausgestellte Tickets und Veranstaltungsdetails abrufen.
 - Gültige ausgestellte Tickets berücksichtigen, einschließlich manueller Tickets ohne normale Bestellung. Ungültige Tickets ausschließen; bei Teilstornierungen und Erstattungen die verbleibenden gültigen Tickets prüfen, nicht pauschal die ganze Buchung entfernen.
 - Add-ons anhand der Order-ID dem richtigen Käufer zuordnen.
-- Mehrere Ticketpositionen nur anhand eindeutiger Buchungs-IDs gruppieren; gleiche Namen sind kein Zusammenführungsschlüssel.
+- Daten bleiben nach eindeutigen Buchungs-IDs getrennt. In Staff OS dürfen Bestellungen desselben Events für die Anzeige zusammengefasst werden, wenn normalisierter vollständiger Name UND Käufer-E-Mail übereinstimmen. Gleiche Namen allein sind kein Zusammenführungsschlüssel. Buchungsanzahl und Check-in-Zustände bleiben auf Bestellebene nachvollziehbar.
 - Ticketpositionen, Bestellungen und tatsächliche Personen getrennt behandeln.
 
 ## Personenzählung

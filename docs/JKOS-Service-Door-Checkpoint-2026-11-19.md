@@ -109,3 +109,14 @@ Der Aufklapper heißt jetzt „Ticketgrößen“. Die bisherige Paket-Aufzählun
 - Beide Formatansichten profitieren vom gleichen Fix. Gegenprüfung mit vollständigen aktuellen Provider-Antworten: Jam 25.11.: 41 Gäste, 14 neu in 7 Tagen, davor 3; NYJB 26.11.: 14 Gäste, 2 neu, davor 12. In beiden Fällen complete=true und keine unbekannten Paketgrößen.
 - Fehlermeldung lautet jetzt „7-Tage-Zuwachs nicht zuverlässig ermittelbar“, damit echte Datenlücken nicht wie ein laufender Ladevorgang wirken.
 - Integrationstest prüft v2-Endpunkt, Eventfilter, Pagination und ISO-Buchungszeitpunkte. 54 Staff-Tests, TypeScript und gezielter Lint bestanden. Service-Auswahl und Service-Layout nicht geändert.
+
+## Einheitlicher Bestellabruf (19.11.2026)
+
+Rückkehrpunkt: Branch `checkpoint/before-unified-orders-2026-11-19`, Commit `2fa2121167c600e305f0b9f262119b040cfb57bc`.
+
+- Alle Ticket-Tailor-Bestellungen und Bestelldetails im Staff OS laufen zentral über `lib/staff/ticket-orders.ts` und `/v2/orders`. Umgestellt: Rosé-Karten/Alerts, Tageszählung, Buchungsaktivität und Buchungsvorlauf. Bereits auf V2 laufende Service-/Battle-Abrufe verwenden denselben Helfer.
+- Events und ausgestellte Tickets bleiben V1. Die lokalen V1-Helfer akzeptieren im TypeScript-Typ nur diese Ressourcen; orders kann dort nicht mehr versehentlich eingesetzt werden. Kein V1-Fallback für Bestellungen.
+- Zentrale Pagination behält Filter, dedupliziert IDs und weist Schleifen, fehlende Positionslisten und unvollständige Bestelldetails zurück. Rein lesende Änderung, keine Ticket-Tailor-Bestellungen verändert.
+- Regressionstests: Rosé-Sortierung, Tageszählung, Mehrfach-Events, Produkt-/Stornoausschluss, ISO-Zeitpunkte, stündliche Aktivität, Vergleich des Buchungsvorlaufs mit numerischen V1-Zeitpunkten; bestehende Tests für Gruppierung, Vorbestellungen, CSV und Battle bleiben bestanden.
+- 57 Tests, TypeScript, gezielter Lint und Produktionsbuild erfolgreich. Sechs aktuelle V2-Bestellungen vom 19.11. durch den neuen Feed-Code verarbeitet: sechs Tagesbuchungen und vier neueste Rosé-Karten mit zugeordneten Events/Datumswerten. Das ist eine Verarbeitung echter V2-Daten, kein vollständiger Live-V1/V2-Vergleich.
+- Komponenten, Styles und Safari-Auswahl unverändert. Live-Anzeige nach Deployment noch nicht visuell geprüft.

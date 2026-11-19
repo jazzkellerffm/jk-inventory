@@ -1,11 +1,12 @@
 import "server-only";
+import { readOrders } from "./ticket-orders";
 import { serviceDate, serviceStart } from "./service-day";
 import { partitionPerformanceEvents, eventFormat, summarizeBattleEvent, type BattleEvent, type BattleTicket, type BattleOrder, type BattleNight } from "./battle-math";
 import { readBattleRevenue } from "./sumup";
-async function pages<T extends {id:string}>(resource:string,filters:Record<string,string>,auth:string,version="v1"){
+async function pages<T extends {id:string}>(resource:"events"|"issued_tickets",filters:Record<string,string>,auth:string){
  const rows=new Map<string,T>();const query=new URLSearchParams({...filters,limit:"100"});const cursors=new Set<string>();
  for(let page=0;page<150;page++){
-  const response=await fetch("https://api.tickettailor.com/"+version+"/"+resource+"?"+query,{headers:{Authorization:auth},cache:"no-store",signal:AbortSignal.timeout(10000)});
+  const response=await fetch("https://api.tickettailor.com/v1/"+resource+"?"+query,{headers:{Authorization:auth},cache:"no-store",signal:AbortSignal.timeout(10000)});
   if(!response.ok)throw Error("Ticket data unavailable");const body=await response.json();
   if(!Array.isArray(body.data))throw Error("Invalid ticket data");for(const row of body.data)rows.set(row.id,row);
   if(!body.links?.next)return [...rows.values()];const cursor=new URL(body.links.next,"https://api.tickettailor.com").searchParams.get("starting_after");
@@ -29,7 +30,7 @@ async function collect(key:string,month:string,merchant?:string,token?:string):P
  const nights:BattleNight[]=[];
  // Bound provider concurrency; only the opened Tools module triggers this request.
  for(let i=0;i<selected.length;i+=3){await Promise.all(selected.slice(i,i+3).map(async event=>{
-  const [tickets,orders]=await Promise.all([pages<BattleTicket>("issued_tickets",{event_id:event.id,status:"valid"},auth),pages<BattleOrder>("orders",{event_id:event.id},auth,"v2")]);
+  const [tickets,orders]=await Promise.all([pages<BattleTicket>("issued_tickets",{event_id:event.id,status:"valid"},auth),readOrders<BattleOrder>({event_id:event.id},auth)]);
   nights.push(summarizeBattleEvent(event,tickets,orders,now/1000));
  }));}
  const revenue=await revenuePromise;

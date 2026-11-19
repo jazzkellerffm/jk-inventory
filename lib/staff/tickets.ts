@@ -1,4 +1,5 @@
 import "server-only";
+import { readOrders, readOrder } from "./ticket-orders";
 import { purchasedTickets, purchaseTime, purchaseWindow, summarizePurchases, type TicketActivity } from "./ticket-activity";
 import { serviceDate, serviceStart } from "./service-day";
 import {ticketDay, weekDay} from "./ticket-weeks";
@@ -12,11 +13,11 @@ export type BookingAlert = { id: string; at: number; label: string; eventId?: st
 type BookingLine = { ticket: string; eventId?: string; event?: string; date?: string };
 export type TicketFeed = { ticketActivity?: TicketActivity; monthlyGuests: { count: number; unknownPackages: number }; bookingDay?: { count: number; recent: { id: string; at: number; lines: BookingLine[] }[] }; bookingAlerts?: BookingAlert[]; monthlyNights?: NightCounts; foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
 
-async function pages<T extends { id: string }>(resource: string, filters: Record<string,string>, auth: string, version = "v1") {
+async function pages<T extends { id: string }>(resource: "events" | "issued_tickets", filters: Record<string,string>, auth: string) {
   const rows = new Map<string,T>();
   const query = new URLSearchParams({ ...filters, limit: "100" });
   while (true) {
-    const response = await fetch("https://api.tickettailor.com/" + version + "/" + resource + "?" + query, {
+    const response = await fetch("https://api.tickettailor.com/v1/" + resource + "?" + query, {
       headers: { Authorization: auth, Accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout(6000),
     });
     if (!response.ok) throw new Error("Ticket Tailor unavailable");
@@ -36,7 +37,7 @@ function readTicketActivity(auth: string, now: number) {
   if (activityCache?.auth === auth && activityCache.start === start && now < activityCache.until) {
     return activityCache.data;
   }
-  const data = pages<ServiceOrder>("orders", {
+  const data = readOrders<ServiceOrder>({
     created_at_gte: String(start), created_at_lte: String(now),
   }, auth).then(orders => summarizePurchases(orders, dates, now));
   activityCache = { auth, start, until: now + 300, data };
@@ -134,7 +135,7 @@ export type Booking = {
 export async function readServicePlan(key: string, eventId: string): Promise<Booking[]> {
   const auth = "Basic " + Buffer.from(key + ":").toString("base64");
   const [orders, tickets] = await Promise.all([
-    pages<ServiceOrder>("orders", {event_id:eventId}, auth, "v2"),
+    readOrders<ServiceOrder>({event_id:eventId}, auth),
     pages<Ticket & { order_id?: string; full_name?: string; checked_in?: boolean|string }>("issued_tickets", {event_id:eventId,status:"valid"}, auth),
   ]);
   // v2 includes product lines and multi-event checkouts. Only fetch missing orders.
@@ -143,15 +144,7 @@ export async function readServicePlan(key: string, eventId: string): Promise<Boo
     .map(t => t.order_id).filter((id): id is string => Boolean(id)))].filter(id => !listedIds.has(id));
   const byOrder = new Map(orders.map(order => [order.id,order]));
   for (let offset=0; offset<orderIds.length; offset+=4) {
-    const details = await Promise.all(orderIds.slice(offset,offset+4).map(async id => {
-      const response = await fetch("https://api.tickettailor.com/v2/orders/"+encodeURIComponent(id), {
-        headers:{Authorization:auth,Accept:"application/json"},cache:"no-store",signal:AbortSignal.timeout(6000),
-      });
-      if(!response.ok) throw new Error("Order details unavailable: HTTP "+response.status);
-      const order:ServiceOrder=await response.json();
-      if(order.id!==id || !Array.isArray(order.line_items)) throw new Error("Incomplete order details");
-      return order;
-    }));
+    const details = await Promise.all(orderIds.slice(offset,offset+4).map(id => readOrder<ServiceOrder>(id, auth)));
     for(const order of details)byOrder.set(order.id,order);
   }
   const bookings = new Map<string,Booking>();
@@ -199,9 +192,9 @@ async function recentBookings(auth: string, now: number, events: Map<string, Eve
   let from = cutoff;
   let until = now;
   let span = 86400;
-  let bookings: (ServiceOrder & { at: number })[] = [];
+  const bookings: (ServiceOrder & { at: number })[] = [];
   while (true) {
-    const orders = await pages<ServiceOrder>("orders", {
+    const orders = await readOrders<ServiceOrder>({
       created_at_gte: String(from), created_at_lte: String(until),
     }, auth);
     const batch = orders.filter(order => purchasedTickets(order) > 0)
@@ -264,7 +257,7 @@ async function collectBookingLead(key: string, today: string) {
     await Promise.all(events.slice(i,i+3).map(async event => {
       const [tickets, orders] = await Promise.all([
         pages<import('./booking-lead').LeadTicket>('issued_tickets', { event_id: event.id, status: 'valid' }, auth),
-        pages<import('./booking-lead').LeadOrder>('orders', { event_id: event.id }, auth),
+        readOrders<import('./booking-lead').LeadOrder>({ event_id: event.id }, auth),
       ]);
       addLeadEvent(feed, event, tickets, orders, today);
     }));

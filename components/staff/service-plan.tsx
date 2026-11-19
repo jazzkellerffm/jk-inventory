@@ -41,6 +41,7 @@ function TicketSummary({rows}:{rows:Booking[]}) {
   const tickets=rows.flatMap(row=>row.tickets);
   const summary=serviceTicketSummary(tickets);
   if (!summary.length) return null;
+  const sizes=[...new Set(summary.flatMap(item=>item.packages.map(p=>p.size)))].sort((a,b)=>a-b);
   const singles=summary.reduce((sum,item)=>sum+item.singles,0);
   return <section className="service-ticket-summary" aria-label="Gebuchte Tickets für diesen Abend">
     <div className="service-ticket-totals">
@@ -54,11 +55,18 @@ function TicketSummary({rows}:{rows:Booking[]}) {
       {item.unknown>0 && <small className="service-ticket-unknown">{item.unknown} {item.unknown===1 ? "Paketgröße" : "Paketgrößen"} ungeklärt</small>}
     </li>)}</ul>
     <details className="service-package-details">
-      <summary>Paketgrößen anzeigen</summary>
-      <dl>{summary.map(item=><div key={item.category}><dt>{item.category}</dt>
-        <dd>{item.packages.map(p=>`${p.count} × ${p.size===1 ? "Einzelticket" : p.size+"er-Paket"}`).join(" · ")}
-          {item.unknown>0 && `${item.packages.length ? " · " : ""}${item.unknown} ungeklärt`}</dd>
-      </div>)}</dl>
+      <summary>Ticketgrößen</summary>
+      {sizes.length>0 && <div className="service-size-scroll" role="region" aria-label="Ticketgrößen nach Kategorie" tabIndex={0}>
+        <table className="service-size-table">
+          <caption>Anzahl gebuchter Tickets je Größe</caption>
+          <thead><tr><th scope="col">Kategorie</th>{sizes.map(size=><th scope="col" key={size}>{size===1 ? "Einzel" : size+"er"}</th>)}</tr></thead>
+          <tbody>{summary.map(item=><tr key={item.category}>
+            <th scope="row">{item.category}</th>
+            {sizes.map(size=><td key={size}>{item.packages.find(p=>p.size===size)?.count ?? "–"}</td>)}
+          </tr>)}</tbody>
+        </table>
+      </div>}
+      {summary.filter(item=>item.unknown>0).map(item=><p className="service-size-note" key={item.category}>{item.category}: {item.unknown} {item.unknown===1 ? "Ticketgröße" : "Ticketgrößen"} ungeklärt.</p>)}
     </details>
   </section>;
 }

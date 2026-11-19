@@ -67,3 +67,7 @@ Der Checkpoint ist ein unveränderter Referenzbranch vor den folgenden Ergänzun
 - Hintergrundaktualisierung in einer reservierten Statuszeile, kein zusätzlich eingeblendeter großer Ladebalken. Erster Buchungsabruf behält TicketLoader. Fehler bleiben sichtbar.
 - ServicePlan-Block einschließlich des nativen Selects und dessen CSS gegen den vorherigen Stand bytegenau verglichen: unverändert.
 - TypeScript, Komponenten-Lint und 51 Staff-Tests bestanden; Produktionsbuild geprüft. Visuelle Prüfung auf dem iPhone noch ausstehend.
+
+## Ticketgrößen als Tabelle (19.11.2026)
+
+Der Aufklapper heißt jetzt „Ticketgrößen“. Die bisherige Paket-Aufzählung wurde durch eine kompakte Tabelle ersetzt: gebuchte Kategorien als Zeilen, tatsächlich vorkommende Größen als Spalten (Einzel, 2er, 3er usw.). Werte sind Ticket-/Paketanzahlen, keine Gästezahlen. Nicht gebuchte Kombinationen zeigen „–“, unbekannte Größen bleiben explizit unter der Tabelle vermerkt. Zusätzliche Größen wie 5er werden dynamisch aufgenommen; bei vielen Spalten scrollt nur die Tabelle horizontal. Obere Zusammenfassung und Safari-Auswahl unverändert.

@@ -125,3 +125,31 @@ test('Live revenue for Jam and NYJB belongs to today until 03:00, future nights 
  assert.equal(feed.nights.find(n=>n.format==='nyjb').cents,20000);
  assert.equal(feed.upcoming.some(n=>n.format==='jam'),false);
 });
+
+
+test('battle fetches v2 orders across pages for dated ticket fulfilments',async t=>{
+ const {readBattle}=await import('../lib/staff/battle.ts');
+ t.mock.method(Date,'now',()=>now*1000);
+ const ts=[ticket('a','Club - 2 Guests'),ticket('b','Premium - 3 Guests')];
+ const first=order('or_a',[ts[0]],1),second=order('or_b',[ts[1]],8);
+ first.created_at=new Date(first.created_at*1000).toISOString();
+ second.created_at=new Date(second.created_at*1000).toISOString();
+ let orderPages=0;
+ t.mock.method(globalThis,'fetch',async input=>{
+  const url=new URL(String(input));
+  if(url.pathname==='/v1/events')return Response.json({data:[event]});
+  if(url.pathname==='/v1/issued_tickets')return Response.json({data:ts});
+  if(url.pathname==='/v2/orders'){
+   orderPages++;
+   assert.equal(url.searchParams.get('event_id'),event.id);
+   if(!url.searchParams.has('starting_after'))return Response.json({data:[first],links:{next:'/v2/orders?starting_after=or_a'}});
+   assert.equal(url.searchParams.get('starting_after'),'or_a');
+   return Response.json({data:[second],links:{next:null}});
+  }
+  throw Error('Unexpected provider endpoint: '+url.pathname);
+ });
+ const feed=await readBattle('v2-orders-regression','2026-11');
+ assert.equal(orderPages,2);
+ const n=feed.upcoming.find(n=>n.id===event.id);
+ assert.equal(n.guests,5);assert.equal(n.recent,2);assert.equal(n.previous,3);assert.equal(n.complete,true);
+});

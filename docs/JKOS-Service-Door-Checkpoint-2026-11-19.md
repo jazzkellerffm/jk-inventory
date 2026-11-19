@@ -102,3 +102,10 @@ Der Aufklapper heißt jetzt „Ticketgrößen“. Die bisherige Paket-Aufzählun
 - Kategorie links in PolySans Bulky, Gästezahl in hellgrüner Pille ebenfalls Bulky. Ticketanzahl rechts kleiner, normale Schrift ohne weitere Pille.
 - Drei Spalten je Zeile halten Zahlen geordnet; lange Kategorien umbrechen links. Trennlinien und kompakte Abstände bleiben erhalten. Ungeklärte Paketgrößen stehen weiterhin in einer eigenen Hinweiszeile.
 - Keine Änderung an Berechnungen, Safari-Auswahl, CSV oder Aufklappverhalten.
+
+## Buchungszuwachs für Jam und NYJB korrigiert (19.11.2026)
+
+- Gemeinsamer Battle-Datenabruf erwartete v2-Bestellungen mit transactions, event_summary und fulfilments, rief jedoch v1/orders ab. Bestellungen werden jetzt über v2/orders geladen; Events und ausgestellte Tickets bleiben auf v1.
+- Beide Formatansichten profitieren vom gleichen Fix. Gegenprüfung mit vollständigen aktuellen Provider-Antworten: Jam 25.11.: 41 Gäste, 14 neu in 7 Tagen, davor 3; NYJB 26.11.: 14 Gäste, 2 neu, davor 12. In beiden Fällen complete=true und keine unbekannten Paketgrößen.
+- Fehlermeldung lautet jetzt „7-Tage-Zuwachs nicht zuverlässig ermittelbar“, damit echte Datenlücken nicht wie ein laufender Ladevorgang wirken.
+- Integrationstest prüft v2-Endpunkt, Eventfilter, Pagination und ISO-Buchungszeitpunkte. 54 Staff-Tests, TypeScript und gezielter Lint bestanden. Service-Auswahl und Service-Layout nicht geändert.

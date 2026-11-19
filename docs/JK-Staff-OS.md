@@ -330,3 +330,10 @@ Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit
 - Aktueller Abend wird separat im Minutenabstand geladen, abgeschlossene Historie weiterhin zehn Minuten gecacht. Erfolgreiche EUR-Zahlungen, gleiche bestehende Umsatzlogik, keine Artikeldetailabfragen.
 - Um 03:00 Europe/Berlin wechselt der Cache-Schlüssel: vorheriger Abend abgeschlossen, neue Zahlungen beim neuen Betriebsdatum. Anzeige beim nächsten Minutenabruf aktualisiert.
 - Bei Abruffehlern bleibt der letzte Stand mit Fehlermeldung; Live-Animation ausgesetzt. Test für Mitternacht, 03:00-Wechsel, Bereichsgrenzen und erfolglose Zahlungen ergänzt.
+
+### 19.11.2026 — Buchungsvorlauf
+- Neue Grafik unter Käufe nach Uhrzeit: Wie früh buchen unsere Gäste? Alle / Jam / NYJB, fünf Zeiträume (0, 1–3, 4–7, 8–14, mehr als 14 Tage).
+- Grundlage: abgeschlossene, nicht abgesagte Abende im laufenden Betriebsmonat. Berlin-Kalendertage zwischen Kaufdatum der Bestellung und Eventdatum; gültige ausgegebene Tickets über order_id zugeordnet und nach Paketgröße gewichtet. Keine Add-ons oder ungültigen Tickets, Ticket-IDs dedupliziert.
+- Prozentanteile beziehen sich auf zuordenbare Gäste. Fehlendes Kaufdatum und unbekannte Paketgrößen werden separat ausgewiesen; keine Schätzung aus Ausstellungsdaten.
+- Eigener authentifizierter Endpunkt, Abruf erst bei geöffnetem Venue Performance, 15-Minuten-Cache mit Betriebsdatum als Schlüssel. API-Fehler geben keine Teilgrafik aus. Bestehende Datenlogik bleibt unverändert.
+- 48 Staff-Tests und Produktionsbuild erfolgreich; realer Geräte-/Datenabgleich noch ausstehend.

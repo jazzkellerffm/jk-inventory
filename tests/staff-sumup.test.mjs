@@ -321,3 +321,22 @@ test('Evening comparison keeps midnight sales live until Berlin 03:00 and finali
     { date: '2026-11-19', live: true, payments: 1, cents: 300 },
   ]);
 });
+
+test('Booking lead counts valid guests by Berlin calendar days and excludes cancelled or unfinished evenings', async () => {
+  const { addLeadEvent, emptyLead } = await import('../lib/staff/booking-lead.ts');
+  const feed = { month:'2026-11', groups:{all:emptyLead(),jam:emptyLead(),nyjb:emptyLead()} };
+  const event = {id:'ev-lead', name:'The Famous Jazz Jam Session',status:'published',start:{date:'2026-11-18',unix:Date.parse('2026-11-18T20:00:00Z')/1000}};
+  const days = [0,1,3,4,7,8,14,15];
+  const orders = days.map((d,i)=>({id:'o'+i,created_at:Date.parse('2026-11-18T10:00:00Z')/1000-d*86400}));
+  const tickets = orders.map((o,i)=>({id:'t'+i,event_id:event.id,status:'valid',description:'Premium 2 Guests',order_id:o.id}));
+  tickets.push({...tickets[0]}, {...tickets[0],id:'void',status:'void'}, {...tickets[0],id:'addon',add_on_id:'a'}, {...tickets[0],id:'manual',order_id:'missing'});
+  addLeadEvent(feed,event,tickets,orders,'2026-11-18');
+  assert.equal(feed.groups.all.nights,0);
+  addLeadEvent(feed,{...event,status:'cancelled'},tickets,orders,'2026-11-19');
+  assert.equal(feed.groups.all.nights,0);
+  addLeadEvent(feed,event,tickets,orders,'2026-11-19');
+  assert.deepEqual(feed.groups.all.bins,[2,4,4,4,2]);
+  assert.equal(feed.groups.all.excludedGuests,2);
+  assert.deepEqual(feed.groups.jam,feed.groups.all);
+  assert.equal(feed.groups.nyjb.nights,0);
+});

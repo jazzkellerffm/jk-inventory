@@ -231,3 +231,32 @@ async function recentBookings(auth: string, now: number, events: Map<string, Eve
   }));
   return {bookingAlerts, bookingDay: {count, latest: records[0], recent: records.slice(0, 4)}};
 }
+
+// Load on opening Venue Performance; independent of live dashboard refreshes.
+let leadCache: { key: string; day: string; until: number; data: Promise<import('./booking-lead').LeadFeed> } | undefined;
+export function readBookingLead(key: string) {
+  const today = serviceDate(Date.now());
+  if (leadCache?.key === key && leadCache.day === today && leadCache.until > Date.now()) return leadCache.data;
+  const data = collectBookingLead(key, today);
+  leadCache = { key, day: today, until: Date.now() + 15*60000, data };
+  data.catch(() => { if (leadCache?.data === data) leadCache = undefined; });
+  return data;
+}
+async function collectBookingLead(key: string, today: string) {
+  const { emptyLead, addLeadEvent } = await import('./booking-lead');
+  const { partitionPerformanceEvents } = await import('./battle-math');
+  const auth = 'Basic ' + Buffer.from(key + ':').toString('base64');
+  const feed = { month: today.slice(0,7), groups: { all: emptyLead(), jam: emptyLead(), nyjb: emptyLead() } };
+  const { active } = partitionPerformanceEvents(await pages<EventRow>('events', {}, auth));
+  const events = active.filter(e => e.start?.date?.startsWith(feed.month) && e.start.date < today);
+  for (let i=0; i<events.length; i+=3) {
+    await Promise.all(events.slice(i,i+3).map(async event => {
+      const [tickets, orders] = await Promise.all([
+        pages<import('./booking-lead').LeadTicket>('issued_tickets', { event_id: event.id, status: 'valid' }, auth),
+        pages<import('./booking-lead').LeadOrder>('orders', { event_id: event.id }, auth),
+      ]);
+      addLeadEvent(feed, event, tickets, orders, today);
+    }));
+  }
+  return feed;
+}

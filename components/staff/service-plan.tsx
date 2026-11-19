@@ -3,6 +3,7 @@ import { TicketLoader } from "./ticket-loader";
 import { useEffect, useState } from "react";
 import { Check, ClipboardList } from "lucide-react";
 import type { Booking, TicketNight } from "@/lib/staff/tickets";
+import { serviceTicketSummary } from "@/lib/staff/service-ticket-summary";
 import { displayBookingName } from "@/lib/staff/display-name";
 
 import { ticketCategory, combine, includedSupply, packageSize, type Supply } from "@/lib/staff/entitlements";
@@ -34,6 +35,21 @@ function guestCount(tickets:string[]) {
   const known=tickets.map(packageSize);
   const total=known.reduce((sum,n)=>sum+n,0);
   return known.includes(0) ? total+" Gäste + ungeklärte Paketgröße" : total+(total===1 ? " Gast" : " Gäste");
+}
+
+function TicketSummary({rows}:{rows:Booking[]}) {
+  const summary=serviceTicketSummary(rows.flatMap(row=>row.tickets));
+  if (!summary.length) return null;
+  return <section className="service-ticket-summary" aria-label="Gebuchte Tickets für diesen Abend">
+    <h3>Gebuchte Tickets</h3>
+    <div className="service-ticket-grid">{summary.map(item=><div className="service-ticket-card" key={item.category}>
+      <strong>{item.category}</strong>
+      <b>{item.guests}{item.unknown>0 ? "+" : ""} {item.guests===1 && !item.unknown ? "Gast" : "Gäste"}</b>
+      <span>{item.tickets} {item.tickets===1 ? "Ticket" : "Tickets"}</span>
+      <small>{item.packages.map(p=>`${p.count} × ${p.size===1 ? "Einzelticket" : p.size+"er-Paket"}`).join(" · ")}</small>
+      {item.unknown>0 && <small>{item.unknown} {item.unknown===1 ? "Paketgröße" : "Paketgrößen"} ungeklärt</small>}
+    </div>)}</div>
+  </section>;
 }
 
 function BookingName({row}:{row:Booking}) {
@@ -105,6 +121,7 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
   const visible = rows?.filter(row => view === "Gästeliste" || row.extras.length || row.tickets.some(ticket=>includedSupply(ticket).length));
   const bottles = supplies.reduce((total,item) => total + (item.label.startsWith("Flasche ") ? item.quantity : 0),0);
   return <>
+    {rows && <TicketSummary rows={rows}/>}
     <div className="service-switch" role="group" aria-label="Ansicht">{["Vorbestellungen","Gästeliste"].map(label =>
       <button type="button" key={label} aria-pressed={view===label} onClick={()=>setView(label)}>{label}</button>)}</div>
     {rows && rows.length>0 && <p className="checkin-total">{rows.filter(row=>row.checkedIn).length} von {rows.length} Buchungen eingecheckt</p>}
@@ -132,7 +149,7 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
 
 }
 
-export function ServicePlan({nights,example,defaultId}:{nights:TicketNight[];example:boolean;defaultId?:string}){
+export function ServicePlan({nights,example,defaultId,state}:{nights:TicketNight[];example:boolean;defaultId?:string;state:string}){
   const [view,setView] = useState("Vorbestellungen");
   const [open,setOpen]=useState(false);
   const [selected,setSelected]=useState("");
@@ -147,6 +164,9 @@ export function ServicePlan({nights,example,defaultId}:{nights:TicketNight[];exa
       </select>
     </div>
       <List key={id} night={night} example={example} view={view} setView={setView}/></>}
-    {open && !id && <p>Der Plan erscheint, sobald Termine aus Ticket Tailor vorliegen.</p>}
+    {open && !id && (state==="loading" ? <TicketLoader label="Veranstaltungen aus Ticket Tailor werden geladen"/> :
+      state==="unavailable" ? <p role="status">Ticket Tailor ist gerade nicht erreichbar. Die Termine werden automatisch erneut geladen.</p> :
+      state==="setup" ? <p>Ticket Tailor ist noch nicht verbunden.</p> :
+      <p>Keine Veranstaltungen für diesen Zeitraum vorhanden.</p>)}
   </details>;
 }

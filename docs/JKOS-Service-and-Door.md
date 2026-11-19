@@ -1,5 +1,7 @@
 # JKOS · Service & Door
-Stand: 18. November 2026.
+Stand: 19. November 2026.
+
+Aktuelle technische Übergabe: [Service & Door – Safari, Ladeanzeigen und Ticketmix](JKOS-Service-Door-Checkpoint-2026-11-19.md).
 
 ## Übergabe: Vorbestellungen und Serviceübersichten
 

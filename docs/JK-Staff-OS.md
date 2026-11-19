@@ -366,3 +366,10 @@ Auf Wunsch von Philipp ist die Darstellung wieder auf dem Stand vor den beiden T
 Spätere Funktionen bleiben erhalten: Live-Abendumsatzbalken mit 03-Uhr-Abschluss, vereinheitlichte Wochenbeschriftung, PolySans-Bulky-Vergleichslabels, Frühbuchungsauswertung einschließlich Weekend-Auswahl Freitag/Samstag und deren Ladefehlerkorrektur. Datenlogik und APIs unverändert. Die obigen Tablet- und Service-Nachbesserungsnotizen beschreiben damit historische, nicht mehr aktive Änderungen.
 
 Build und vorhandene Staff-Tests werden vor Veröffentlichung geprüft. Die Bestätigung, ob die Verkleinerung nach dem Laden der Service-Daten auf dem echten iPhone verschwunden ist, steht noch aus. iPad-Optimierungen erst wieder separat in einer Vorschau prüfen.
+
+
+### 19.11.2026 — Safari bestätigt, Service-Lader und Ticketmix
+
+Der native Service-Select ist auf dem echten iPhone von Philipp als funktionierend bestätigt. Gesicherter Stand: `d6c1eaa447cbd27c365ed11b4d5c094e2567d510`, Branch `checkpoint/staff-safari-select-2026-11-19`. Dieser Eintrag ersetzt die zuvor offenen Safari-Prüfhinweise. Select im normalen Fluss, separates Label und `overflow:hidden` direkt am Select beibehalten.
+
+Anschließend ergänzt: TicketLoader für die initiale Veranstaltungsliste, getrennte Fehler-/Setup-/Leerzustände sowie eine dynamische Übersicht der tatsächlich gebuchten Ticketkategorien, Gäste, Tickets und Paketgrößen des ausgewählten Abends. Keine Null-Kategorien; keine zusätzlichen API-Abrufe. Vollständige Übergabe: [Checkpoint und Service-Erweiterungen](JKOS-Service-Door-Checkpoint-2026-11-19.md).

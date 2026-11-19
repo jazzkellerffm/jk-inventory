@@ -118,7 +118,7 @@ export function TicketSales({example,feed,state,refreshing,week,setWeek}:Props &
     {feed && <BookingHistory day={feed.bookingDay}/>}
   </section>
   <Performance feed={feed} example={example} state={state} refreshing={refreshing}/>
-  <ServicePlan nights={feed?.nights ?? []} defaultId={upcoming[0]?.id} example={example}/></>;
+  <ServicePlan state={state} nights={feed?.nights ?? []} defaultId={upcoming[0]?.id} example={example}/></>;
 }
 
 const concertMonth = new Intl.DateTimeFormat("de-DE", { month: "short", timeZone: "Europe/Berlin" });

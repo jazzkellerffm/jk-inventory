@@ -36,10 +36,10 @@ Der Checkpoint ist ein unveränderter Referenzbranch vor den folgenden Ergänzun
 
 ## Ticketmix des ausgewählten Abends
 
-- Oberhalb der Umschaltung Vorbestellungen/Gästeliste: „Gebuchte Tickets“.
+- Oberhalb der Umschaltung Vorbestellungen/Gästeliste: kompakte Gesamtzeile mit Gästen, Buchungen und tatsächlich vorhandenen Einzeltickets.
 - Daten ausschließlich aus denselben gültigen Service-Buchungen wie Gästeliste und Vorbestellungen; keine zusätzliche API-Abfrage.
 - Nur tatsächlich gebuchte Kategorien anzeigen: Club, Club Plus, Premium, VIP, Worldstar VIP, Weitere Tickets. Keine Null-Kacheln.
-- Je Kategorie Gäste, ausgestellte Tickets und Verteilung der Paketgrößen anzeigen.
+- Je Kategorie eine kompakte Zeile mit Gästen und ausgestellten Tickets. Verteilung der Paketgrößen im standardmäßig geschlossenen Aufklapper „Paketgrößen anzeigen“.
 - Beispiel: zwei Club-Einzeltickets plus drei Club-Zweierpakete = fünf Tickets, acht Gäste; „2 × Einzelticket · 3 × 2er-Paket“.
 - Ein Ticket/Paket ist nicht dasselbe wie eine Bestellung oder eine Person. Mehrere Tickets in einer Bestellung werden vollständig gezählt.
 - Einzelticket heißt Paketgröße 1, nicht Bestellung mit einer Ticketposition.
@@ -57,3 +57,13 @@ Der Checkpoint ist ein unveränderter Referenzbranch vor den folgenden Ergänzun
 - Die reine Safari-Auswahl am Checkpoint wurde vom Nutzer auf dem echten iPhone bestätigt. Nachfolgende Ticketmix-/Loader-Ergänzungen benötigen noch die visuelle Geräteprüfung.
 - Lokaler Browserlauf war in dieser Umgebung wegen fehlender WebKit-Systembibliotheken bzw. nicht erlaubter Browser-Sockets nicht ausführbar. Kein echter Safari-Test der neuen Ergänzungen behaupten.
 - Bestehender Lint-Befund in TicketSales: `Date.now()` im Render-Fallback (`react-hooks/purity`), bereits vor diesem Änderungssatz vorhanden.
+
+## Kompaktere Serviceansicht (19.11.2026)
+
+- Hohe Kacheln durch kompakte Kategoriezeilen ersetzt; Null-Kategorien weiterhin ausgeblendet.
+- Gesamtzeile: Gäste, Anzahl Buchungen (nicht Tickets) und Einzeltickets nur bei Anzahl > 0.
+- Paketgrößen gesammelt aufklappbar; unbekannte Größen bereits in der Kategoriezeile sichtbar.
+- CSV als kleiner beschrifteter Button mit mindestens 44px Touchhöhe.
+- Hintergrundaktualisierung in einer reservierten Statuszeile, kein zusätzlich eingeblendeter großer Ladebalken. Erster Buchungsabruf behält TicketLoader. Fehler bleiben sichtbar.
+- ServicePlan-Block einschließlich des nativen Selects und dessen CSS gegen den vorherigen Stand bytegenau verglichen: unverändert.
+- TypeScript, Komponenten-Lint und 51 Staff-Tests bestanden; Produktionsbuild geprüft. Visuelle Prüfung auf dem iPhone noch ausstehend.

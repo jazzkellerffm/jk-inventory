@@ -38,17 +38,28 @@ function guestCount(tickets:string[]) {
 }
 
 function TicketSummary({rows}:{rows:Booking[]}) {
-  const summary=serviceTicketSummary(rows.flatMap(row=>row.tickets));
+  const tickets=rows.flatMap(row=>row.tickets);
+  const summary=serviceTicketSummary(tickets);
   if (!summary.length) return null;
+  const singles=summary.reduce((sum,item)=>sum+item.singles,0);
   return <section className="service-ticket-summary" aria-label="Gebuchte Tickets für diesen Abend">
-    <h3>Gebuchte Tickets</h3>
-    <div className="service-ticket-grid">{summary.map(item=><div className="service-ticket-card" key={item.category}>
+    <div className="service-ticket-totals">
+      <strong>{guestCount(tickets)}</strong>
+      <span>{rows.length} {rows.length===1 ? "Buchung" : "Buchungen"}</span>
+      {singles>0 && <span className="service-single-count">{singles} {singles===1 ? "Einzelticket" : "Einzeltickets"}</span>}
+    </div>
+    <ul className="service-ticket-rows">{summary.map(item=><li key={item.category}>
       <strong>{item.category}</strong>
-      <b>{item.guests}{item.unknown>0 ? "+" : ""} {item.guests===1 && !item.unknown ? "Gast" : "Gäste"}</b>
-      <span>{item.tickets} {item.tickets===1 ? "Ticket" : "Tickets"}</span>
-      <small>{item.packages.map(p=>`${p.count} × ${p.size===1 ? "Einzelticket" : p.size+"er-Paket"}`).join(" · ")}</small>
-      {item.unknown>0 && <small>{item.unknown} {item.unknown===1 ? "Paketgröße" : "Paketgrößen"} ungeklärt</small>}
-    </div>)}</div>
+      <span>{item.guests}{item.unknown>0 ? "+" : ""} {item.guests===1 && !item.unknown ? "Gast" : "Gäste"} <small>· {item.tickets} {item.tickets===1 ? "Ticket" : "Tickets"}</small></span>
+      {item.unknown>0 && <small className="service-ticket-unknown">{item.unknown} {item.unknown===1 ? "Paketgröße" : "Paketgrößen"} ungeklärt</small>}
+    </li>)}</ul>
+    <details className="service-package-details">
+      <summary>Paketgrößen anzeigen</summary>
+      <dl>{summary.map(item=><div key={item.category}><dt>{item.category}</dt>
+        <dd>{item.packages.map(p=>`${p.count} × ${p.size===1 ? "Einzelticket" : p.size+"er-Paket"}`).join(" · ")}
+          {item.unknown>0 && `${item.packages.length ? " · " : ""}${item.unknown} ungeklärt`}</dd>
+      </div>)}</dl>
+    </details>
   </section>;
 }
 
@@ -125,11 +136,11 @@ function List({night,example,view,setView}:{night:TicketNight;example:boolean;vi
     <div className="service-switch" role="group" aria-label="Ansicht">{["Vorbestellungen","Gästeliste"].map(label =>
       <button type="button" key={label} aria-pressed={view===label} onClick={()=>setView(label)}>{label}</button>)}</div>
     {rows && rows.length>0 && <p className="checkin-total">{rows.filter(row=>row.checkedIn).length} von {rows.length} Buchungen eingecheckt</p>}
-    {!example && <button type="button" onClick={download} disabled={exporting}>Aktuelle CSV herunterladen</button>}
-    {exporting && <TicketLoader label="Aktuelle Gästeliste wird erstellt"/>}
+    <div className="service-actions">
+      {!example && <button className="service-csv-button" type="button" onClick={download} disabled={exporting}>{exporting ? "CSV wird erstellt …" : "CSV herunterladen"}</button>}
+      <span className="service-refresh-status" role="status">{exporting ? "Gästeliste wird erstellt …" : error ? "Aktualisierung fehlgeschlagen." : refreshing && rows ? "Aktualisiert …" : ""}</span>
+    </div>
     {exportError && <p role="alert">{exportError}</p>}
-    {refreshing && rows && !error && <TicketLoader label="Buchungen werden aktualisiert"/>}
-    {error && <p role="status">Aktualisierung fehlgeschlagen.</p>}
     {!rows && !error && <TicketLoader label="Buchungen werden geladen"/>}
     {view === "Vorbestellungen" && supplies.length > 0 && <div className="service-prep">
       <h3>Für die Vorbereitung</h3><Pills items={supplies}/>

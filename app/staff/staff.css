@@ -465,13 +465,27 @@
 /* Unconfirmed assignments stay legible and retain their station colour. */
 .roster-role[data-tentative="true"] { opacity:.72; outline:1px dashed currentColor; outline-offset:-1px; }
 
-/* Booked categories only; counts distinguish issued packages from guests. */
-.service-ticket-summary { margin:16px 0 20px; }
-.service-ticket-summary h3 { margin:0 0 10px; font-size:16px; }
-.service-ticket-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr)); gap:8px; }
-.service-ticket-card { min-width:0; padding:12px; border:1px solid var(--line); border-radius:12px; background:#f4f7f3; }
-.service-ticket-card strong,.service-ticket-card b,.service-ticket-card span,.service-ticket-card small { display:block; overflow-wrap:anywhere; }
-.service-ticket-card strong { font-size:14px; }
-.service-ticket-card b { margin-top:6px; font-size:22px; line-height:1.2; }
-.service-ticket-card span { margin-top:3px; font-size:13px; color:var(--muted); }
-.service-ticket-card small { margin-top:7px; font-size:12px; color:var(--muted); }
+/* Compact booked categories; the native event select above is unchanged. */
+.service-ticket-summary { margin:16px 0; }
+.service-ticket-totals { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:10px; font-size:14px; }
+.service-ticket-totals strong { font-size:20px; }
+.service-ticket-totals>span { color:var(--muted); }
+.service-ticket-totals .service-single-count { padding:3px 8px; border-radius:8px; background:#e4eee6; color:var(--accent); font-weight:700; }
+.service-ticket-rows { list-style:none; margin:0; padding:4px 12px; border:1px solid var(--line); border-radius:12px; background:#f4f7f3; }
+.service-ticket-rows li { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:2px 12px; padding:8px 0; font-size:15px; }
+.service-ticket-rows li+li { border-top:1px solid var(--line); }
+.service-ticket-rows li>span { font-variant-numeric:tabular-nums; }
+.service-ticket-rows small { font-size:13px; color:var(--muted); }
+.service-ticket-unknown { flex-basis:100%; }
+.staff-service .service-package-details>summary { display:flex; align-items:center; gap:8px; min-height:44px; font-size:14px; color:var(--muted); }
+.staff-service .service-package-details>summary::-webkit-details-marker { display:none; }
+.staff-service .service-package-details>summary::after { content:"+"; margin-left:auto; }
+.staff-service .service-package-details[open]>summary::after { content:"−"; }
+.service-package-details dl { margin:0 0 10px; font-size:14px; }
+.service-package-details dl>div+div { margin-top:8px; }
+.service-package-details dt { font-weight:700; }
+.service-package-details dd { margin:2px 0 0; color:var(--muted); overflow-wrap:anywhere; }
+.service-actions { display:flex; align-items:center; flex-wrap:wrap; gap:4px 12px; min-height:44px; margin:4px 0; }
+.service-csv-button { min-height:44px; padding:6px 10px; border:1px solid var(--line); border-radius:8px; font-size:13px; color:var(--muted); }
+.service-csv-button:disabled { opacity:.65; cursor:wait; }
+.service-refresh-status { flex:1; min-width:145px; min-height:20px; font-size:12px; color:var(--muted); }

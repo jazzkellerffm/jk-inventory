@@ -343,3 +343,6 @@ Die Rangliste berücksichtigt nur zugeordnete Katalog- bzw. Kategorieartikel mit
 - Zuordnung nach Veranstaltungsdatum (Freitag und Samstag), unabhängig vom Eventnamen. Sonntag nur unter Alle. Bestehende Gültigkeits-, Absage- und Paketlogik unverändert.
 - Keine zusätzlichen API-Abfragen: vorhandene Daten werden gleichzeitig in die drei neuen Gruppen aggregiert.
 - Test prüft kombinierte und getrennte Gästezahlen, Sonntag und abgesagte Freitage.
+
+### 19.11.2026 — Kompakte Weekend-Auswahl
+- Im Buchungsvorlauf ersetzt ein natives Auswahlfeld (Freitag + Samstag / Freitag / Samstag) die zweite Pillenleiste. Mehr Abstand zur Gäste-/Abendanzahl. Hauptauswahl, Balken und Berechnungen unverändert.

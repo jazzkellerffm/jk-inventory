@@ -2,6 +2,20 @@
 
 Stand: 20. November 2026 · Repo: jazzkellerffm/jk-inventory
 
+## Aktueller Aufbau: eigene Box mit Team
+
+Die folgenden Punkte ersetzen die ursprüngliche Einbettung in die Baraktivitäts-Kachel:
+
+- Showtime ist eine eigene flache grüne Box direkt oberhalb der Baraktivität, mit 12px Abstand. Gustavo-Zeit, Rosé-Balken und bisherige Textgrößen bleiben erhalten. Die innere Trennlinie entfällt.
+- Unter Gästezahl und Sold out stehen dezente Namenspillen. Sie verwenden die bereits geladenen Dienstplandaten aus `StaffBoard.shifts`; kein weiterer Abruf.
+- Die Zuordnung erfolgt nach dem Berliner Datum des tatsächlich angezeigten Ticket-Tailor-Events. Nach Mitternacht bleibt bis zum bestehenden Tageswechsel um 03:00 Uhr auch das dazugehörige Team sichtbar. Ein zukünftiges Event erhält ausschließlich seine eigenen Schichten.
+- Ein Name erscheint auch bei mehreren Rollen nur einmal. Rein vorläufige Einsätze tragen sichtbar „offen“ und eine gestrichelte Kontur. Ein bestätigter Einsatz hat Vorrang gegenüber einem weiteren vorläufigen Einsatz derselben Person.
+- Die Teamzeile ist ein Link mit mindestens 44px Touchhöhe. Sie öffnet den vorhandenen Dienstplan in der Woche des Events und setzt dabei einen vorherigen Namensfilter zurück. Nicht geplante Zeiträume zeigen einen Leerzustand statt das Team eines anderen Tages.
+- Fehlende Planung: „Team noch nicht geplant“. Laden und Abruffehler sind davon getrennt dargestellt.
+- Die separate Kachel „Team heute Abend“ bleibt auf ausdrücklichen Wunsch bestehen. Dienstplandaten, Rollen, Safari-Auswahl, Ticketzählung und Countdown-Logik werden nicht verändert.
+- Rücksprungpunkt vor dieser Layout-Ergänzung: Branch `checkpoint/before-showtime-team-2026-11-20`, Commit `7d0e2eaaec7bcf8bca9daabfd4657decaba25db4`.
+- 67 Staff-Tests sowie TypeScript und gezielter ESLint-Lauf bestanden. Neue Tests decken Nachtwechsel, zukünftige Events ohne Schichten, Berliner Datumsgrenze, Mehrfachrollen und vorläufige Einsätze ab.
+
 ## Gesicherter Rücksprungpunkt
 
 Vor dieser Ergänzung wurde der Branch `checkpoint/before-showtime-2026-11-20` auf GitHub angelegt, ausgehend von `e8c0816dc5474c7126211cf7d01e840ba8a11303`.

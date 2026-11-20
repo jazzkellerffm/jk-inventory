@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { showtime } from '../lib/staff/showtime.ts';
+import { showtime, showtimeTeam } from '../lib/staff/showtime.ts';
 const ms = date => Date.parse(date);
 const night = (start, more = {}) => ({id:start, name:'Jazz', start:ms(start)/1000, guests:51, recent:0, drinks:0, unknown:0, ...more});
 
@@ -14,6 +14,31 @@ test('Thursday switches from doors to show countdown and then scheduled showtime
  assert.equal(showtime(nights,ms('2026-11-19T20:59:59+01:00')).value,'1 Min.');
  const started=showtime(nights,ms('2026-11-19T21:00:00+01:00'));
  assert.equal(started.phase,'started'); assert.equal(started.value,'21:00');
+});
+
+test('Showtime team follows the event night across midnight and then the next event', () => {
+ const shifts=[{date:'2026-11-19',names:['Chelly','Adri'],role:'Bar inkl. Backstage'},
+  {date:'2026-11-19',names:['Laura','Ana']}, {date:'2026-11-20',names:['Hamad','Adri'],role:'Bar'},
+  {date:'2026-11-20',names:['Adriano','Ana']}];
+ const nights=[night('2026-11-19T21:00:00+01:00'),night('2026-11-20T21:30:00+01:00')];
+ const running=showtime(nights,ms('2026-11-20T01:49:00+01:00'));
+ assert.deepEqual(showtimeTeam(shifts,running.night.start).people.map(p=>p.name),['Chelly','Adri','Laura','Ana']);
+ const next=showtime(nights,ms('2026-11-20T03:00:00+01:00'));
+ assert.deepEqual(showtimeTeam(shifts,next.night.start).people.map(p=>p.name),['Hamad','Adri','Adriano','Ana']);
+});
+
+test('future event without shifts does not borrow another evening’s team; date is Berlin', () => {
+ const shifts=[{date:'2026-11-20',names:['Hamad']},{date:'2026-11-21',names:['Chelly']}];
+ assert.deepEqual(showtimeTeam(shifts,ms('2026-11-20T23:30:00Z')/1000),{date:'2026-11-21',people:[{name:'Chelly',tentative:false}]});
+ assert.deepEqual(showtimeTeam(shifts,ms('2026-11-25T21:00:00+01:00')/1000).people,[]);
+});
+
+test('team names appear once across roles and tentative assignments remain explicit', () => {
+ const date='2026-11-26';
+ const shifts=[{date,names:['Adri','Joab'],status:'tentative'},
+  {date,names:[' adri ','Hamad'],role:'Bar'}, {date,names:['Joab'],status:'tentative',role:'Backstage'}];
+ assert.deepEqual(showtimeTeam(shifts,ms(date+'T21:00:00+01:00')/1000).people,
+  [{name:'Adri',tentative:false},{name:'Joab',tentative:true},{name:'Hamad',tentative:false}]);
 });
 test('Friday, Saturday, Sunday and special times come from the actual event', () => {
  for(const [start,doors] of [

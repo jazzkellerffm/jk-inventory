@@ -89,6 +89,12 @@ function ActivityChart({ feed }: { feed: BarFeed }) {
 export function StaffDashboard({ example }: { example?: StaffBoard }) {
   const tickets = useTicketFeed(!!example);
   const [salesWeek, setSalesWeek] = useState(0);
+  const [scheduleFocus, setScheduleFocus] = useState<{ date: string; request: number }>();
+  function openSchedule(date: string) {
+    setScheduleFocus(prior => ({ date, request: (prior?.request ?? 0) + 1 }));
+    const schedule = document.querySelector<HTMLDetailsElement>("#schedule");
+    if (schedule) schedule.open = true;
+  }
   function openBooking(booking: BookingAlert) {
     const now = tickets.feed?.asOf ?? Date.now() / 1000;
     const day = booking.eventDate;
@@ -127,8 +133,9 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>
       <OrderAlerts bookings={tickets.feed?.bookingAlerts} onBooking={openBooking} board={board} food={foodOrders} demo={!!example}/>
+      <Showtime feed={tickets.feed} state={tickets.state} now={example && snapshot ? snapshot.getTime() : checkedAt} example={!!example}
+        shifts={board?.shifts} teamUnavailable={error || !!board?.scheduleError} onOpenSchedule={openSchedule}/>
       <section aria-labelledby="activity" className="staff-activity staff-panel">
-          <Showtime feed={tickets.feed} state={tickets.state} now={example && snapshot ? snapshot.getTime() : checkedAt} example={!!example}/>
           <div className="staff-activity-body">
           <div className="staff-section-head"><span className="staff-eyebrow"><Activity size={17}/> SumUp</span><span className={`staff-status ${stale ? "staff-warn" : ""}`} role="status"><i/>{status}</span></div>
           <h2 id="activity">Baraktivität</h2>
@@ -196,7 +203,7 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
           return "href" in module ?
             <Link key={id} className="staff-tile" href={module.href}>{label}<ArrowUpRight size={20}/></Link> :
             <details key={id} id={id} className="staff-tile-detail"><summary className="staff-tile">{label}<ChevronDown size={20}/></summary>
-              {module.render(board, error, !!example)}</details>;
+              {module.render(board, error, !!example, scheduleFocus)}</details>;
         })}
       </div>
       {example && <Link className="staff-exit-demo" href="/staff">Zum Teamzugang <ArrowRight size={15}/></Link>}

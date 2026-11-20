@@ -5,7 +5,7 @@ import { FormatPerformance } from "./format-battle";
 import { Schedule } from "./schedule";
 
 type StaffModule = { id: string; title: string; hint: string; icon: LucideIcon } & (
-  { href: string } | { render: (board: StaffBoard | undefined, error: boolean, example?: boolean) => ReactNode }
+  { href: string } | { render: (board: StaffBoard | undefined, error: boolean, example?: boolean, scheduleFocus?: { date: string; request: number }) => ReactNode }
 );
 
 export const staffModules: StaffModule[] = [
@@ -13,7 +13,7 @@ export const staffModules: StaffModule[] = [
   { id: "inventory", title: "Inventory", hint: "Bestände prüfen", icon: Boxes, href: "/inventory" },
   {
     id: "schedule", title: "Dienstplan", hint: "Schichten & Team", icon: CalendarDays,
-    render: (board, error) => <Schedule shifts={board?.shifts ?? []}
+    render: (board, error, _example, focus) => <Schedule key={focus?.request ?? 0} initialDate={focus?.date} shifts={board?.shifts ?? []}
       invalid={!!board?.scheduleError || (error && !board)} loading={!board && !error}/>,
   },
 ];

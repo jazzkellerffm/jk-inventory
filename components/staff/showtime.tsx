@@ -1,13 +1,17 @@
 import type { TicketFeed } from '@/lib/staff/tickets';
-import { showtime } from '@/lib/staff/showtime';
+import type { Shift } from '@/lib/staff/types';
+import { ArrowUpRight } from 'lucide-react';
+import { showtime, showtimeTeam } from '@/lib/staff/showtime';
 import styles from './showtime.module.css';
 
-export function Showtime({ feed, state, now, example = false }: {
+export function Showtime({ feed, state, now, example = false, shifts, teamUnavailable, onOpenSchedule }: {
   feed: TicketFeed | null; state: string; now: number; example?: boolean;
+  shifts?: Shift[]; teamUnavailable: boolean; onOpenSchedule: (date: string) => void;
 }) {
   const info = showtime(feed?.nights ?? [], now);
+  const team = info ? showtimeTeam(shifts ?? [], info.night.start) : null;
   const stale = !example && !!feed && (state === 'unavailable' || now / 1000 - feed.asOf > 300);
-  return <div className={styles.showtime} aria-label="Showtime">
+  return <section className={styles.showtime} aria-label="Showtime">
     {!info ? <div className={styles.empty}><b>Showtime</b><span>
       {!feed ? state === 'setup' ? 'Ticket Tailor ist noch nicht verbunden.'
         : state === 'unavailable' ? 'Termine derzeit nicht verfügbar.' : 'Termine werden geladen …'
@@ -35,6 +39,21 @@ export function Showtime({ feed, state, now, example = false }: {
         {info.night.soldOut && <b className={styles.soldOut}>Sold out</b>}
         {stale && <span className={styles.stale}>Letzter Stand · {new Intl.DateTimeFormat('de-DE', {timeZone:'Europe/Berlin', hour:'2-digit', minute:'2-digit'}).format(feed!.asOf * 1000)}</span>}
       </div>
+      {team && (teamUnavailable || !shifts ? <p className={styles.teamStatus}>
+        {teamUnavailable ? 'Team derzeit nicht verfügbar.' : 'Team wird geladen …'}
+      </p> : <a className={styles.team} href="#schedule" onClick={() => onOpenSchedule(team.date)}
+        aria-label={'Team für ' + info.date + ': ' + (team.people.length
+          ? team.people.map(person => person.name + (person.tentative ? ' noch offen' : '')).join(', ')
+          : 'noch nicht geplant') + '. Dienstplan öffnen'}>
+        <span className={styles.teamLabel}>Team</span>
+        <span className={styles.people}>
+          {team.people.length ? team.people.map(person => <span className={styles.person} key={person.name}
+            data-tentative={person.tentative || undefined}>
+            {person.name}{person.tentative && <small> · offen</small>}
+          </span>) : <span className={styles.unplanned}>Team noch nicht geplant</span>}
+        </span>
+        <ArrowUpRight size={15} aria-hidden="true"/>
+      </a>)}
     </>}
-  </div>;
+  </section>;
 }

@@ -1,4 +1,5 @@
 import type { TicketNight } from './tickets';
+import type { Shift } from './types';
 import { serviceDate } from './service-day';
 import { ticketDay } from './ticket-weeks';
 
@@ -30,4 +31,23 @@ export function showtime(nights: TicketNight[], now: number) {
     date: date.format(start), doors: clock.format(doors), start: clock.format(start),
     percent: night.soldOut ? 100 : Math.max(0, Math.min(100, night.guests / referenceGuests * 100)),
   };
+}
+
+// Match the displayed event's Berlin date, never the device date or today's roster.
+export function showtimeTeam(shifts: Shift[], start: number) {
+  const date = ticketDay(start);
+  const people = new Map<string, { name: string; tentative: boolean }>();
+  for (const shift of shifts.filter(shift => shift.date === date)) {
+    for (const rawName of shift.names) {
+      const name = rawName.trim();
+      if (!name) continue;
+      const key = name.normalize('NFC').toLocaleLowerCase('de-DE');
+      const prior = people.get(key);
+      people.set(key, {
+        name: prior?.name ?? name,
+        tentative: (prior?.tentative ?? true) && shift.status === 'tentative',
+      });
+    }
+  }
+  return { date, people: [...people.values()] };
 }

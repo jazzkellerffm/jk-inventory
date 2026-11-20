@@ -1,8 +1,10 @@
 .showtime {
   min-width: 0;
-  margin-bottom: 18px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #d7e1d926;
+  margin-bottom: 12px;
+  padding: 18px 26px;
+  border: 1px solid #28463f;
+  border-radius: 22px;
+  background: #28463f;
   color: #f3e9d2;
 }
 .heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
@@ -20,8 +22,18 @@
 .stale { flex-basis: 100%; opacity: .85; }
 .empty { display: flex; flex-wrap: wrap; gap: 4px 12px; color: #d7e1d9; }
 .empty b { color: #f3e9d2; font-weight: 400; }
+.team { display: flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 8px; color: #d7e1d9; text-decoration: none; border-radius: 8px; }
+.team:hover .person { background: #f3e9d226; }
+.team.team:focus-visible { outline: 2px solid #f3e9d2; outline-offset: 4px; }
+.teamLabel, .teamStatus, .unplanned { font-size: 11px; line-height: 1.4; }
+.teamLabel, .team > svg { flex: none; }
+.people { display: flex; flex: 1; min-width: 0; flex-wrap: wrap; align-items: center; gap: 6px; padding-block: 6px; }
+.person { max-width: 100%; padding: 4px 10px; border: 1px solid transparent; border-radius: 999px; background: #f3e9d21a; color: #f3e9d2; font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
+.person[data-tentative] { border-color: #d7e1d980; border-style: dashed; background: transparent; }
+.person small { font-size: inherit; color: #d7e1d9; }
+.teamStatus { margin: 14px 0 0; color: #d7e1d9; }
 @media (max-width: 720px) {
-  .showtime { margin-bottom: 14px; padding-bottom: 13px; }
+  .showtime { padding: 18px 20px; border-radius: 18px; }
   .heading { gap: 12px; }
   .event > b { font-size: 13px; }
   .countdown { max-width: 43%; }

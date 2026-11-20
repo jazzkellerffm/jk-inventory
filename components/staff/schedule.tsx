@@ -31,10 +31,10 @@ function periodLabel(key:string, view:View) {
   return dayMonth.formatRange(start,end);
 }
 
-export function Schedule({ shifts, invalid, loading }: { shifts: Shift[]; invalid: boolean; loading: boolean }) {
+export function Schedule({ shifts, invalid, loading, initialDate = '' }: { shifts: Shift[]; invalid: boolean; loading: boolean; initialDate?: string }) {
   const [today] = useState(() => serviceDate(Date.now()));
   const [view,setView] = useState<View>("Woche");
-  const [anchor,setAnchor] = useState("");
+  const [anchor,setAnchor] = useState(initialDate);
   const [name,setName] = useState("");
   if (invalid || !shifts.length) return <div id="dienstplan" className="staff-schedule-body"><p>
     {invalid ? "Dienstplan zurzeit nicht verfügbar." : loading ? "Dienstplan wird geladen …" : "Noch keine kommenden Schichten eingetragen."}
@@ -43,7 +43,7 @@ export function Schedule({ shifts, invalid, loading }: { shifts: Shift[]; invali
   const names = [...new Set(shifts.flatMap(s=>s.names))].sort((a,b)=>a.localeCompare(b,"de"));
   const activeName = names.includes(name) ? name : "";
   const filtered = shifts.filter(s=>!activeName || s.names.includes(activeName));
-  const periods = [...new Set(filtered.map(s=>period(s.date,view)))].sort();
+  const periods = [...new Set([...filtered.map(s=>period(s.date,view)), ...(initialDate ? [period(initialDate,view)] : [])])].sort();
   const requested = period(anchor || today,view);
   const current = periods.includes(requested) ? requested : (periods.find(key => key >= requested) ?? periods[periods.length - 1]);
   const index = periods.indexOf(current);
@@ -53,7 +53,7 @@ export function Schedule({ shifts, invalid, loading }: { shifts: Shift[]; invali
   return <div id="dienstplan" className="staff-schedule-body">
     <div className="service-switch" role="group" aria-label="Dienstplanansicht">
       {(["Woche","Monat"] as const).map(v=><button type="button" key={v} aria-pressed={v===view}
-        onClick={()=>{setAnchor(dates[0]);setView(v);}}>{v}</button>)}
+        onClick={()=>{setAnchor(dates[0] ?? anchor);setView(v);}}>{v}</button>)}
     </div>
     <div className="roster-period"><h3>{periodLabel(current,view)}</h3>
       {periods.length>1 && <div>{[{delta:-1,label:"Zurück",Icon:ChevronLeft},{delta:1,label:"Weiter",Icon:ChevronRight}].map(({delta,label,Icon})=>
@@ -61,6 +61,7 @@ export function Schedule({ shifts, invalid, loading }: { shifts: Shift[]; invali
     </div>
     <label>Vorname<select value={activeName} onChange={e=>setName(e.target.value)}>
       <option value="">Ganzes Team</option>{names.map(n=><option key={n}>{n}</option>)}</select></label>
+    {!dates.length && <p>Für diesen Zeitraum sind noch keine Schichten eingetragen.</p>}
     {dates.map(date => {
       const day = atNoon(date);
       return <section key={date} className="roster-day">

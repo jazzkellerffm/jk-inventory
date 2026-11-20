@@ -53,7 +53,7 @@ export function NightHistory({ feed, enabled, example }: { feed: TicketFeed; ena
   }, [enabled, example, month, current, history, retry]);
   const total = counts ? Object.values(counts).reduce((a, b) => a + b, 0) : 0;
   const label = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(month + '-01T12:00:00Z'));
-  const buttonClass = 'flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line)] disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2';
+  const buttonClass = 'flex h-11 w-11 items-center justify-center border-0 bg-transparent disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-offset-2';
   return <section className="mt-4 border-t border-[var(--line)] pt-4" aria-label="Abgeschlossene Abende nach Monat"
     onTouchStart={e => { const t = e.touches[0]; touch.current = { x: t.clientX, y: t.clientY }; }}
     onTouchCancel={() => { touch.current = null; }}

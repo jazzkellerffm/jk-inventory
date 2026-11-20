@@ -27,3 +27,6 @@ Aktueller Monat nutzt den vorhandenen TicketFeed. Historische Monate werden beim
 72 Staff-Tests bestanden, einschließlich Monatsgrenzen/Jahreswechsel, Tagesaggregation, Paketgrößen, Ausschluss von Absagen/Add-ons, Cache und Fehlerwiederholung.
 ESLint für geänderte TS/TSX-Dateien sowie Next-Produktionsbuild bestanden.
 Echte historische Produktionsdaten und iPhone-Safari-Gesten sind nicht durch diese automatisierten Tests abgedeckt.
+
+## Dezente Pfeile
+Auf Wunsch am 20. November: Kreisrahmen entfernt. Pfeile bleiben unverändert, mit unsichtbaren 44 × 44 px Tippflächen, deaktivierten Randzuständen und sichtbarem Tastaturfokus. Keine Änderung an Wischgeste oder Datenlogik.

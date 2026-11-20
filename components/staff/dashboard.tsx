@@ -129,13 +129,13 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
   return <div className="staff-shell">
     <Masthead signedIn={!example} demo={!!example}/>
     <main>
-      <div id="bar-monitor" className="staff-heading"><div><h1>Bar-Monitor<span>.</span></h1></div>
+      <div className="staff-heading"><div><h1>Bar-Monitor<span>.</span></h1></div>
         {snapshot && <div className="staff-stamp"><span>{day.format(snapshot)}</span><b>{time.format(snapshot)} <small>Uhr</small></b></div>}
       </div>
       <OrderAlerts bookings={tickets.feed?.bookingAlerts} onBooking={openBooking} board={board} food={foodOrders} demo={!!example}/>
       <Showtime feed={tickets.feed} state={tickets.state} now={example && snapshot ? snapshot.getTime() : checkedAt} example={!!example}
         shifts={board?.shifts} teamUnavailable={error || !!board?.scheduleError} onOpenSchedule={openSchedule}/>
-      <section aria-labelledby="activity" className="staff-activity staff-panel">
+      <section id="bar-monitor" aria-labelledby="activity" className="staff-activity staff-panel">
           <div className="staff-activity-body">
           <div className="staff-section-head"><span className="staff-eyebrow"><Activity size={17}/> SumUp</span><span className={`staff-status ${stale ? "staff-warn" : ""}`} role="status"><i/>{status}</span></div>
           <h2 id="activity">Baraktivität</h2>

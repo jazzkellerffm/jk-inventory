@@ -2,6 +2,7 @@ import type { TicketFeed } from '@/lib/staff/tickets';
 import type { Shift } from '@/lib/staff/types';
 import { ArrowUpRight } from 'lucide-react';
 import { showtime, showtimeTeam } from '@/lib/staff/showtime';
+import { stationIcons } from './station-cards';
 import styles from './showtime.module.css';
 
 export function Showtime({ feed, state, now, example = false, shifts, teamUnavailable, onOpenSchedule }: {
@@ -43,14 +44,18 @@ export function Showtime({ feed, state, now, example = false, shifts, teamUnavai
         {teamUnavailable ? 'Team derzeit nicht verfügbar.' : 'Team wird geladen …'}
       </p> : <a className={styles.team} href="#schedule" onClick={() => onOpenSchedule(team.date)}
         aria-label={'Team für ' + info.date + ': ' + (team.people.length
-          ? team.people.map(person => person.name + (person.tentative ? ' noch offen' : '')).join(', ')
+          ? team.people.map(person => person.name + ': ' + person.roles.join(', ') + (person.tentative ? ' noch offen' : '')).join('; ')
           : 'noch nicht geplant') + '. Dienstplan öffnen'}>
         <span className={styles.teamLabel}>Team</span>
         <span className={styles.people}>
-          {team.people.length ? team.people.map(person => <span className={styles.person} key={person.name}
-            data-tentative={person.tentative || undefined}>
-            {person.name}{person.tentative && <small> · offen</small>}
-          </span>) : <span className={styles.unplanned}>Team noch nicht geplant</span>}
+          {team.people.length ? team.people.map(person => {
+            const Icon = stationIcons[person.station];
+            return <span className={styles.person} key={person.name} data-station={person.station}
+              title={person.roles.join(' · ')} data-tentative={person.tentative || undefined}>
+              <Icon size={12} aria-hidden="true"/>
+              <span>{person.name}{person.tentative && <small> · offen</small>}</span>
+            </span>;
+          }) : <span className={styles.unplanned}>Team noch nicht geplant</span>}
         </span>
         <ArrowUpRight size={15} aria-hidden="true"/>
       </a>)}

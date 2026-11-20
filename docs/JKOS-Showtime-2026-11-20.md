@@ -6,15 +6,18 @@ Stand: 20. November 2026 · Repo: jazzkellerffm/jk-inventory
 
 Die folgenden Punkte ersetzen die ursprüngliche Einbettung in die Baraktivitäts-Kachel:
 
-- Showtime ist eine eigene flache grüne Box direkt oberhalb der Baraktivität, mit 12px Abstand. Gustavo-Zeit, Rosé-Balken und bisherige Textgrößen bleiben erhalten. Die innere Trennlinie entfällt.
-- Unter Gästezahl und Sold out stehen dezente Namenspillen. Sie verwenden die bereits geladenen Dienstplandaten aus `StaffBoard.shifts`; kein weiterer Abruf.
+- Showtime ist eine eigene flache Box in zartem Rosé (`#f7eeeb`) direkt oberhalb der dunkelgrünen Baraktivität, mit 12px Abstand. Gustavo-Zeit und Texte sind dunkelgrün; der dünne Füllbalken verwendet das vorhandene gedeckte Rosé `#b57c73`. Maße und Textgrößen bleiben erhalten.
+- Unter Gästezahl und Sold out stehen Namenspillen in den Farben der jeweiligen Dienstplanposition: Bar Rosé, Backstage Apricot, Service Mint, Door warmes Grau. Kleine vorhandene Positionssymbole, Rollen im zugänglichen Linktext und ein Titel ergänzen die Farben. Sie verwenden die bereits geladenen Dienstplandaten aus `StaffBoard.shifts`; kein weiterer Abruf.
+- Dienstplan und Showtime verwenden dieselbe Zuordnung über `lib/staff/stations.ts` und gemeinsame Farbvariablen. „Bar inkl. Backstage“ bleibt wie im Dienstplan Bar/Rosé. Unbekannte Rollen bleiben neutral. Die Farbe folgt dem Einsatz, nicht dauerhaft der Person. Bestätigte Rollen haben Vorrang vor vorläufigen; bei mehreren bestätigten Rollen bestimmt die erste bekannte Position im Dienstplan die Farbe, sämtliche Rollen bleiben im zugänglichen Text enthalten.
 - Die Zuordnung erfolgt nach dem Berliner Datum des tatsächlich angezeigten Ticket-Tailor-Events. Nach Mitternacht bleibt bis zum bestehenden Tageswechsel um 03:00 Uhr auch das dazugehörige Team sichtbar. Ein zukünftiges Event erhält ausschließlich seine eigenen Schichten.
 - Ein Name erscheint auch bei mehreren Rollen nur einmal. Rein vorläufige Einsätze tragen sichtbar „offen“ und eine gestrichelte Kontur. Ein bestätigter Einsatz hat Vorrang gegenüber einem weiteren vorläufigen Einsatz derselben Person.
 - Die Teamzeile ist ein Link mit mindestens 44px Touchhöhe. Sie öffnet den vorhandenen Dienstplan in der Woche des Events und setzt dabei einen vorherigen Namensfilter zurück. Nicht geplante Zeiträume zeigen einen Leerzustand statt das Team eines anderen Tages.
 - Fehlende Planung: „Team noch nicht geplant“. Laden und Abruffehler sind davon getrennt dargestellt.
 - Die separate Kachel „Team heute Abend“ bleibt auf ausdrücklichen Wunsch bestehen. Dienstplandaten, Rollen, Safari-Auswahl, Ticketzählung und Countdown-Logik werden nicht verändert.
 - Rücksprungpunkt vor dieser Layout-Ergänzung: Branch `checkpoint/before-showtime-team-2026-11-20`, Commit `7d0e2eaaec7bcf8bca9daabfd4657decaba25db4`.
-- 67 Staff-Tests sowie TypeScript und gezielter ESLint-Lauf bestanden. Neue Tests decken Nachtwechsel, zukünftige Events ohne Schichten, Berliner Datumsgrenze, Mehrfachrollen und vorläufige Einsätze ab.
+- Rücksprungpunkt vor der Farbänderung: Branch `checkpoint/before-showtime-colors-2026-11-20`, Commit `f09a926cc320d9dda4b7d698befa000176b6795e`.
+- 69 Staff-Tests sowie TypeScript und gezielter ESLint-Lauf bestanden. Tests decken Nachtwechsel, zukünftige Events ohne Schichten, Berliner Datumsgrenze, Mehrfachrollen, Rollenwechsel, kombinierte Rollen und vorläufige Einsätze ab.
+- Kontrastprüfung: Namen mindestens 9,34:1, kleine sekundäre Texte mindestens 4,61:1; Füllbalken 3,41:1 gegenüber dem Track und 3,02:1 gegenüber der Rosé-Fläche. Vorläufige Pillen behalten ihre Positionsfarbe und die gestrichelte Kontur; veraltete Füllstände werden gedeckt grün und bleiben mit „Letzter Stand“ gekennzeichnet.
 
 ## Gesicherter Rücksprungpunkt
 
@@ -32,7 +35,7 @@ Für einen Rückbau die Showtime-Ergänzung gezielt in einem neuen Commit entfer
 - Zukünftige Kalendertage erscheinen als „morgen“ bzw. „in N Tagen“. Eventdatum und beide Uhrzeiten stehen immer dabei. Keine Sekunden; die vorhandene 15-Sekunden-Uhr des Dashboards aktualisiert den Countdown.
 - Balken: gebuchte Personen / Richtwert 60, auf 0–100 % begrenzt. Paketanzahl wird nicht als Gästezahl verwendet.
 - Expliziter Sold-out-Status aus dem bestehenden Feed füllt den Balken vollständig und zeigt „Sold out“, auch unter 60 Gästen. Ein voller Balken erzeugt allein keinen Sold-out-Status.
-- Unbekannte Paketgrößen werden mit „≥“ und „Zuordnung offen“ kenntlich gemacht. Bei Abruffehlern oder einem über fünf Minuten alten Feed bleiben Daten mit „Letzter Stand“ erkennbar; der Balken wird abgeschwächt.
+- Unbekannte Paketgrößen werden mit „≥“ und „Zuordnung offen“ kenntlich gemacht. Bei Abruffehlern oder einem über fünf Minuten alten Feed bleiben Daten mit „Letzter Stand“ erkennbar; der Balken erhält eine gedeckte Statusfarbe.
 - Ladezustand, fehlende Verbindung, fehlgeschlagener Abruf und leere Vorschau haben jeweils eigene Texte.
 
 ## Dateien

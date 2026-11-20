@@ -1,22 +1,15 @@
 import { DoorOpen, HandPlatter, Martini, UsersRound, Utensils } from "lucide-react";
 import type { Shift } from "@/lib/staff/types";
+import { stationFor } from "@/lib/staff/stations";
 
-const stations = [
-  { key: "bar", Icon: Martini },
-  { key: "backstage", Icon: Utensils },
-  { key: "service", Icon: HandPlatter },
-  { key: "door", Icon: DoorOpen },
-];
-const teamStation = { key: "team", Icon: UsersRound };
-
-function stationFor(role = "") {
-  const label = role.trim().toLowerCase();
-  return stations.find(station => label.startsWith(station.key)) ?? teamStation;
-}
+export const stationIcons = {
+  bar: Martini, backstage: Utensils, service: HandPlatter, door: DoorOpen, team: UsersRound,
+};
 
 export function StationCards({ shifts, activeName }: { shifts: Shift[]; activeName?: string }) {
   return <dl className="station-cards">{shifts.map((shift, index) => {
-    const { key: station, Icon } = stationFor(shift.role);
+    const station = stationFor(shift.role);
+    const Icon = stationIcons[station];
     return <div key={index} className="roster-role" data-station={station} data-tentative={shift.status === "tentative"}>
       <dt><Icon size={15} aria-hidden="true"/><span>{shift.role || "Team"}</span></dt>
       <dd>

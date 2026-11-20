@@ -29,7 +29,7 @@ test('Showtime team follows the event night across midnight and then the next ev
 
 test('future event without shifts does not borrow another evening’s team; date is Berlin', () => {
  const shifts=[{date:'2026-11-20',names:['Hamad']},{date:'2026-11-21',names:['Chelly']}];
- assert.deepEqual(showtimeTeam(shifts,ms('2026-11-20T23:30:00Z')/1000),{date:'2026-11-21',people:[{name:'Chelly',tentative:false}]});
+ assert.deepEqual(showtimeTeam(shifts,ms('2026-11-20T23:30:00Z')/1000),{date:'2026-11-21',people:[{name:'Chelly',tentative:false,station:'team',roles:['Team']}]});
  assert.deepEqual(showtimeTeam(shifts,ms('2026-11-25T21:00:00+01:00')/1000).people,[]);
 });
 
@@ -38,7 +38,41 @@ test('team names appear once across roles and tentative assignments remain expli
  const shifts=[{date,names:['Adri','Joab'],status:'tentative'},
   {date,names:[' adri ','Hamad'],role:'Bar'}, {date,names:['Joab'],status:'tentative',role:'Backstage'}];
  assert.deepEqual(showtimeTeam(shifts,ms(date+'T21:00:00+01:00')/1000).people,
-  [{name:'Adri',tentative:false},{name:'Joab',tentative:true},{name:'Hamad',tentative:false}]);
+  [{name:'Adri',tentative:false,station:'bar',roles:['Team','Bar']},
+   {name:'Joab',tentative:true,station:'backstage',roles:['Team','Backstage']},
+   {name:'Hamad',tentative:false,station:'bar',roles:['Bar']}]);
+});
+
+test('team stations follow each evening’s roster, including combined and open assignments', () => {
+ const date='2026-11-19';
+ const shifts=[{date,names:['Chelly','Adri'],role:'Bar inkl. Backstage'},
+  {date,names:['Laura'],role:'Service'}, {date,names:['Ana'],role:'Door'},
+  {date,names:['Joab'],role:'Backstage (noch offen)',status:'tentative'},
+  {date,names:['Sam'],role:'Team · Aufgaben noch offen'},
+  {date:'2026-11-20',names:['Chelly'],role:'Backstage'}];
+ const today=showtimeTeam(shifts,ms(date+'T21:00:00+01:00')/1000).people;
+ assert.deepEqual(today.map(p=>[p.name,p.station]),[
+  ['Chelly','bar'],['Adri','bar'],['Laura','service'],['Ana','door'],['Joab','backstage'],['Sam','team']]);
+ assert.equal(today.find(p=>p.name==='Joab').tentative,true);
+ assert.deepEqual(today[0].roles,['Bar inkl. Backstage']);
+ assert.equal(showtimeTeam(shifts,ms('2026-11-20T21:30:00+01:00')/1000).people[0].station,'backstage');
+});
+
+test('confirmed role wins over tentative role in either order; multiple roles remain available', () => {
+ const date='2026-11-19',start=ms(date+'T21:00:00+01:00')/1000;
+ const confirmed={date,names:['Adri'],role:'Bar'};
+ const tentative={date,names:['Adri'],role:'Backstage',status:'tentative'};
+ for(const shifts of [[confirmed,tentative],[tentative,confirmed]]) {
+  const [person]=showtimeTeam(shifts,start).people;
+  assert.equal(person.station,'bar'); assert.equal(person.tentative,false);
+  assert.deepEqual([...person.roles].sort(),['Backstage','Bar']);
+ }
+ const [multi]=showtimeTeam([confirmed,{...confirmed,role:'Service'},confirmed],start).people;
+ assert.equal(multi.station,'bar'); assert.deepEqual(multi.roles,['Bar','Service']);
+ const unknown={...confirmed,role:'Aufgaben noch offen'};
+ for(const shifts of [[unknown,tentative],[tentative,unknown]]) {
+  assert.equal(showtimeTeam(shifts,start).people[0].station,'team');
+ }
 });
 test('Friday, Saturday, Sunday and special times come from the actual event', () => {
  for(const [start,doors] of [

@@ -2,6 +2,7 @@ import type { TicketNight } from './tickets';
 import type { Shift } from './types';
 import { serviceDate } from './service-day';
 import { ticketDay } from './ticket-weeks';
+import { stationFor, type Station } from './stations';
 
 const clock = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' });
 const date = new Intl.DateTimeFormat('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: '2-digit', month: '2-digit' });
@@ -36,16 +37,25 @@ export function showtime(nights: TicketNight[], now: number) {
 // Match the displayed event's Berlin date, never the device date or today's roster.
 export function showtimeTeam(shifts: Shift[], start: number) {
   const date = ticketDay(start);
-  const people = new Map<string, { name: string; tentative: boolean }>();
+  const people = new Map<string, { name: string; tentative: boolean; station: Station; roles: string[] }>();
   for (const shift of shifts.filter(shift => shift.date === date)) {
+    const tentative = shift.status === 'tentative';
+    const station = stationFor(shift.role);
+    const role = shift.role?.trim() || 'Team';
     for (const rawName of shift.names) {
       const name = rawName.trim();
       if (!name) continue;
       const key = name.normalize('NFC').toLocaleLowerCase('de-DE');
       const prior = people.get(key);
+      // Prefer a confirmed assignment; among equal statuses, prefer a known
+      // station. Multiple confirmed stations keep the first roster assignment.
+      const useStation = !prior || (prior.tentative && !tentative)
+        || (prior.tentative === tentative && prior.station === 'team');
       people.set(key, {
         name: prior?.name ?? name,
-        tentative: (prior?.tentative ?? true) && shift.status === 'tentative',
+        tentative: (prior?.tentative ?? true) && tentative,
+        station: useStation ? station : prior.station,
+        roles: [...new Set([...(prior?.roles ?? []), role])],
       });
     }
   }

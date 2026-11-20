@@ -38,3 +38,22 @@ test('failed historical tickets are rejected and can be retried, not cached as e
  fail=false;
  assert.equal((await readNightHistory('retry-test','2026-09')).quiet,1);
 });
+
+test('shared month summary counts packages and guests across past and upcoming dates, not purchase dates', async t => {
+ const { readMonthSummary } = await import('../lib/staff/tickets.ts');
+ t.mock.method(Date, 'now', () => Date.parse('2026-11-20T15:00:00Z'));
+ const event = (id,date) => ({ id, name:'Concert', status:'published', start:{ date,unix:1 } });
+ const events = [event('past','2026-11-03'),event('upcoming','2026-11-28'),event('other','2026-10-31')];
+ t.mock.method(globalThis, 'fetch', async input => {
+  const u = new URL(input);
+  if(u.pathname.endsWith('/events')) return page(events);
+  const id=u.searchParams.get('event_id'); assert.notEqual(id,'other');
+  const row=(tid,description,extra={})=>({id:tid,event_id:id,status:'valid',description,created_at:1,...extra});
+  return page(id==='past' ? [row('a','Club - 3 Guests'),row('b','VIP Table - 4 Guests'),row('c','Club - 4 Guests',{status:'void'}),row('d','Club - 2 Guests',{add_on_id:'extra'})] : [row('e','Worldstar VIP - 2 Guests'),row('f','Premium - 2 Guests'),row('g','Unrecognized admission')]);
+ });
+ const summary=await readMonthSummary('shared-month-test','2026-11');
+ assert.deepEqual(summary.counts,{soldOut:0,busy:0,half:0,quiet:1,unclear:0});
+ assert.deepEqual(summary.monthlyGuests,{count:11,unknownPackages:1});
+ assert.deepEqual(summary.monthlyTables,{vip:1,worldstar:1});
+ assert.deepEqual(summary.monthlyCategories,{Club:1,'Club Plus':0,Premium:1,VIP:1,'Worldstar VIP':1,'Weitere Tickets':1});
+});

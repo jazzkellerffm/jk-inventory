@@ -4,30 +4,12 @@ import { NightHistory } from "./night-history";
 import { TicketPurchaseMonitor } from "./ticket-activity";
 import { TicketLoader } from "./ticket-loader";
 import {useState} from "react";
-import { ticketCategories } from "@/lib/staff/entitlements";
 import {ticketDay,weekDay} from "@/lib/staff/ticket-weeks";
 import type {TicketFeed} from "@/lib/staff/tickets";
 
 const eventDate = new Intl.DateTimeFormat("de-DE", {
   timeZone: "Europe/Berlin", weekday: "short", day: "2-digit", month: "2-digit",
 });
-
-type ChartRow = [label: string, hint: string, count: number, tone: string];
-
-function MonthlyBars({rows}: {rows: ChartRow[]}) {
-  const total = rows.reduce((sum, [, , count]) => sum + count, 0);
-  return <dl className="mt-3 space-y-3">
-    {rows.map(([label, hint, count, tone]) => <div key={label} className="grid grid-cols-[1fr_auto] items-baseline gap-x-2 gap-y-1">
-      <dt className="flex flex-wrap items-baseline gap-x-2">
-        <b>{label}</b>{hint && <small className="text-[var(--muted)]">{hint}</small>}
-      </dt>
-      <dd className="font-bold tabular-nums">{count}</dd>
-      <div aria-hidden="true" className="col-span-2 h-2 overflow-hidden rounded-full bg-black/[0.035]">
-        <div className={tone + " h-full rounded-full"} style={{width: (total ? 100 * count / total : 0) + "%"}}/>
-      </div>
-    </div>)}
-  </dl>;
-}
 
 export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|null;example:boolean;state:string;refreshing:boolean}){
   const [week,setWeek]=useState(0);
@@ -43,10 +25,6 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
     .slice(0, 15) ?? [];
   const limits = [5, 10, 15].filter(limit => limit === 5 || ranked.length > limit - 5);
   const visibleLimit = Math.min(eventLimit, limits[limits.length - 1]);
-  const categories = ticketCategories.map(label => ({ label, count: feed?.monthlyCategories?.[label] ?? 0 }))
-    .filter(row => row.label !== "Weitere Tickets" || row.count > 0)
-    .sort((a,b) => b.count - a.count);
-  const highest = categories[0].count;
   const max=Math.max(1,...nights.map(n=>n.guests));
   const pct=total?Math.round(recent/total*100):0;
   if (!feed) return <details className="staff-panel perf-panel" id="performance" onToggle={e=>setOpened(e.currentTarget.open)}>
@@ -54,7 +32,6 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
     {state === "loading" || refreshing ? <TicketLoader label="Venue Performance wird geladen"/> :
       <p role="status">{state === "setup" ? "Ticket Tailor ist noch nicht verbunden." : "Verkaufsdaten derzeit nicht verfügbar."}</p>}
   </details>;
-  const monthLabel = new Intl.DateTimeFormat("de-DE", {month:"long", year:"numeric", timeZone:"Europe/Berlin"}).format(feed.asOf * 1000);
   return <details className="staff-panel perf-panel" id="performance" onToggle={e=>setOpened(e.currentTarget.open)}><summary>Venue Performance</summary>
     <div className="service-switch week-switch" role="group" aria-label="Performance-Woche">{[0,1,2,3].map(i=><button key={i} type="button" aria-pressed={i===week} onClick={()=>setWeek(i)}>{i===0?"Aktuell":"+"+i+" Wo."}</button>)}</div>
     <p>{example?"Beispieldaten":"Ticket Tailor"} · {weekDay(now,week*7).split("-").reverse().join(".")}{refreshing && " · Wird aktualisiert …"}</p>
@@ -66,37 +43,6 @@ export function Performance({feed,example,state,refreshing}:{feed:TicketFeed|nul
     <TicketPurchaseMonitor activity={feed.ticketActivity}/>
     <BookingLead enabled={opened} example={example}/>
     <NightHistory feed={feed} enabled={opened} example={example}/>
-    {feed.monthlyGuests && <section className="mt-4 flex items-baseline justify-between gap-3 border-t border-[var(--line)] pt-4">
-      <div>
-        <h3 className="font-poly-bulky">Gebuchte Gäste im Monat</h3>
-        <p className="text-sm text-[var(--muted)]">Alle Konzerttermine · {monthLabel}</p>
-        {feed.monthlyGuests.unknownPackages > 0 && <small className="text-[var(--muted)]">
-          {feed.monthlyGuests.unknownPackages === 1 ? "1 Ticketpaket ohne Gästezahl" : feed.monthlyGuests.unknownPackages + " Ticketpakete ohne Gästezahl"}
-        </small>}
-      </div>
-      <strong className="perf-monthly-guests-value shrink-0 whitespace-nowrap">
-        {feed.monthlyGuests.unknownPackages > 0 && "≥ "}{feed.monthlyGuests.count.toLocaleString("de-DE")}
-      </strong>
-    </section>}
-    {feed?.monthlyTables && <section className="mt-4 border-t border-[var(--line)] pt-4">
-      <h3 className="font-bold">VIP-Tische · {monthLabel}</h3>
-      <MonthlyBars rows={[
-        ["VIP", "", feed.monthlyTables.vip, "bg-[#dbe8df]"],
-        ["Worldstar VIP", "", feed.monthlyTables.worldstar, "bg-[#f4e3e3]"],
-      ]}/>
-      <p className="mt-2 text-sm text-[var(--muted)]">Gebuchte Tische für Veranstaltungen in diesem Monat</p>
-    </section>}
-    {feed?.monthlyCategories && <details className="mt-4 border-t border-[var(--line)] pt-4">
-      <summary>Ticketkategorien im Vergleich</summary>
-      <p className="text-sm text-[var(--muted)]">{monthLabel} · Gebuchte Ticketpakete</p>
-      {highest ? <ol className="mt-3 space-y-3">{categories.map(({label,count}) =>
-        <li key={label}>
-          <div className="flex items-baseline justify-between gap-3"><b>{label}</b><b className="tabular-nums">{count}</b></div>
-          <div aria-hidden="true" className="mt-1 h-3 overflow-hidden rounded-full bg-[#e8eeea]">
-            <div className="ticket-fill" style={{width:count / highest * 100 + "%"}}/>
-          </div>
-        </li>)}</ol> : <p>Noch keine gebuchten Ticketpakete für diesen Monat.</p>}
-    </details>}
     {feed && <details className="mt-4 border-t border-[var(--line)] pt-4">
       <summary>Kommende Events im Vergleich</summary>
       {limits.length > 1 && <div className="service-switch" role="group" aria-label="Anzahl kommender Events">

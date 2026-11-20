@@ -265,9 +265,13 @@ async function collectBookingLead(key: string, today: string) {
   return feed;
 }
 
-// Only load a historical month when requested; failed/partial reads never become zero counts.
-const nightHistoryCache = new Map<string, { key: string; until: number; data: Promise<NightCounts> }>();
+export type MonthSummary = Pick<TicketFeed, 'monthlyGuests' | 'monthlyCategories' | 'monthlyTables'> & { counts: NightCounts };
 export async function readNightHistory(key: string, month: string) {
+  return (await readMonthSummary(key, month)).counts;
+}
+// Only load a historical month when requested; failed/partial reads never become zero counts.
+const nightHistoryCache = new Map<string, { key: string; until: number; data: Promise<MonthSummary> }>();
+export async function readMonthSummary(key: string, month: string) {
   const now = Date.now();
   const today = serviceDate(now);
   const cached = nightHistoryCache.get(month);
@@ -278,11 +282,13 @@ export async function readNightHistory(key: string, month: string) {
   data.catch(() => { if (nightHistoryCache.get(month)?.data === data) nightHistoryCache.delete(month); });
   return data;
 }
-async function collectNightHistory(key: string, month: string, today: string): Promise<NightCounts> {
+async function collectNightHistory(key: string, month: string, today: string): Promise<MonthSummary> {
   const { isCancelledEvent } = await import('./battle-math');
   const auth = 'Basic ' + Buffer.from(key + ':').toString('base64');
   const active = (await pages<EventRow>('events', {}, auth)).filter(e => !isCancelledEvent(e) && ['published', 'close_sales', 'sales_closed'].includes(e.status));
-  const events = active.filter(e => e.start?.date?.startsWith(month) && e.start.date < today);
+  const events = active.filter(e => e.start?.date?.startsWith(month));
+  const monthlyGuests = { count: 0, unknownPackages: 0 };
+  const monthlyCategories: TicketFeed['monthlyCategories'] = { Club: 0, 'Club Plus': 0, Premium: 0, VIP: 0, 'Worldstar VIP': 0, 'Weitere Tickets': 0 };
   const completed = new Map<string, { soldOut: boolean; guests: number; unknown: number }>();
   for (let i = 0; i < events.length; i += 3) {
     await Promise.all(events.slice(i, i + 3).map(async event => {
@@ -291,10 +297,12 @@ async function collectNightHistory(key: string, month: string, today: string): P
       night.soldOut &&= (event.unavailable === true || event.unavailable === 'true') && ['sold out', 'fully booked'].includes(event.unavailable_status?.trim().toLowerCase() ?? '');
       for (const ticket of tickets) {
         if (ticket.event_id !== event.id || ticket.status !== 'valid' || ticket.add_on_id) continue;
+        monthlyCategories[ticketCategory(ticket.description ?? '')]++;
         const size = packageSize(ticket.description ?? '');
-        if (size) night.guests += Number(size); else night.unknown++;
+        if (size) { night.guests += Number(size); monthlyGuests.count += Number(size); }
+        else { night.unknown++; monthlyGuests.unknownPackages++; }
       }
-      completed.set(event.start.date, night);
+      if (event.start.date < today) completed.set(event.start.date, night);
     }));
   }
   const counts: NightCounts = { soldOut: 0, busy: 0, half: 0, quiet: 0, unclear: 0 };
@@ -305,5 +313,5 @@ async function collectNightHistory(key: string, month: string, today: string): P
     else if (night.guests >= 25) counts.half++;
     else counts.quiet++;
   }
-  return counts;
+  return { counts, monthlyGuests, monthlyCategories, monthlyTables: { vip: monthlyCategories.VIP, worldstar: monthlyCategories["Worldstar VIP"] } };
 }

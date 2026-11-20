@@ -65,8 +65,9 @@ export function NightHistory({ feed, enabled, example }: { feed: TicketFeed; ena
     onTouchStart={e => { const t = e.touches[0]; touch.current = { x: t.clientX, y: t.clientY }; }}
     onTouchCancel={() => { touch.current = null; }}
     onTouchEnd={e => { const start = touch.current; touch.current = null; if (!start) return; const t = e.changedTouches[0]; const dx = t.clientX - start.x; const dy = t.clientY - start.y; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) move(dx > 0 ? -1 : 1); }}>
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <h3 className="font-poly-bulky">Monatsübersicht · {label}</h3>
+    <h3 className="font-poly-bulky">Monatsübersicht</h3>
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+      <p className="min-w-0 font-poly-bulky">{label}</p>
       <div className="flex gap-1" role="group" aria-label="Monat wechseln">
         <button className={buttonClass} type="button" aria-label="Vorheriger Monat" disabled={month <= earliest} onClick={() => move(-1)}><ChevronLeft size={20}/></button>
         <button className={buttonClass} type="button" aria-label="Nächster Monat" disabled={month >= current} onClick={() => move(1)}><ChevronRight size={20}/></button>

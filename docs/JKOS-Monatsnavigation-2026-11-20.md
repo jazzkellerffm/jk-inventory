@@ -37,3 +37,6 @@ Auf Wunsch am 20. November: Kreisrahmen entfernt. Pfeile bleiben unverändert, m
 Produktionsstand: `1fd28c4ad3b0113e29358285114150b6cca660c1`.
 Sicherungszweig: `checkpoint/before-shared-month-2026-11-20`.
 Der historische Endpunkt liefert alle vier Auswertungen in einer Antwort. Der Client übernimmt sie gemeinsam. Der bestehende `counts`-Wert bleibt kompatibel. Zusätzlicher Test prüft vergangene und kommende Termine, Personen pro Paket, VIP-Tabellen sowie ausgeschlossene ungültige Tickets und Add-ons.
+
+## Stabile Monatsnavigation
+Überschrift bewusst in zwei Zeilen: „Monatsübersicht“, darunter Monat/Jahr links und Pfeile in einer festen rechten Grid-Spalte. Lange Monatsnamen verschieben die Navigation nicht mehr in eine neue Zeile. Unsichtbare 44-px-Tippflächen bleiben erhalten. Reine Layoutänderung.

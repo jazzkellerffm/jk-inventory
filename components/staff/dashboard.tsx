@@ -14,6 +14,7 @@ import type { FoodOrder } from "@/lib/staff/food";
 import { MaskedRevenue } from "./masked-revenue";
 import { FoodOrders } from "./food-orders";
 import { BarEvenings } from "./bar-evenings";
+import { Showtime } from "./showtime";
 import { Bestsellers } from "./bestsellers";
 import { QuickMenu } from "./quick-menu";
 import { NightDrinks, TicketSales, useTicketFeed } from "./ticket-sales";
@@ -127,11 +128,14 @@ export function StaffDashboard({ example }: { example?: StaffBoard }) {
       </div>
       <OrderAlerts bookings={tickets.feed?.bookingAlerts} onBooking={openBooking} board={board} food={foodOrders} demo={!!example}/>
       <section aria-labelledby="activity" className="staff-activity staff-panel">
+          <Showtime feed={tickets.feed} state={tickets.state} now={example && snapshot ? snapshot.getTime() : checkedAt} example={!!example}/>
+          <div className="staff-activity-body">
           <div className="staff-section-head"><span className="staff-eyebrow"><Activity size={17}/> SumUp</span><span className={`staff-status ${stale ? "staff-warn" : ""}`} role="status"><i/>{status}</span></div>
           <h2 id="activity">Baraktivität</h2>
           <div className="staff-metric"><strong>{lastFive ?? "–"}</strong><span>Zahlungen<br/>in 5 Minuten</span></div>
           {feed ? <ActivityChart feed={feed}/> : loading && !error && !board ? <TicketLoader label="Zahlungen werden geladen"/> : <p className="staff-placeholder">{message}</p>}
           <p className="staff-note"><Clock3 size={14}/>{stale && feed ? "Letzter Stand · " + time.format(new Date(feed.asOf)) + " Uhr" : example ? "Beispielabend · 60 Minuten" : "Aktualisierung alle 15 Sekunden"}</p>
+          </div>
         </section>
 
       <section id="barpegel" className="staff-panel bar-load" aria-labelledby="load-title" data-level={level}>

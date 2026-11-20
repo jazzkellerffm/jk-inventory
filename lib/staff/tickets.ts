@@ -8,7 +8,7 @@ import { ticketCategory, includedDrinks, packageSize, paidSupply, type Supply } 
 type EventRow = { id: string; name: string; status: string; unavailable?: boolean | string; unavailable_status?: string | null; start: { unix: number; date: string } };
 type Ticket = { id: string; event_id: string; description: string; status: string; add_on_id?: string; created_at: number };
 export type TicketNight = { soldOut?: boolean; id: string; name: string; start: number; guests: number; recent: number; drinks: number; unknown: number };
-type NightCounts = { soldOut: number; busy: number; half: number; quiet: number; unclear: number };
+export type NightCounts = { soldOut: number; busy: number; half: number; quiet: number; unclear: number };
 export type BookingAlert = { id: string; at: number; label: string; eventId?: string; eventDate?: string; eventName?: string };
 type BookingLine = { ticket: string; eventId?: string; event?: string; date?: string };
 export type TicketFeed = { ticketActivity?: TicketActivity; monthlyGuests: { count: number; unknownPackages: number }; bookingDay?: { count: number; recent: { id: string; at: number; lines: BookingLine[] }[] }; bookingAlerts?: BookingAlert[]; monthlyNights?: NightCounts; foodPreorders?: number | null; asOf: number; nights: TicketNight[]; monthlyCategories: Record<ReturnType<typeof ticketCategory>, number>; monthlyTables: { vip: number; worldstar: number } };
@@ -263,4 +263,47 @@ async function collectBookingLead(key: string, today: string) {
     }));
   }
   return feed;
+}
+
+// Only load a historical month when requested; failed/partial reads never become zero counts.
+const nightHistoryCache = new Map<string, { key: string; until: number; data: Promise<NightCounts> }>();
+export async function readNightHistory(key: string, month: string) {
+  const now = Date.now();
+  const today = serviceDate(now);
+  const cached = nightHistoryCache.get(month);
+  if (cached?.key === key && cached.until > now) return cached.data;
+  const data = collectNightHistory(key, month, today);
+  nightHistoryCache.set(month, { key, until: now + 300_000, data });
+  if (nightHistoryCache.size > 13) nightHistoryCache.delete(nightHistoryCache.keys().next().value!);
+  data.catch(() => { if (nightHistoryCache.get(month)?.data === data) nightHistoryCache.delete(month); });
+  return data;
+}
+async function collectNightHistory(key: string, month: string, today: string): Promise<NightCounts> {
+  const { isCancelledEvent } = await import('./battle-math');
+  const auth = 'Basic ' + Buffer.from(key + ':').toString('base64');
+  const active = (await pages<EventRow>('events', {}, auth)).filter(e => !isCancelledEvent(e) && ['published', 'close_sales', 'sales_closed'].includes(e.status));
+  const events = active.filter(e => e.start?.date?.startsWith(month) && e.start.date < today);
+  const completed = new Map<string, { soldOut: boolean; guests: number; unknown: number }>();
+  for (let i = 0; i < events.length; i += 3) {
+    await Promise.all(events.slice(i, i + 3).map(async event => {
+      const tickets = await pages<Ticket>('issued_tickets', { event_id: event.id, status: 'valid' }, auth);
+      const night = completed.get(event.start.date) ?? { soldOut: true, guests: 0, unknown: 0 };
+      night.soldOut &&= (event.unavailable === true || event.unavailable === 'true') && ['sold out', 'fully booked'].includes(event.unavailable_status?.trim().toLowerCase() ?? '');
+      for (const ticket of tickets) {
+        if (ticket.event_id !== event.id || ticket.status !== 'valid' || ticket.add_on_id) continue;
+        const size = packageSize(ticket.description ?? '');
+        if (size) night.guests += Number(size); else night.unknown++;
+      }
+      completed.set(event.start.date, night);
+    }));
+  }
+  const counts: NightCounts = { soldOut: 0, busy: 0, half: 0, quiet: 0, unclear: 0 };
+  for (const night of completed.values()) {
+    if (night.soldOut) counts.soldOut++;
+    else if (night.guests >= 45) counts.busy++;
+    else if (night.unknown) counts.unclear++;
+    else if (night.guests >= 25) counts.half++;
+    else counts.quiet++;
+  }
+  return counts;
 }

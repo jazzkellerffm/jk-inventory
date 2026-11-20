@@ -33,4 +33,5 @@ Für einen Rückbau die Showtime-Ergänzung gezielt in einem neuen Commit entfer
 - 64 Staff-Tests bestanden, einschließlich Einlass/Show, Wochenend-/Sonderzeiten, Mitternacht, 03:00-Umschaltung, Sommerzeit und Sold-out-/Gästegrenzen.
 - TypeScript, gezielter ESLint-Lauf und Next.js-Produktionsbuild bestanden.
 - Safari-Select-Komponente und ihre Styles nicht verändert.
-- Visuelle Geräteprüfung steht aus: lokales WebKit scheitert an fehlenden Systembibliotheken, Chromium an gesperrten Browser-Sockets. Kein erfolgreicher Safari-/Screenshot-Test behauptet.
+- Veröffentlichte Desktop-Demo unter `https://staff.jazzkeller.com/staff/demo` im Cloud-Browser visuell geprüft: Showtime mit Gustavo-Zeit, Rosé-Balken und bestehendem Zahlungsdiagramm wird korrekt dargestellt.
+- Visuelle iPhone-/Safari-Prüfung steht aus: lokales WebKit scheitert an fehlenden Systembibliotheken, Chromium an gesperrten Browser-Sockets. Die erfolgreiche Desktop-Prüfung ersetzt keinen mobilen Safari-Test.

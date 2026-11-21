@@ -550,14 +550,14 @@
 .admin-total strong { display:block; font-family:var(--staff-display),sans-serif; font-size:clamp(30px,6vw,44px); margin:8px 0; overflow-wrap:anywhere; }
 .admin-values { margin:16px 0; }
 .admin-values > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; padding:12px 0; border-bottom:1px solid #d9dcd5; }
-.admin-values dd { text-align:right; white-space:nowrap; font-family:var(--font-poly-bulky-only),sans-serif; }
+.admin-values dd { text-align:right; white-space:nowrap; font-family:var(--staff-display),sans-serif; font-weight:700; }
 .admin-night { border-bottom:1px solid var(--line); }
 .admin-night>summary { display:grid; grid-template-columns:minmax(0,1fr) auto 18px; align-items:center; gap:12px; min-height:80px; padding:16px 0; list-style:none; }
 .admin-night-title { display:flex; flex-direction:column; min-width:0; gap:3px; }
 .admin-night-title time, .admin-night-value small { font-size:12px; color:var(--muted); font-weight:400; }
 .admin-night-title>span { font-family:var(--font-poly-bulky-only),sans-serif; font-size:16px; line-height:1.35; overflow-wrap:anywhere; }
 .admin-night-value { display:flex; flex-direction:column; align-items:flex-end; gap:3px; white-space:nowrap; }
-.admin-night-value strong { font-family:var(--font-poly-bulky-only),sans-serif; font-size:16px; font-weight:400; }
+.admin-night-value strong { font-family:var(--staff-display),sans-serif; font-weight:700; font-size:16px; font-weight:400; }
 .admin-night-revenue { appearance:none; border:0; background:transparent; color:inherit; font:inherit; text-align:right; padding:6px 0 6px 8px; min-height:44px; cursor:pointer; border-radius:8px; }
 .admin-night-revenue small { display:flex; align-items:center; justify-content:flex-end; gap:5px; }
 .admin-night-revenue:disabled { cursor:default; opacity:1; }
@@ -588,9 +588,9 @@
 
 /* Private evening overview: the staff palette, with compact figures. */
 .admin-dashboard { margin:24px 0 30px; }
-.admin-evening { padding:0; border-radius:22px; background:#294d43; color:#f5ecd2; overflow:hidden; }
-.admin-evening-primary { padding:20px 20px 18px; }
-.admin-evening-secondary { padding:0 20px 12px; background:#f4e3e3; color:#294d43; border-top:1px dashed #b78e88; }
+.admin-evening { padding:0; border-radius:0; background:transparent; color:#f5ecd2; }
+.admin-evening-primary { padding:20px 20px 18px; background:#294d43; border-radius:22px; }
+.admin-evening-secondary { padding:0 20px 12px; margin-top:0; background:#f4e3e3; color:#294d43; border:0; border-top:1px dashed #b78e88; border-radius:22px; }
 .admin-evening-secondary .admin-evening-bar { border:0; padding-top:16px; margin-top:0; }
 .admin-evening-secondary .admin-evening-bar small, .admin-evening-secondary .admin-evening-note, .admin-evening-secondary .admin-evening-details, .admin-evening-secondary .admin-evening-footer { color:#53625a; }
 .admin-evening-secondary .admin-evening-details .admin-values>div { border-color:#d8bdbc; }
@@ -608,13 +608,13 @@
 .admin-evening-split span:last-child { background:#a9c7b6; }
 .admin-evening-sources { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
 .admin-evening-sources dt { display:flex; align-items:center; gap:5px; font-size:12px; color:#d7e1d9; }
-.admin-evening-sources dd { font-family:var(--font-poly-bulky-only),sans-serif; font-size:clamp(18px,4.3vw,25px); margin-top:4px; overflow-wrap:anywhere; }
+.admin-evening-sources dd { font-family:var(--staff-display),sans-serif; font-weight:700; font-size:clamp(18px,4.3vw,25px); margin-top:4px; overflow-wrap:anywhere; }
 .admin-evening-sources i { display:inline-block; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
 .admin-key-ticket { background:#efc4ba; }
 .admin-key-bar { background:#a9c7b6; }
 .admin-evening-bar { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px 16px; margin-top:16px; padding-top:12px; border-top:1px solid #668378; font-size:13px; }
 .admin-evening-bar small { display:block; color:#d7e1d9; font-size:11px; max-width:42ch; margin-top:3px; }
-.admin-evening-bar strong { font-family:var(--font-poly-bulky-only),sans-serif; font-size:21px; white-space:nowrap; }
+.admin-evening-bar strong { font-family:var(--staff-display),sans-serif; font-weight:700; font-size:21px; white-space:nowrap; }
 .admin-evening-note { font-size:12px; color:#d7e1d9; margin-top:12px; line-height:1.5; }
 .admin-evening-details { margin-top:8px; color:#d7e1d9; font-size:12px; }
 .admin-evening-details summary { min-height:44px; display:flex; align-items:center; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }

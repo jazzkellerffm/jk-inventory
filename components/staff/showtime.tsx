@@ -26,7 +26,7 @@ export function Showtime({ feed, state, now, example = false, shifts, teamUnavai
         </div>
         <div className={styles.countdown} role="timer">
           <span>{info.label}</span>
-          <strong>{info.value}</strong>
+          {info.value && <strong>{info.value}</strong>}
         </div>
       </div>
       <div className={styles.track} role="meter" aria-label="Gebuchte Gäste · Richtwert 60"

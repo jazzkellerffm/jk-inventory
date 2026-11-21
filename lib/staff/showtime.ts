@@ -18,17 +18,17 @@ export function showtime(nights: TicketNight[], now: number) {
   if (!night) return null;
   const start = night.start * 1000;
   const doors = start - 3_600_000;
-  const phase = now < doors ? 'doors' : now < start ? 'show' : 'started';
+  const phase = now < doors ? 'doors' : now < start ? 'show' : ticketDay(now / 1000) > ticketDay(night.start) ? 'ended' : 'started';
   const target = phase === 'doors' ? doors : start;
   const minutes = Math.max(0, Math.ceil((target - now) / 60_000));
   const days = Math.round((Date.parse(ticketDay(target / 1000)) - Date.parse(ticketDay(now / 1000))) / 86_400_000);
-  const value = phase === 'started' ? clock.format(start)
+  const value = phase === 'ended' ? '' : phase === 'started' ? clock.format(start)
     : days > 0 ? days === 1 ? 'morgen' : 'in ' + days + ' Tagen'
     : minutes >= 60 ? Math.floor(minutes / 60) + ' Std.' + (minutes % 60 ? ' ' + minutes % 60 + ' Min.' : '')
     : minutes + ' Min.';
   return {
     night, phase, value,
-    label: phase === 'started' ? 'Showtime seit' : phase === 'doors' ? days > 0 ? 'Einlass' : 'Einlass in' : days > 0 ? 'Show' : 'Show in',
+    label: phase === 'ended' ? 'Show ended' : phase === 'started' ? 'Showtime seit' : phase === 'doors' ? days > 0 ? 'Einlass' : 'Einlass in' : days > 0 ? 'Show' : 'Show in',
     date: date.format(start), doors: clock.format(doors), start: clock.format(start),
     percent: night.soldOut ? 100 : Math.max(0, Math.min(100, night.guests / referenceGuests * 100)),
   };

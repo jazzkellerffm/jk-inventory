@@ -108,3 +108,16 @@ test('occupancy uses guests, clamps overflow and respects explicit sold out even
   assert.equal(info.percent,expected);assert.equal(info.night.soldOut,soldOut);assert.equal(info.night.unknown,1);
  }
 });
+
+ test('Berlin midnight ends the display, while 03:00 still changes the event', () => {
+ const nights=[night('2026-11-20T21:30:00+01:00'),night('2026-11-21T21:30:00+01:00')];
+ assert.equal(showtime(nights,ms('2026-11-20T23:59:59+01:00')).phase,'started');
+ for (const time of ['00:00:00','01:29:00','02:59:59']) {
+  const info=showtime(nights,ms('2026-11-21T'+time+'+01:00'));
+  assert.equal(info.phase,'ended'); assert.equal(info.label,'Show ended'); assert.equal(info.value,'');
+  assert.equal(info.night.id,nights[0].id);
+ }
+ assert.equal(showtime(nights,ms('2026-11-21T03:00:00+01:00')).night.id,nights[1].id);
+ const summer=[night('2026-07-10T21:30:00+02:00')];
+ assert.equal(showtime(summer,ms('2026-07-11T00:00:00+02:00')).phase,'ended');
+});

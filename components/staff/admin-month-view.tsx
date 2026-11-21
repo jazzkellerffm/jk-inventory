@@ -1,4 +1,6 @@
-import { ChevronDown } from 'lucide-react';
+'use client';
+import { useEffect, useState } from 'react';
+import { ChevronDown, RefreshCw } from 'lucide-react';
 import { ticketTotal } from '@/lib/staff/admin/finance';
 import { serviceDate } from '@/lib/staff/service-day';
 import type { AdminSummary } from '@/lib/staff/admin/data';
@@ -6,6 +8,23 @@ import type { AdminSummary } from '@/lib/staff/admin/data';
 export type AdminMode = 'payments' | 'events';
 const money = (value: number | null | undefined) => value == null ? '—' : new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value / 100);
 const day = (value: string) => new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(value + 'T12:00:00Z'));
+
+function EventRevenue({ ticket, sumup }: { ticket: number | null; sumup: number | null }) {
+  const [combined, setCombined] = useState(false);
+  useEffect(() => {
+    if (!combined) return;
+    const timer = window.setTimeout(() => setCombined(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [combined]);
+  const available = ticket !== null && sumup !== null;
+  return <button type="button" className="admin-night-value admin-night-revenue" disabled={!available}
+    aria-label={available ? (combined ? 'Ticket Tailor gesamt anzeigen' : 'Gesamtumsatz inklusive SumUp anzeigen') : 'Gesamtumsatz noch nicht verfügbar'}
+    title={available ? 'Antippen zum Wechseln zwischen Ticket Tailor und Gesamtumsatz' : 'SumUp noch nicht vollständig abgeglichen'}
+    onClick={event => { event.preventDefault(); event.stopPropagation(); setCombined(value => !value); }}>
+    <small>{combined ? 'Gesamtumsatz' : 'Ticket Tailor gesamt'}{available && <RefreshCw size={11} aria-hidden="true" />}</small>
+    <strong aria-live="polite">{money(combined && available ? ticket + sumup : ticket)}</strong>
+  </button>;
+}
 
 function Calculation({ children }: { children: React.ReactNode }) {
   return <details className="admin-calculation">
@@ -58,13 +77,13 @@ export function AdminMonthView({ data, mode, retry }: { data: AdminSummary; mode
       {eventComplete && !nights.length && <p className="admin-note">Keine gültigen Ticketpakete für diesen Monat vorhanden.</p>}
       {nights.map(night => {
         const sameDate = nights.filter(other => other.date === night.date).length;
-        const bar = data.bar && sameDate === 1 && night.date <= serviceDate(data.asOf)
+        const bar = data.bar && data.bar.paymentIssues === 0 && sameDate === 1 && night.date <= serviceDate(data.asOf)
           ? Object.hasOwn(data.bar.nights, night.date) ? data.bar.nights[night.date] : 0 : null;
         const gastro = !night.uncertain && bar != null && night.includedCents != null ? bar + night.includedCents : null;
         return <details className="admin-night" key={night.id} name="admin-event">
           <summary>
             <span className="admin-night-title"><time dateTime={night.date}>{day(night.date)}</time><span>{night.name}</span></span>
-            <span className="admin-night-value"><small>Ticket Tailor gesamt</small><strong>{money(ticketTotal(night))}</strong></span>
+            <EventRevenue ticket={ticketTotal(night)} sumup={bar} />
             <ChevronDown size={18} aria-hidden="true" />
           </summary>
           {night.uncertain ? <p className="admin-note">Zuordnung wird geprüft · keine verlässliche Aufteilung.</p> : <dl className="admin-values">

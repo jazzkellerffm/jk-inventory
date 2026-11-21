@@ -13,12 +13,13 @@ export type Valuation = { drinkCents: number; bottles: Record<string, number>;
   clubPerGuest: Record<string, number> };
 export type NightFinance = { id: string; name: string; date: string; ticketCents: number;
   feeCents: number; addonCents: number; guests: number; includedCents: number | null;
+  includedDrinkCount: number; knownIncludedCents: number; unvaluedSupplies: { label: string; quantity: number }[];
   admissionCents: number | null; upgradeCents: number | null; uncertain: boolean };
 export const berlinDay = (time: string | number) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date(time));
 const cents = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
 
 export function summarizeTickets(orders: FinanceOrder[], month: string, valuation: Valuation) {
-  let payments = 0, refunds = 0, paymentIssues = 0, eventIssues = 0;
+  let payments = 0, refunds = 0, paymentIssues = 0, eventIssues = 0, excludedEventOrders = 0;
   const nights = new Map<string, NightFinance>();
   const seen = new Set<string>();
   for (const order of orders) {
@@ -48,8 +49,15 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
       else if (tx.type === 'refund') { refunded -= tx.amount; if (selected) refunds -= tx.amount; }
       else if (tx.amount) { if (selected) paymentIssues++; ledgerIssue = true; }
     }
+    // Cash above retains all payments/refunds. Event value describes valid bookings:
+    // cancelled orders and void ticket lines are not active event tickets or add-ons.
+    const selectedLines = order.line_items.filter(line => line.event_summary?.start_date && berlinDay(line.event_summary.start_date).startsWith(month));
+    if (order.status === 'cancelled') {
+      if (selectedLines.length) excludedEventOrders++;
+      continue;
+    }
     if (order.line_items.some(line => line.type === 'ticket' && (!line.event_summary?.event_id || !line.event_summary.start_date))) eventIssues++;
-    const lines = order.line_items.filter(line => line.event_summary?.start_date && berlinDay(line.event_summary.start_date).startsWith(month));
+    const lines = selectedLines.filter(line => line.type !== 'void');
     if (!lines.length) continue;
     // Refunded/discounted/cancelled or multi-source allocations must reconcile before splitting revenue.
     const balanced = !ledgerIssue && order.status === 'completed' && refunded === 0 && cents(order.total)
@@ -60,6 +68,7 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
       const event = line.event_summary!;
       const night = nights.get(event.event_id) ?? { id: event.event_id, name: event.name, date: berlinDay(event.start_date),
         ticketCents: 0, feeCents: 0, addonCents: 0, guests: 0, includedCents: 0,
+        includedDrinkCount: 0, knownIncludedCents: 0, unvaluedSupplies: [],
         admissionCents: 0, upgradeCents: 0, uncertain: false };
       nights.set(event.event_id, night);
       if (!balanced || !Number.isSafeInteger(line.quantity) || line.quantity < 0 || !cents(line.value) || !cents(line.booking_fee)
@@ -73,15 +82,27 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
       night.ticketCents += value;
       const guests = packageSize(line.description) * line.quantity;
       night.guests += guests;
-      let drinks: number | null = includedDrinks(line.description) * valuation.drinkCents * line.quantity;
-      for (const supply of includedSupply(line.description)) {
+      const drinkCount = includedDrinks(line.description) * line.quantity;
+      let drinks = drinkCount * valuation.drinkCents;
+      const missing: { label: string; quantity: number }[] = [];
+      const supplies = includedSupply(line.description);
+      for (const supply of supplies) {
         const price = valuation.bottles[supply.label];
-        if (!cents(price)) { drinks = null; break; }
-        drinks += supply.quantity * line.quantity * price;
+        if (!cents(price)) missing.push({ label: supply.label, quantity: supply.quantity * line.quantity });
+        else drinks += supply.quantity * line.quantity * price;
       }
-      // Some old VIP labels omit the bottle; missing entitlement is not a zero value.
-      if (ticketCategory(line.description) === 'VIP' && !includedSupply(line.description).length) drinks = null;
-      if (drinks === null || drinks > value || !guests) {
+      // Old VIP labels may omit the entitlement. Do not invent a bottle or its price.
+      if (ticketCategory(line.description) === 'VIP' && !supplies.length)
+        missing.push({ label: 'VIP-Inklusivleistung', quantity: line.quantity });
+      night.includedDrinkCount += drinkCount;
+      if (drinks > value || !guests) missing.push({ label: 'Ticketbewertung zu prüfen', quantity: line.quantity });
+      else night.knownIncludedCents += drinks;
+      for (const supply of missing) {
+        const existing = night.unvaluedSupplies.find(item => item.label === supply.label);
+        if (existing) existing.quantity += supply.quantity;
+        else night.unvaluedSupplies.push({ ...supply });
+      }
+      if (missing.length) {
         night.includedCents = null; night.admissionCents = null; night.upgradeCents = null;
         continue;
       }
@@ -92,7 +113,7 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
       else if (night.upgradeCents !== null) night.upgradeCents += value - drinks - base * guests;
     }
   }
-  return { payments, refunds, netPayments: paymentIssues ? null : payments - refunds, paymentIssues, eventIssues,
+  return { payments, refunds, netPayments: paymentIssues ? null : payments - refunds, paymentIssues, eventIssues, excludedEventOrders,
     nights: [...nights.values()].sort((a, b) => a.date.localeCompare(b.date)) };
 }
 

@@ -548,3 +548,5 @@
 .admin-night { padding:20px 0; border-bottom:1px solid #d9dcd5; }
 .admin-note { color:#57665e; font-size:14px; line-height:1.5; margin:20px 0; }
 .staff-admin button:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
+
+.admin-value-note { display:block; color:#57665e; font-size:13px; line-height:1.45; margin-top:4px; }

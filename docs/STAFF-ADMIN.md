@@ -40,11 +40,11 @@ Personal PIN configured in Production on 2026-11-21; owner confirmed successful 
 
 - Ticket lines are attributed by event date, independent of purchase date.
 - Unit value and unit booking fee multiply by quantity once. Paid ledger, order total and line totals must reconcile.
-- Refunded, cancelled, discounted/unbalanced or otherwise uncertain allocations are withheld. No proportional refund split is guessed.
+- Event value means valid ticket packages: cancelled orders and void lines are excluded, with their count disclosed. Their payments/refunds remain in the payment-month ledger. Active refunded, discounted/unbalanced or otherwise uncertain allocations are withheld; no proportional refund split is guessed.
 - Ticket value excludes booking fees and add-ons. Add-ons remain separately visible.
-- Included drinks: agreed valuation EUR 15 per included drink. This is entitlement valuation, not redemption, cost or extra revenue.
+- Included drinks: agreed valuation EUR 15 per included drink. This is entitlement valuation, not redemption, cost or extra revenue. Known drink values remain visible even if a VIP bottle has no configured value. Unvalued entitlements are named with their quantities; the displayed amount is explicitly a partial value.
 - Entry & seating = ticket value minus included valuation.
-- Upgrade comparison = entry & seating minus explicitly configured historic Club value per guest. It is incremental revenue, not profit.
+- Upgrade comparison = entry & seating minus explicitly configured historic Club value per guest. It is incremental revenue, not profit. Hide this row until the needed baseline and entitlement values exist. Likewise hide dependent admission/combined valuation rows when incomplete.
 - SumUp evening allocation uses Berlin 03:00–03:00. Multiple events on one date or uncertain refund allocation produce no guessed event amount. Future service nights remain open.
 - SumUp + included valuation is shown as a calculated sum, **not pure gastronomy revenue**, because SumUp can contain tips, admission or other products. TT add-ons are separately visible; they are not silently classified as food/drink.
 
@@ -58,7 +58,7 @@ Bottle keys are `Flasche Crémant` and `Flasche Moët`; Club keys are event IDs.
 
 ## Verification and remaining work
 
-- 94 automated tests: existing Staff behavior plus finance fixtures and API authorization gates.
+- 99 automated tests: existing Staff behavior plus finance fixtures and API authorization gates.
 - Production build, TypeScript, targeted ESLint.
 - Read-only sample of 50 real Ticket Tailor v2 orders: zero payment/line reconciliation issues, eight November event groups. This does not certify a whole month.
 - Actual database transaction verified wrong-secret denial, five-attempt limit, revision rejection, idle/absolute expiry, revocation and lack of anonymous table access. Test writes rolled back.
@@ -79,3 +79,9 @@ Observed after PIN activation: monthly payment figures were withheld even though
 Correction adds signed Ticket Tailor refund handling, SumUp transaction-event reconciliation, duplicate event protection, cross-month fixtures and a read-only live verifier (`tests/check-admin-live.mjs`). The verifier checks November and October against independently summed provider transaction history. It logs only pass/fail stages, never amounts, customer data or secrets. Read-only preview verification passed for both months on 2026-11-21. TypeScript, targeted ESLint and all 94 Staff tests passed. Event allocations with credits, refunds or missing valuation inputs remain explicitly incomplete; payment totals are independently available.
 
 Pre-correction production checkpoint: `e11abe56dfe06fed79c5b36694727a02bc36f5bd`. Existing PIN/session configuration and Safari select are unchanged.
+
+## Event values and loading feedback — 2026-11-21
+
+Checkpoint before change: `388df42d2a0b97ee6009f41dac445f16e0e81fe4`. Reuse the existing rose/green TicketLoader for admin session and finance loading. Disclose SumUp figures as before provider fees and credit repayment. No provider payouts, repayment deductions or invented bottle/Club valuation values are introduced.
+
+Five new regression tests cover known drink portions beside unknown bottles, configured bottle values, cancelled bookings with refunds or retained credit, and void lines not becoming add-ons. Cash calculations are unchanged.

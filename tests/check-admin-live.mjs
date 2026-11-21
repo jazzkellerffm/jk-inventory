@@ -42,6 +42,14 @@ for (const month of ['2026-11','2026-10']) {
   assert.equal(result.bar.netPayments,barNet,'SumUp payment/refund history mismatch');
   stage = 'combined total';
   assert.equal(result.combinedPayments,ticketNet+barNet,'Combined total mismatch');
+  stage = 'active event packages';
+  assert.equal(result.ticket.eventIssues,0);
+  assert.ok(result.ticket.nights.some(night=>night.includedDrinkCount>0));
+  for (const night of result.ticket.nights) {
+    assert.ok(Number.isSafeInteger(night.knownIncludedCents) && night.knownIncludedCents>=0);
+    if (night.unvaluedSupplies.length) { assert.equal(night.includedCents,null); assert.equal(night.admissionCents,null); }
+  }
+  console.log('ADMIN_EVENTS '+month+' PASS: valid packages reconciled; known drinks retained; cancelled orders excluded');
   console.log('ADMIN_VERIFY '+month+' PASS: both sources complete; refunds and combined total reconciled');
 }
 } catch {

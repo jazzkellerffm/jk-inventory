@@ -108,3 +108,41 @@ test('two refunds on one payment keep their own dates and unique event IDs',()=>
   assert.equal(summarizeSumUp([refund],'2026-11',[detail]).netPayments,-1000);
   assert.equal(summarizeSumUp([{...refund,timestamp:'2026-12-01T12:00:00Z'}],'2026-12',[detail]).netPayments,-1000);
 });
+test('unvalued VIP bottles preserve the known drink portion and explicit missing quantities',()=>{
+  const premium=order();
+  const vip=order({id:'or_vip'});vip.line_items[0].description='VIP Table - 2 Guests · incl. 1 Bottle Crémant';
+  vip.line_items[0].quantity=2;vip.line_items[0].total=19400;vip.total=19400;vip.transactions[0].amount=19400;
+  const night=summarizeTickets([premium,vip],'2026-12',valuation).nights[0];
+  assert.equal(night.includedDrinkCount,2);assert.equal(night.knownIncludedCents,3000);
+  assert.equal(night.includedCents,null);assert.equal(night.admissionCents,null);assert.equal(night.upgradeCents,null);
+  assert.deepEqual(night.unvaluedSupplies,[{label:'Flasche Crémant',quantity:2}]);
+  assert.equal(night.ticketCents,28200);
+});
+test('valued bottles complete the included total without duplicating drink values',()=>{
+  const premium=order(),vip=order({id:'or_vip'});vip.line_items[0].description='VIP Table - 2 Guests · incl. 1 Bottle Crémant';
+  const night=summarizeTickets([premium,vip],'2026-12',{...valuation,bottles:{'Flasche Crémant':3000}}).nights[0];
+  assert.equal(night.knownIncludedCents,6000);assert.equal(night.includedCents,6000);
+  assert.equal(night.admissionCents,12800);assert.deepEqual(night.unvaluedSupplies,[]);
+});
+test('cancelled bookings are excluded from valid event packages but cash and refunds remain',()=>{
+  const valid=order(),cancelled=order({id:'or_cancelled',status:'cancelled'});
+  cancelled.line_items[0].type='void';
+  cancelled.transactions.push({...cancelled.transactions[0],type:'refund',amount:-9400});
+  const cash=summarizeTickets([valid,cancelled],'2026-11',valuation);
+  assert.equal(cash.netPayments,10000);assert.equal(cash.refunds,9400);
+  const events=summarizeTickets([valid,cancelled],'2026-12',valuation);
+  assert.equal(events.excludedEventOrders,1);assert.equal(events.eventIssues,0);
+  assert.equal(events.nights[0].ticketCents,9400);assert.equal(events.nights[0].addonCents,0);
+});
+test('cancelled credit bookings do not block unrelated valid event totals',()=>{
+  const cancelled=order({status:'cancelled'});cancelled.line_items[0].type='void';
+  const cash=summarizeTickets([cancelled],'2026-11',valuation);
+  const events=summarizeTickets([cancelled],'2026-12',valuation);
+  assert.equal(cash.netPayments,9700);assert.equal(events.excludedEventOrders,1);
+  assert.equal(events.eventIssues,0);assert.deepEqual(events.nights,[]);
+});
+test('void lines in a completed order cannot become add-on revenue or included entitlements',()=>{
+  const o=order();o.line_items.push({...o.line_items[0],type:'void'});o.total=19400;o.transactions[0].amount=19400;
+  const night=summarizeTickets([o],'2026-12',valuation).nights[0];
+  assert.equal(night.ticketCents,9400);assert.equal(night.addonCents,0);assert.equal(night.includedDrinkCount,2);
+});

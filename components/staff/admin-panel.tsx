@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, LockKeyhole } from 'lucide-react';
 import { Masthead } from './masthead';
+import { TicketLoader } from './ticket-loader';
 import { serviceDate } from '@/lib/staff/service-day';
 import type { AdminSummary } from '@/lib/staff/admin/data';
 
@@ -82,16 +83,16 @@ export function AdminPanel() {
     <Link href="/staff#staff-tools">Zurück zum Team</Link>
     {!unlocked ? <section className="staff-login">
       <LockKeyhole aria-hidden="true"/><h2>Geschützter Bereich</h2>
-      {configured === null ? <p>Zugang wird geprüft …</p> : configured ? <form onSubmit={unlock}>
+      {configured === null ? <TicketLoader label="Zugang wird geprüft"/> : configured ? <form onSubmit={unlock}>
         <label htmlFor="admin-pin">Admin-PIN</label><input id="admin-pin" type="password" inputMode="numeric" autoComplete="off" pattern="[0-9]{6}" maxLength={6} minLength={6} value={pin} onChange={e => setPin(e.target.value)} required />
         <button className="staff-submit" disabled={busy}>{busy ? 'Prüfen …' : 'Entsperren'}</button>
       </form> : <p>Der Admin-Zugang ist vorbereitet. Die persönliche PIN muss noch eingerichtet werden.</p>}
     </section> : <>
       <div className="admin-month"><h2>{label}</h2><div><button aria-label="Vorheriger Monat" disabled={month <= '2026-06' || busy} onClick={() => setMonth(shifted(month, -1))}><ChevronLeft /></button><button aria-label="Nächster Monat" disabled={month >= currentMonth() || busy} onClick={() => setMonth(shifted(month, 1))}><ChevronRight /></button></div></div>
       <div className="service-switch" role="group" aria-label="Berechnungsbasis"><button aria-pressed={mode === 'payments'} className={mode === 'payments' ? 'active' : ''} onClick={() => setMode('payments')}>Zahlungen</button><button aria-pressed={mode === 'events'} className={mode === 'events' ? 'active' : ''} onClick={() => setMode('events')}>Veranstaltungen</button></div>
-      {busy && <p role="status">Zahlungsvorgänge werden abgeglichen …</p>}
+      {busy && <TicketLoader label="Zahlungsvorgänge werden abgeglichen"/>}
       {data && (mode === 'payments' ? <>
-        <section className="admin-total"><p>Zahlungen im Monat · nach erfassten Rückzahlungen</p><strong>{money(data.combinedPayments)}</strong><p>Ticket Tailor + SumUp · vor Anbietergebühren · inklusive etwaiger Trinkgelder</p></section>
+        <section className="admin-total"><p>Zahlungen im Monat · nach erfassten Rückzahlungen</p><strong>{money(data.combinedPayments)}</strong><p>Ticket Tailor + SumUp · vor Anbietergebühren und Kreditrückzahlung · inklusive etwaiger Trinkgelder</p></section>
         <dl className="admin-values"><div><dt>Ticket Tailor</dt><dd>{money(data.ticket?.netPayments)}</dd></div><div><dt>SumUp</dt><dd>{money(data.bar?.netPayments)}</dd></div><div><dt>Erfasste Rückzahlungen</dt><dd>{money(data.ticket?.netPayments != null && data.bar?.netPayments != null ? data.ticket.refunds + data.bar.refunds : null)}</dd></div></dl>
         {(data.combinedPayments === null) && <div role="status">
           {!data.ticket ? <p>Ticket Tailor konnte nicht vollständig geladen werden.</p> : data.ticket.paymentIssues > 0 && <p>Ticket Tailor: {data.ticket.paymentIssues} Zahlungsvorgänge benötigen noch einen Abgleich.</p>}
@@ -101,7 +102,8 @@ export function AdminPanel() {
         </div>}
         <p className="admin-note">Zahlungsdatum in Europe/Berlin. Ticketkäufe für spätere Veranstaltungen zählen hier mit. Stripe wird nicht nochmals addiert. Auszahlungen und Gewinn sind andere Größen.</p>
       </> : <>
-        <section className="admin-total"><p>Ticketwert der Veranstaltungen im Monat</p><strong>{money(ticketTotal)}</strong><p>Ohne Buchungsgebühren und Zusatzbestellungen · unabhängig vom Kaufmonat</p></section>
+        <section className="admin-total"><p>Gültige Ticketpakete im Veranstaltungsmonat</p><strong>{money(ticketTotal)}</strong><p>Ohne Buchungsgebühren und Zusatzbestellungen · unabhängig vom Kaufmonat · stornierte Tickets ausgenommen</p></section>
+        {!!data.ticket?.excludedEventOrders && <p className="admin-note">{data.ticket.excludedEventOrders} stornierte {data.ticket.excludedEventOrders === 1 ? 'Buchung ist' : 'Buchungen sind'} hier ausgenommen. Zugehörige Zahlungen und Rückzahlungen bleiben unter „Zahlungen“ berücksichtigt.</p>}
         {!eventComplete && <p>Einige Bestellungen benötigen einen Abgleich, etwa wegen Erstattungen oder Guthaben. Eine vollständige Monatssumme bleibt bis dahin offen.</p>}
         {nights.map(night => {
           const sameDate = nights.filter(other => other.date === night.date).length;
@@ -111,16 +113,19 @@ export function AdminPanel() {
           return <section className="admin-night" key={night.id}><p>{new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit' }).format(new Date(night.date + 'T12:00:00Z'))}</p><h3>{night.name}</h3>
             {night.uncertain ? <p>Zuordnung wird geprüft · keine verlässliche Aufteilung.</p> : <dl className="admin-values">
               <div><dt>Ticketpakete</dt><dd>{money(night.ticketCents)}</dd></div>
-              <div><dt>Davon Inklusivgetränke · kalkulatorisch</dt><dd>{money(night.includedCents)}</dd></div>
-              <div><dt>Eintritt & Platzkomfort</dt><dd>{money(night.admissionCents)}</dd></div>
-              <div><dt>Mehrerlös gegenüber Club · nach Inklusivwert</dt><dd>{money(night.upgradeCents)}</dd></div>
+              <div><dt>{night.includedCents === null ? 'Bewertete Inklusivgetränke · Teilbetrag' : 'Davon Inklusivgetränke · kalkulatorisch'}
+                <small className="admin-value-note">{night.includedDrinkCount} {night.includedDrinkCount === 1 ? 'Drink' : 'Drinks'} à 15 €</small>
+                {night.unvaluedSupplies.length > 0 && <small className="admin-value-note">Noch ohne Rechenwert: {night.unvaluedSupplies.map(item => `${item.quantity} × ${item.label}`).join(' · ')}</small>}
+              </dt><dd>{money(night.knownIncludedCents)}</dd></div>
+              {night.admissionCents !== null && <div><dt>Eintritt & Platzkomfort</dt><dd>{money(night.admissionCents)}</dd></div>}
+              {night.upgradeCents !== null && <div><dt>Mehrerlös gegenüber Club · nach Inklusivwert</dt><dd>{money(night.upgradeCents)}</dd></div>}
               <div><dt>SumUp-Zahlungen des Abends</dt><dd>{money(bar)}</dd></div>
-              <div><dt>SumUp + Inklusivwert · kalkulatorisch</dt><dd>{money(gastro)}</dd></div>
+              {gastro !== null && <div><dt>SumUp + Inklusivwert · kalkulatorisch</dt><dd>{money(gastro)}</dd></div>}
               <div><dt>Zusatzbestellungen über Ticket Tailor</dt><dd>{money(night.addonCents)}</dd></div>
             </dl>}
           </section>;
         })}
-        <p className="admin-note">Inklusivdrinks: vereinbarter Ansatz 15 € je enthaltenem Drink, keine Aussage über den tatsächlichen Verbrauch. Für Flaschen und historische Club-Vergleichspreise bleiben fehlende Ansätze offen. SumUp kann Trinkgelder und weitere Artikel enthalten; deshalb ist die Summe noch kein reiner Gastronomieumsatz. Serviceabend: 03:00 bis 03:00.</p>
+        <p className="admin-note">Inklusivdrinks: vereinbarter Ansatz 15 € je enthaltenem Drink, keine Aussage über den tatsächlichen Verbrauch. Unbewertete Flaschen werden separat genannt. Abgeleitete Summen und Club-Vergleiche erscheinen erst, wenn alle nötigen Rechenwerte feststehen. SumUp kann Trinkgelder und weitere Artikel enthalten; deshalb ist die Summe noch kein reiner Gastronomieumsatz. Vor Anbietergebühren und Kreditrückzahlung. Serviceabend: 03:00 bis 03:00.</p>
       </>)}
       {data && <p className="admin-note">Stand {new Date(data.asOf).toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' })} Uhr</p>}
     </>}

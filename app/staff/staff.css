@@ -558,6 +558,10 @@
 .admin-night-title>span { font-family:var(--font-poly-bulky-only),sans-serif; font-size:16px; line-height:1.35; overflow-wrap:anywhere; }
 .admin-night-value { display:flex; flex-direction:column; align-items:flex-end; gap:3px; white-space:nowrap; }
 .admin-night-value strong { font-family:var(--font-poly-bulky-only),sans-serif; font-size:16px; font-weight:400; }
+.admin-night-revenue { appearance:none; border:0; background:transparent; color:inherit; font:inherit; text-align:right; padding:6px 0 6px 8px; min-height:44px; cursor:pointer; border-radius:8px; }
+.admin-night-revenue small { display:flex; align-items:center; justify-content:flex-end; gap:5px; }
+.admin-night-revenue:disabled { cursor:default; opacity:1; }
+.admin-night-revenue:not(:disabled):active { opacity:.7; }
 .admin-night>.admin-values { margin:0 0 12px; font-size:14px; }
 .admin-night .admin-values>div:last-child { border-bottom:0; }
 .admin-night .admin-values dt { overflow-wrap:anywhere; }

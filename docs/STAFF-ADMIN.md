@@ -87,3 +87,5 @@ Checkpoint before change: `388df42d2a0b97ee6009f41dac445f16e0e81fe4`. Reuse the 
 Five new regression tests cover known drink portions beside unknown bottles, configured bottle values, cancelled bookings with refunds or retained credit, and void lines not becoming add-ons. Cash calculations are unchanged.
 
 Philipp supplied bottle values during this correction: EUR 50 Crémant, EUR 129 Moët (provisional). Defaults live in `lib/staff/admin/data.ts`; both remain overridable through `STAFF_ADMIN_VALUATION_JSON`. UI discloses these assumptions. Cash totals are unaffected.
+
+Verification: 99 automated tests, TypeScript and targeted ESLint passed. Read-only November and October 2026 checks both passed for payment/refund reconciliation and valid event package completeness. The production build passed in preview. Historic glass entitlements remain explicitly unvalued until a glass price is agreed.

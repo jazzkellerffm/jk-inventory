@@ -54,7 +54,7 @@ export async function readAdminEvening() {
   const previousMonth = previous.slice(0, 7);
   const [priorTickets, priorBar] = await Promise.allSettled([
     previousMonth === month && tt.status === 'fulfilled' ? Promise.resolve(tt.value) : tickets(previousMonth),
-    previousMonth === month && su.status === 'fulfilled' ? Promise.resolve(su.value) : sumup(previousMonth),
+    sumup(previousMonth),
   ]);
   const oldNights = priorTickets.status === 'fulfilled' ? priorTickets.value.nights.filter(night => night.date === previous) : [];
   const oldTicket = priorTickets.status === 'fulfilled' && priorTickets.value.eventIssues === 0 &&

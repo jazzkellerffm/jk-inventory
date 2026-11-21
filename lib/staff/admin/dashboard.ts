@@ -24,7 +24,7 @@ export function eveningDashboard(events: EveningEvent[] | null, ticket: AdminSum
     sumupCents: sumup, combinedCents: total !== null && sumup !== null ? total + sumup : null,
     barWithIncludedCents: sumup !== null && included !== null ? sumup + included : null };
 }
-export type EveningDashboard = ReturnType<typeof eveningDashboard>;
+export type EveningDashboard = ReturnType<typeof eveningDashboard> & { comparison?: { date: string; combinedCents: number | null; sumupCents: number | null } };
 export type HistoryPoint = { month: string; cents: number | null; partial: boolean };
 export type AdminHistory = { firstMonth: string | null; points: HistoryPoint[]; nextBefore: string | null; asOf: number };
 export function shiftMonth(month: string, offset: number) {

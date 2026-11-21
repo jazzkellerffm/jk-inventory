@@ -29,7 +29,7 @@ test('unit value and fee multiply by quantity once; duplicate orders do not mult
   assert.equal(s.nights[0].ticketCents,18800);assert.equal(s.nights[0].guests,4);assert.equal(s.nights[0].includedCents,6000);
 });
 test('refund is attributed to its own payment month; event allocation is withheld',()=>{
-  const o=order();o.transactions.push({...o.transactions[0],type:'refund',amount:2000,created_at:'2026-12-06T12:00:00Z'});
+  const o=order();o.transactions.push({...o.transactions[0],type:'refund',amount:-2000,created_at:'2026-12-06T12:00:00Z'});
   assert.equal(summarizeTickets([o],'2026-11',valuation).netPayments,9700);
   const dec=summarizeTickets([o],'2026-12',valuation);
   assert.equal(dec.netPayments,-2000);assert.ok(dec.nights[0].uncertain);assert.equal(dec.eventIssues,1);
@@ -60,4 +60,51 @@ test('mixed-event order assigns each line only to its event month',()=>{
   const o=order();o.line_items.push({...o.line_items[0],event_summary:{event_id:'ev_nov',name:'November',start_date:'2026-11-20T21:00:00+01:00'}});
   o.total=19400;o.transactions[0].amount=19400;
   const s=summarizeTickets([o],'2026-11',valuation);assert.equal(s.netPayments,19400);assert.equal(s.nights.length,1);assert.equal(s.nights[0].ticketCents,9400);
+});
+test('signed Ticket Tailor v2 refunds reduce cash once and only in their refund month',()=>{
+  const o=order();
+  o.transactions.push({...o.transactions[0],type:'refund',amount:-1700});
+  const s=summarizeTickets([o,o],'2026-11',valuation);
+  assert.equal(s.payments,9700);assert.equal(s.refunds,1700);assert.equal(s.netPayments,8000);assert.equal(s.paymentIssues,0);
+  o.transactions[1].amount=1700;
+  assert.equal(summarizeTickets([o],'2026-11',valuation).netPayments,null);
+  assert.equal(summarizeTickets([o],'2026-10',valuation).netPayments,0);
+});
+function sumupRefund() {
+  const payment={id:'parent',type:'PAYMENT',status:'SUCCESSFUL',timestamp:'2026-10-31T22:30:00Z',amount:50,currency:'EUR',refunded_amount:10};
+  const refund={...payment,type:'REFUND',status:'REFUNDED',timestamp:'2026-11-01T12:00:00Z',amount:10,refunded_amount:0};
+  const event={id:99,transaction_id:'parent',type:'REFUND',status:'REFUNDED',timestamp:refund.timestamp,amount:10};
+  const detail={id:'parent',currency:'EUR',timestamp:payment.timestamp,amount:50,events:[event]};
+  return {payment,refund,event,detail};
+}
+test('SumUp reconciles separate refund rows against events, across calendar months',()=>{
+  const {payment,refund,detail}=sumupRefund();
+  const oct=summarizeSumUp([payment],'2026-10',[detail]);
+  assert.equal(oct.netPayments,5000);assert.equal(oct.nights['2026-10-31'],4000);
+  const nov=summarizeSumUp([refund,refund],'2026-11',[detail]);
+  assert.equal(nov.netPayments,-1000);assert.equal(nov.refunds,1000);assert.deepEqual(nov.nights,{});
+});
+test('SumUp refund events and history are never double counted, including partial refunds',()=>{
+  const {payment,refund,detail,event}=sumupRefund();
+  payment.timestamp='2026-11-01T00:30:00Z';detail.timestamp=payment.timestamp;
+  detail.events=[event,event];
+  const result=summarizeSumUp([payment,payment,refund,refund],'2026-11',[detail]);
+  assert.equal(result.payments,5000);assert.equal(result.refunds,1000);assert.equal(result.netPayments,4000);
+  assert.equal(result.paymentIssues,0);assert.deepEqual(result.nights,{});
+});
+test('SumUp missing, mismatched or incomplete refund details do not produce trusted totals',()=>{
+  const {payment,refund,detail}=sumupRefund();
+  payment.timestamp='2026-11-01T20:00:00Z';detail.timestamp=payment.timestamp;
+  for (const details of [[],[{...detail,id:'wrong'}],[{...detail,events:[]}],[{...detail,events:[{...detail.events[0],amount:9}]}]]) {
+    const result=summarizeSumUp([payment,refund],'2026-11',details);
+    assert.equal(result.netPayments,null);assert.ok(result.paymentIssues>0);
+  }
+});
+test('two refunds on one payment keep their own dates and unique event IDs',()=>{
+  const {payment,refund,detail,event}=sumupRefund();
+  payment.refunded_amount=20;
+  detail.events=[event,{...event,id:100,timestamp:'2026-12-01T12:00:00Z'}];
+  assert.equal(summarizeSumUp([payment],'2026-10',[detail]).nights['2026-10-31'],3000);
+  assert.equal(summarizeSumUp([refund],'2026-11',[detail]).netPayments,-1000);
+  assert.equal(summarizeSumUp([{...refund,timestamp:'2026-12-01T12:00:00Z'}],'2026-12',[detail]).netPayments,-1000);
 });

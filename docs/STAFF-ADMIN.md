@@ -22,7 +22,7 @@ Requires the existing team session **and** a separate admin session. The server 
 
 Migration `migrations/20261121_staff_admin.sql` was applied to `jk-included-drinks` (`dospfulzjqyavqwfmcmm`). Private schema `jkos_admin_private` holds only authentication metadata. Existing Included Drinks tables were not altered. Anonymous clients have no schema/table access; RPC requires an independent 256-bit server secret. Database failure denies access.
 
-**Personal PIN has not been selected or configured. Therefore the production area stays locked/unconfigured.**
+Personal PIN configured in Production on 2026-11-21; owner confirmed successful access. No PIN or hash is stored in this repository.
 
 ## Financial definitions
 
@@ -32,7 +32,9 @@ Migration `migrations/20261121_staff_admin.sql` was applied to `jk-included-drin
 - SumUp: transaction-history payment/refund timestamps in the selected calendar month. Monetary major units become integer euro cents.
 - Combined = Ticket Tailor + SumUp, before provider fees and including any tips. Stripe is not added again.
 - Unknown methods, currencies, incomplete pages or malformed data withhold trusted totals. Offline/gift-credit methods need separate reconciliation and cannot silently be added to SumUp.
-- SumUp history records marked refunded require transaction-event reconciliation. Their calendar total remains open; they are not treated as a verified net total.
+- Ticket Tailor v2 refund amounts are negative integer cents. Subtract their magnitude once, using the refund transaction date. A malformed transaction outside the selected month does not block that month; an unknown date still does.
+- SumUp refunds are reconciled against the original transaction detail and final refund event IDs. The original payment and separate history refund row are not counted twice. Cash totals use the refund date; evening totals attribute verified refunds to the original payment night. Missing or inconsistent detail withholds the total.
+- The admin screen identifies which source failed or needs reconciliation and provides “Erneut laden”.
 
 ### Events
 
@@ -56,16 +58,24 @@ Bottle keys are `Flasche Crémant` and `Flasche Moët`; Club keys are event IDs.
 
 ## Verification and remaining work
 
-- 89 automated tests: existing Staff behavior plus finance fixtures and API authorization gates.
+- 94 automated tests: existing Staff behavior plus finance fixtures and API authorization gates.
 - Production build, TypeScript, targeted ESLint.
 - Read-only sample of 50 real Ticket Tailor v2 orders: zero payment/line reconciliation issues, eight November event groups. This does not certify a whole month.
 - Actual database transaction verified wrong-secret denial, five-attempt limit, revision rejection, idle/absolute expiry, revocation and lack of anonymous table access. Test writes rolled back.
 - Browser rendering check attempted but unavailable: installed Chromium cannot create its required process socket in this environment. Mobile visual review remains outstanding; do not claim Safari testing.
 - Live month totals still need reconciliation against provider exports before relying on them for accounting. No live financial totals have been certified.
-- Next: activate personal PIN, verify representative live months/refunds, agree bottle valuations and historic baselines. Then refine fee/discount/refund allocation and classify SumUp products for a true gastronomy share.
+- Next: verify representative live months/refunds, agree bottle valuations and historic baselines. Then refine fee/discount/refund allocation and classify SumUp products for a true gastronomy share.
 - Public drink mix/seasonal curve, weekly finance and payout builder are not part of this change.
 
 ## Rollback
 
 Previous production code checkpoint: `9824500ed26661240b8aa1e7938ba491d236a569` (Worldstar Moët).
 Restore that deployment or revert this feature commit. The isolated private auth schema can remain unused; no removal of shared data is necessary. Removing `STAFF_ADMIN_PIN_HASH` disables admin authorization immediately on the next deployment.
+
+## Refund correction — 2026-11-21
+
+Observed after PIN activation: monthly payment figures were withheld even though both provider APIs returned complete pages. Ticket Tailor negative refund amounts failed the original non-negative validator; SumUp refund reconciliation had been intentionally left incomplete.
+
+Correction adds signed Ticket Tailor refund handling, SumUp transaction-event reconciliation, duplicate event protection, cross-month fixtures and a read-only live verifier (`tests/check-admin-live.mjs`). The verifier checks November and October against independently summed provider transaction history. It logs only pass/fail stages, never amounts, customer data or secrets. Deployment verification is recorded separately after the check runs.
+
+Pre-correction production checkpoint: `e11abe56dfe06fed79c5b36694727a02bc36f5bd`. Existing PIN/session configuration and Safari select are unchanged.

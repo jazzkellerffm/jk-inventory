@@ -17,6 +17,7 @@ export function AdminPanel() {
   const [pin, setPin] = useState(''), [message, setMessage] = useState(''), [busy, setBusy] = useState(false);
   const [month, setMonth] = useState(currentMonth), [mode, setMode] = useState<'payments' | 'events'>('payments');
   const [data, setData] = useState<AdminSummary | null>(null);
+  const [refresh, setRefresh] = useState(0);
   const request = useRef<AbortController | null>(null);
   const clear = useCallback(() => { request.current?.abort(); setData(null); setUnlocked(false); setPin(''); }, []);
   const lock = useCallback(async () => {
@@ -61,7 +62,7 @@ export function AdminPanel() {
       .finally(() => { if (!controller.signal.aborted) setBusy(false); });
     });
     return () => controller.abort();
-  }, [month, unlocked, clear]);
+  }, [month, unlocked, clear, refresh]);
   async function unlock(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setMessage('');
     try {
@@ -92,7 +93,12 @@ export function AdminPanel() {
       {data && (mode === 'payments' ? <>
         <section className="admin-total"><p>Zahlungen im Monat · nach erfassten Rückzahlungen</p><strong>{money(data.combinedPayments)}</strong><p>Ticket Tailor + SumUp · vor Anbietergebühren · inklusive etwaiger Trinkgelder</p></section>
         <dl className="admin-values"><div><dt>Ticket Tailor</dt><dd>{money(data.ticket?.netPayments)}</dd></div><div><dt>SumUp</dt><dd>{money(data.bar?.netPayments)}</dd></div><div><dt>Erfasste Rückzahlungen</dt><dd>{money(data.ticket?.netPayments != null && data.bar?.netPayments != null ? data.ticket.refunds + data.bar.refunds : null)}</dd></div></dl>
-        {(data.combinedPayments === null) && <p role="status">Mindestens eine Quelle ist unvollständig. Deshalb wird keine Gesamtsumme angezeigt.</p>}
+        {(data.combinedPayments === null) && <div role="status">
+          {!data.ticket ? <p>Ticket Tailor konnte nicht vollständig geladen werden.</p> : data.ticket.paymentIssues > 0 && <p>Ticket Tailor: {data.ticket.paymentIssues} Zahlungsvorgänge benötigen noch einen Abgleich.</p>}
+          {!data.bar ? <p>SumUp konnte nicht vollständig geladen werden.</p> : data.bar.paymentIssues > 0 && <p>SumUp: {data.bar.paymentIssues} Erstattungen konnten noch nicht vollständig zugeordnet werden.</p>}
+          <p>Die Gesamtsumme erscheint, sobald beide Quellen vollständig abgeglichen sind.</p>
+          <button onClick={() => setRefresh(value => value + 1)} disabled={busy}>Erneut laden</button>
+        </div>}
         <p className="admin-note">Zahlungsdatum in Europe/Berlin. Ticketkäufe für spätere Veranstaltungen zählen hier mit. Stripe wird nicht nochmals addiert. Auszahlungen und Gewinn sind andere Größen.</p>
       </> : <>
         <section className="admin-total"><p>Ticketwert der Veranstaltungen im Monat</p><strong>{money(ticketTotal)}</strong><p>Ohne Buchungsgebühren und Zusatzbestellungen · unabhängig vom Kaufmonat</p></section>

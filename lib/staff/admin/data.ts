@@ -1,7 +1,8 @@
 import 'server-only';
 import { readOrders } from '../ticket-orders';
 import { serviceStart } from '../service-day';
-import { summarizeSumUp, summarizeTickets, type FinanceOrder, type SumUpFinanceRow, type Valuation } from './finance';
+import { summarizeSumUp, summarizeTickets, type FinanceOrder, type SumUpFinanceRow, type SumUpFinanceDetail, type Valuation } from './finance';
+import { needsRefundDetail, sumupId } from './sumup-refunds';
 
 function valuation(): Valuation {
   const config: Valuation = { drinkCents: 1500, bottles: {}, clubPerGuest: {} };
@@ -20,7 +21,7 @@ function valuation(): Valuation {
 }
 
 async function sumup(month: string) {
-  const merchant = process.env.SUMUP_MERCHANT_CODE, token = process.env.SUMUP_API_KEY;
+  const merchant = process.env.SUMUP_MERCHANT_CODE?.trim(), token = process.env.SUMUP_API_KEY?.trim();
   if (!merchant || !token) throw Error('SumUp not configured');
   // Cover both calendar month and the last service night up to 03:00 the next day.
   const from = Date.parse(month + '-01T00:00:00+02:00');
@@ -50,11 +51,25 @@ async function sumup(month: string) {
       ? new URL(href, path).searchParams.toString() : new URLSearchParams(href).toString();
     if (!query) throw Error('Invalid SumUp cursor');
   }
-  return summarizeSumUp(rows, month);
+  const ids = [...new Set(rows.filter(needsRefundDetail).map(sumupId))];
+  const details: SumUpFinanceDetail[] = [];
+  for (let i = 0; i < ids.length; i += 4) {
+    const batch = await Promise.all(ids.slice(i, i + 4).map(async id => {
+      if (!id) return null;
+      const response = await fetch(`https://api.sumup.com/v2.1/merchants/${encodeURIComponent(merchant)}/transactions?id=${encodeURIComponent(id)}`,
+        { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: AbortSignal.timeout(10000) });
+      if (!response.ok) throw Error('SumUp refund details unavailable');
+      const detail = await response.json();
+      if (detail.id !== id) throw Error('SumUp refund reference mismatch');
+      return detail as SumUpFinanceDetail;
+    }));
+    for (const detail of batch) if (detail) details.push(detail);
+  }
+  return summarizeSumUp(rows, month, details);
 }
 
 async function tickets(month: string) {
-  const key = process.env.TICKET_TAILOR_API_KEY;
+  const key = process.env.TICKET_TAILOR_API_KEY?.trim();
   if (!key) throw Error('Ticket Tailor not configured');
   // All order ledgers: a refund this month may belong to a much older purchase.
   const orders = await readOrders<FinanceOrder>({}, 'Basic ' + Buffer.from(key + ':').toString('base64'));

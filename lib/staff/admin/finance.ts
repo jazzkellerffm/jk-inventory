@@ -1,5 +1,7 @@
 import { includedDrinks, includedSupply, packageSize, ticketCategory } from '../entitlements';
 import { serviceDate } from '../service-day';
+import { reconcileSumUpRefunds, sumupId, type SumUpFinanceDetail, type SumUpFinanceRow } from './sumup-refunds';
+export type { SumUpFinanceRow, SumUpFinanceDetail } from './sumup-refunds';
 
 export type FinanceLine = { type: string; description: string; quantity: number; value: number;
   booking_fee: number; total: number; event_summary?: { event_id: string; name: string; start_date: string } };
@@ -28,17 +30,22 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
     let settled = 0, refunded = 0, ledgerIssue = false;
     for (const tx of order.transactions) {
       if (tx.pending === true) continue;
-      if (!cents(tx.amount) || tx.currency !== 'EUR' || tx.pending !== false || !Number.isFinite(Date.parse(tx.created_at))) {
-        paymentIssues++; ledgerIssue = true; continue;
+      const validTime = Number.isFinite(Date.parse(tx.created_at));
+      const selected = validTime && berlinDay(tx.created_at).startsWith(month);
+      // v2 refunds are signed negative amounts, unlike non-negative line values.
+      const validAmount = Number.isSafeInteger(tx.amount) &&
+        (tx.type === 'refund' ? tx.amount <= 0 : tx.amount >= 0);
+      if (!validAmount || tx.currency !== 'EUR' || tx.pending !== false || !validTime) {
+        if (selected || !validTime) paymentIssues++;
+        ledgerIssue = true; continue;
       }
-      const selected = berlinDay(tx.created_at).startsWith(month);
       // Credits/gift cards are not a new cash inflow. Unknown methods need review.
       if (!['STRIPE', 'PAYPAL', 'SQUARE'].includes(tx.payment_method)) {
         if (tx.amount) { if (selected) paymentIssues++; ledgerIssue = true; }
         continue;
       }
       if (tx.type === 'payment') { settled += tx.amount; if (selected) payments += tx.amount; }
-      else if (tx.type === 'refund') { refunded += tx.amount; if (selected) refunds += tx.amount; }
+      else if (tx.type === 'refund') { refunded -= tx.amount; if (selected) refunds -= tx.amount; }
       else if (tx.amount) { if (selected) paymentIssues++; ledgerIssue = true; }
     }
     if (order.line_items.some(line => line.type === 'ticket' && (!line.event_summary?.event_id || !line.event_summary.start_date))) eventIssues++;
@@ -89,18 +96,18 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
     nights: [...nights.values()].sort((a, b) => a.date.localeCompare(b.date)) };
 }
 
-export type SumUpFinanceRow = { transaction_id?: string; id?: string; transaction_code?: string; type: string;
-  status: string; timestamp: string; amount: number; currency: string; refunded_amount?: number };
-export function summarizeSumUp(rows: SumUpFinanceRow[], month: string) {
-  let payments = 0, refunds = 0, paymentIssues = 0;
+export function summarizeSumUp(rows: SumUpFinanceRow[], month: string, details: SumUpFinanceDetail[] = []) {
+  const ledger = reconcileSumUpRefunds(rows, details);
+  let payments = 0, refunds = 0;
+  const paymentIssues = ledger.issues;
   const nights: Record<string, number> = {};
   const seen = new Set<string>();
-  for (const row of rows) {
+  for (const row of ledger.rows) {
     if (['FAILED', 'PENDING', 'CANCELLED'].includes(row.status)) continue;
-    const id = row.transaction_id || row.id || row.transaction_code;
+    const id = sumupId(row);
     if (!id || !Number.isFinite(Date.parse(row.timestamp)) || row.currency !== 'EUR' ||
       !Number.isFinite(row.amount) || !['SUCCESSFUL', 'REFUNDED'].includes(row.status)) throw new Error('Unclear SumUp transaction');
-    const key = `${id}:${row.type}:${row.timestamp}`;
+    const key = row.refundEventId ? `event:${row.refundEventId}` : `${id}:${row.type}:${row.timestamp}`;
     if (seen.has(key)) continue;
     seen.add(key);
     const amount = Math.round(Math.abs(row.amount) * 100);
@@ -111,16 +118,13 @@ export function summarizeSumUp(rows: SumUpFinanceRow[], month: string) {
       const date = serviceDate(Date.parse(row.timestamp));
       if (date.startsWith(month)) nights[date] = (nights[date] ?? 0) + amount;
       // Event allocations of refunds require their original payment reference.
-      if ((row.refunded_amount ?? 0) > 0 || row.status === 'REFUNDED') {
+      if (!row.refundsReconciled && ((row.refunded_amount ?? 0) > 0 || row.status === 'REFUNDED')) {
         nights[date] = NaN;
-        // History alone cannot prove that all refund events were returned and matched.
-        // Keep totals open until reconciliation against transaction_events is implemented.
-        if (selected) paymentIssues++;
       }
     } else if (row.type === 'REFUND' || row.type === 'CHARGE_BACK') {
       if (selected) refunds += amount;
-      const date = serviceDate(Date.parse(row.timestamp));
-      if (date.startsWith(month)) nights[date] = NaN;
+      const date = serviceDate(Date.parse(row.originalPaymentAt ?? row.timestamp));
+      if (date.startsWith(month)) nights[date] = row.originalPaymentAt ? (nights[date] ?? 0) - amount : NaN;
     } else throw new Error('Unknown SumUp type');
   }
   return { payments, refunds, paymentIssues, netPayments: paymentIssues ? null : payments - refunds,

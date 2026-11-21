@@ -8,6 +8,7 @@ import { clearHistoryWindow, historyMonth, loadHistoryWindow, type HistoryWindow
 import { TicketLoader } from './ticket-loader';
 
 const money = (value: number | null | undefined) => value == null ? '—' : new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value / 100);
+const shortDay = (date: string) => new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(date + 'T12:00:00Z'));
 const monthName = (month: string) => new Intl.DateTimeFormat('de-DE', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(month + '-01T12:00:00Z'));
 
 export function AdminEveningView({ data, now, refresh, loading }: { data: EveningDashboard; now: number; refresh: () => void; loading: boolean }) {
@@ -27,7 +28,27 @@ export function AdminEveningView({ data, now, refresh, loading }: { data: Evenin
       <div><dt><i className="admin-key-ticket"/>Ticket Tailor gesamt</dt><dd>{money(data.ticketTotal)}</dd></div>
       <div><dt><i className="admin-key-bar"/>SumUp</dt><dd>{money(data.sumupCents)}</dd></div>
     </dl>
+    <div className="admin-week-compare" aria-label="Gesamtumsatz im Vergleich zur Vorwoche">
+      <h3>Vorwochenvergleich <small>Ticket Tailor + SumUp</small></h3>
+      {([{label:'Heute · live',date:data.date,cents:data.combinedCents},{label:'Vorwoche',date:data.comparison?.date,cents:data.comparison?.combinedCents ?? null}] as const).map((item,index) => {
+        const peak = Math.max(1, data.combinedCents ?? 0, data.comparison?.combinedCents ?? 0);
+        return <div className="admin-compare-row" key={index}>
+          <div className="admin-compare-label"><span>{item.label}{item.date ? ' · ' + shortDay(item.date) : ''}</span><strong>{money(item.cents)}</strong></div>
+          <div className="admin-compare-track"><span className={index===0?'admin-compare-current':'admin-compare-previous'} style={{width:item.cents===null?'0%':Math.max(0,item.cents)/peak*100+'%'}} /></div>
+        </div>;
+      })}
+    </div>
     </div><div className="admin-evening-secondary"><div className="admin-evening-bar"><span>SumUp + Inklusivgetränke<small>Kalkulatorisch · bereits im Ticketwert enthalten</small></span><strong>{money(data.barWithIncludedCents)}</strong></div>
+    <div className="admin-rose-compare" aria-label="SumUp-Umsatz im Vergleich zur Vorwoche">
+      <h3>SumUp · Vorwochenvergleich</h3>
+      {([{label:'Heute · live',cents:data.sumupCents},{label:'Vorwoche · '+(data.comparison?.date ? shortDay(data.comparison.date) : '–'),cents:data.comparison?.sumupCents ?? null}] as const).map((item,index) => {
+        const peak = Math.max(1,data.sumupCents ?? 0,data.comparison?.sumupCents ?? 0);
+        return <div className="admin-compare-row" key={index}>
+          <div className="admin-compare-label"><span>{item.label}</span><strong>{money(item.cents)}</strong></div>
+          <div className="admin-compare-track"><span className={index===0?'admin-compare-current':'admin-compare-previous'} style={{width:item.cents===null?'0%':Math.max(0,item.cents)/peak*100+'%'}} /></div>
+        </div>;
+      })}
+    </div>
     {data.includedCents === null && data.knownIncludedCents !== null && <p className="admin-evening-note">Inklusivwert bisher {money(data.knownIncludedCents)}. Noch offen: {data.unvaluedSupplies.map(item => `${item.quantity} × ${item.label}`).join(' · ') || 'Ticketbewertung'}.</p>}
     {(data.ticketTotal === null || data.sumupCents === null) && <p className="admin-evening-note" role="status">{data.ticketTotal === null ? 'Ticket Tailor noch unvollständig. ' : ''}{data.sumupCents === null ? 'SumUp noch unvollständig. ' : ''}Die Gesamtsumme bleibt bis zum Abgleich offen.</p>}
     <details className="admin-evening-details"><summary>Details</summary><dl className="admin-values">

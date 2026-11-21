@@ -30,7 +30,7 @@ export function AdminEveningView({ data, now, refresh, loading }: { data: Evenin
     </dl>
     <div className="admin-week-compare" aria-label="Gesamtumsatz im Vergleich zur Vorwoche">
       <h3>Vorwochenvergleich <small>Ticket Tailor + SumUp</small></h3>
-      {([{label:'Heute · live',date:data.date,cents:data.combinedCents},{label:'Vorwoche',date:data.comparison?.date,cents:data.comparison?.combinedCents ?? null}] as const).map((item,index) => {
+      {([{label:ended?'Letzter Abend':'Heute · live',date:data.date,cents:data.combinedCents},{label:'Vorwoche',date:data.comparison?.date,cents:data.comparison?.combinedCents ?? null}] as const).map((item,index) => {
         const peak = Math.max(1, data.combinedCents ?? 0, data.comparison?.combinedCents ?? 0);
         return <div className="admin-compare-row" key={index}>
           <div className="admin-compare-label"><span>{item.label}{item.date ? ' · ' + shortDay(item.date) : ''}</span><strong>{money(item.cents)}</strong></div>
@@ -41,7 +41,7 @@ export function AdminEveningView({ data, now, refresh, loading }: { data: Evenin
     </div><div className="admin-evening-secondary"><div className="admin-evening-bar"><span>SumUp + Inklusivgetränke<small>Kalkulatorisch · bereits im Ticketwert enthalten</small></span><strong>{money(data.barWithIncludedCents)}</strong></div>
     <div className="admin-rose-compare" aria-label="SumUp-Umsatz im Vergleich zur Vorwoche">
       <h3>SumUp · Vorwochenvergleich</h3>
-      {([{label:'Heute · live',cents:data.sumupCents},{label:'Vorwoche · '+(data.comparison?.date ? shortDay(data.comparison.date) : '–'),cents:data.comparison?.sumupCents ?? null}] as const).map((item,index) => {
+      {([{label:ended?'Letzter Abend':'Heute · live',cents:data.sumupCents},{label:'Vorwoche · '+(data.comparison?.date ? shortDay(data.comparison.date) : '–'),cents:data.comparison?.sumupCents ?? null}] as const).map((item,index) => {
         const peak = Math.max(1,data.sumupCents ?? 0,data.comparison?.sumupCents ?? 0);
         return <div className="admin-compare-row" key={index}>
           <div className="admin-compare-label"><span>{item.label}</span><strong>{money(item.cents)}</strong></div>

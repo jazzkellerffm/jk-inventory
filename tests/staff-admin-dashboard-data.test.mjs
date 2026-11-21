@@ -19,11 +19,11 @@ async function isolated(name,fn){
  process.env.TICKET_TAILOR_API_KEY='test-'+name;process.env.SUMUP_API_KEY='test-'+name;process.env.SUMUP_MERCHANT_CODE='test';
  try{await fn();}finally{globalThis.fetch=fetch;Date.now=now;for(const [k,v] of Object.entries(original)){if(v===undefined)delete process.env[k];else process.env[k]=v;}}
 }
-test('evening uses dotted Ticket Tailor filters and follows event pagination',()=>isolated('events',async()=>{
+test('evening filters the complete paginated event catalogue by occurrence date',()=>isolated('events',async()=>{
  let pages=0;
  globalThis.fetch=async(input)=>{
   const url=new URL(input);pages++;assert.equal(url.pathname,'/v1/events');
-  assert.ok(url.searchParams.has('start_at.gte'));assert.ok(url.searchParams.has('start_at.lt'));
+  assert.equal(url.searchParams.has('start_at.gte'),false);assert.equal(url.searchParams.has('start_at.lt'),false);
   assert.equal(url.searchParams.has('start_at_gte'),false);
   const event={id:'ev_today',name:'Test',status:'published',start:{date:'2026-11-21',unix:Date.parse('2026-11-21T20:30:00Z')/1000}};
   if(pages===1)return json({data:[{...event,id:'yesterday',start:{...event.start,date:'2026-11-20'}}],links:{next:'/v1/events?starting_after=yesterday'}});

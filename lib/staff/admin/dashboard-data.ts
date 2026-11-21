@@ -9,9 +9,10 @@ async function events(date: string): Promise<EveningEvent[]> {
   const key = process.env.TICKET_TAILOR_API_KEY?.trim();
   if (!key) throw Error('Ticket Tailor unavailable');
   return privateMemo('evening-events:' + date, key, 60000, async () => {
-    const next = new Date(Date.parse(date + 'T12:00:00Z') + 86400000).toISOString().slice(0, 10);
-    const query = new URLSearchParams({ limit: '100', 'start_at.gte': String(Date.parse(date + 'T00:00:00+02:00') / 1000),
-      'start_at.lt': String(Date.parse(next + 'T00:00:00+01:00') / 1000) });
+    // Use the same complete event catalogue as the team dashboard. The provider's
+    // date-filtered list can omit an occurrence that is present in this catalogue.
+    // Filter the actual occurrence date below, after following every page.
+    const query = new URLSearchParams({ limit: '100' });
     const result = new Map<string, EveningEvent>(), cursors = new Set<string>();
     for (let i = 0; i < 20; i++) {
       const response = await fetch('https://api.tickettailor.com/v1/events?' + query, {

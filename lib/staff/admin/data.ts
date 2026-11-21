@@ -1,6 +1,8 @@
 import 'server-only';
 import { readOrders } from '../ticket-orders';
 import { serviceStart } from '../service-day';
+import { berlinDay } from './finance';
+import { privateMemo } from './private-cache';
 import { summarizeSumUp, summarizeTickets, type FinanceOrder, type SumUpFinanceRow, type SumUpFinanceDetail, type Valuation } from './finance';
 import { needsRefundDetail, sumupId } from './sumup-refunds';
 
@@ -23,13 +25,9 @@ function valuation(): Valuation {
   return config;
 }
 
-async function sumup(month: string) {
+export async function readSumUpRange(from: number, end: number) {
   const merchant = process.env.SUMUP_MERCHANT_CODE?.trim(), token = process.env.SUMUP_API_KEY?.trim();
   if (!merchant || !token) throw Error('SumUp not configured');
-  // Cover both calendar month and the last service night up to 03:00 the next day.
-  const from = Date.parse(month + '-01T00:00:00+02:00');
-  const next = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5)), 1, 12));
-  const end = Math.min(Date.now(), serviceStart(next.getTime()));
   const path = `https://api.sumup.com/v2.1/merchants/${encodeURIComponent(merchant)}/transactions/history`;
   let query = new URLSearchParams({ oldest_time: new Date(from).toISOString(), newest_time: new Date(end).toISOString(),
     limit: '100', order: 'ascending' }).toString();
@@ -68,15 +66,28 @@ async function sumup(month: string) {
     }));
     for (const detail of batch) if (detail) details.push(detail);
   }
-  return summarizeSumUp(rows, month, details);
+  return { rows, details };
 }
 
-async function tickets(month: string) {
+export function sumup(month: string) {
+  const identity = (process.env.SUMUP_MERCHANT_CODE ?? '') + (process.env.SUMUP_API_KEY ?? '');
+  return privateMemo('sumup:' + month, identity, month === berlinDay(Date.now()).slice(0, 7) ? 60000 : 600000, async () => {
+    // Cover calendar month and its last service night, including month-end 00–03h.
+    const from = Date.parse(month + '-01T00:00:00+02:00');
+    const next = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5)), 1, 12));
+    const end = Math.min(Date.now(), serviceStart(next.getTime()));
+    const { rows, details } = await readSumUpRange(from, end);
+    return summarizeSumUp(rows, month, details);
+  });
+}
+
+export function tickets(month: string) {
   const key = process.env.TICKET_TAILOR_API_KEY?.trim();
-  if (!key) throw Error('Ticket Tailor not configured');
-  // All order ledgers: a refund this month may belong to a much older purchase.
-  const orders = await readOrders<FinanceOrder>({}, 'Basic ' + Buffer.from(key + ':').toString('base64'));
-  return summarizeTickets(orders, month, valuation());
+  if (!key) return Promise.reject(Error('Ticket Tailor not configured'));
+  // Share the private server read between the current evening and selected month.
+  return privateMemo('orders', key, 60000, () =>
+    readOrders<FinanceOrder>({}, 'Basic ' + Buffer.from(key + ':').toString('base64'))
+  ).then(orders => summarizeTickets(orders, month, valuation()));
 }
 
 export async function readAdminSummary(month: string) {

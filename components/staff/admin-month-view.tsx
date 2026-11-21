@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react';
+import { ticketTotal } from '@/lib/staff/admin/finance';
 import { serviceDate } from '@/lib/staff/service-day';
 import type { AdminSummary } from '@/lib/staff/admin/data';
 
@@ -16,7 +17,7 @@ function Calculation({ children }: { children: React.ReactNode }) {
 export function AdminMonthView({ data, mode, retry }: { data: AdminSummary; mode: AdminMode; retry: () => void }) {
   const nights = data.ticket?.nights ?? [];
   const eventComplete = data.ticket && data.ticket.eventIssues === 0;
-  const ticketTotal = eventComplete ? nights.reduce((sum, night) => sum + night.ticketCents, 0) : null;
+  const monthTotal = eventComplete ? nights.reduce((sum, night) => sum + ticketTotal(night)!, 0) : null;
   const retryButton = <button className="admin-retry" type="button" onClick={retry}>Erneut laden</button>;
   return <>
     {mode === 'payments' ? <>
@@ -39,14 +40,14 @@ export function AdminMonthView({ data, mode, retry }: { data: AdminSummary; mode
         <p>Vor Anbietergebühren und Kreditrückzahlung, inklusive etwaiger Trinkgelder. Stripe wird nicht nochmals addiert. Auszahlungen und Gewinn sind andere Größen.</p>
       </Calculation>
     </> : <>
-      <section className="admin-total" aria-label="Ticketpakete im Veranstaltungsmonat">
-        <p>Ticketpakete im Monat</p><strong>{money(ticketTotal)}</strong>
-        <small>Veranstaltungsdatum · ohne Gebühren & Zusatzbestellungen</small>
+      <section className="admin-total" aria-label="Ticket Tailor gesamt im Veranstaltungsmonat">
+        <p>Ticket Tailor gesamt im Monat</p><strong>{money(monthTotal)}</strong>
+        <small>Veranstaltungsdatum · inklusive Buchungsgebühren & Zusatzbestellungen</small>
       </section>
       {!eventComplete && <div role="status"><p>{!data.ticket ? 'Ticket Tailor konnte nicht vollständig geladen werden.' : 'Einige Bestellungen benötigen einen Abgleich. Die vollständige Monatssumme bleibt bis dahin offen.'}</p>{retryButton}</div>}
       {!data.bar && <div role="status"><p>SumUp konnte nicht vollständig geladen werden. Die Abendzahlungen bleiben bis dahin offen.</p>{retryButton}</div>}
       <Calculation>
-        <p>Gültige Ticketpakete für Veranstaltungen in diesem Monat, unabhängig vom Kaufmonat. Buchungsgebühren, Zusatzbestellungen und stornierte Tickets sind ausgenommen.</p>
+        <p>Gültige Buchungen für Veranstaltungen in diesem Monat, unabhängig vom Kaufmonat. Ticket Tailor gesamt = Ticketpakete + Buchungsgebühren + Zusatzbestellungen. Kunden-Buchungsgebühren sind enthalten; Anbietergebühren werden nicht abgezogen. Stornierte Buchungen sind ausgenommen.</p>
         {!!data.ticket?.excludedEventOrders && <p>{data.ticket.excludedEventOrders} stornierte {data.ticket.excludedEventOrders === 1 ? 'Buchung ist' : 'Buchungen sind'} ausgenommen. Zugehörige Zahlungen und Rückzahlungen bleiben unter „Zahlungen“ berücksichtigt.</p>}
         <p>Ticketanteil ohne Inklusivgetränke = Ticketpakete minus bewertete Inklusivgetränke. Darin stecken Eintritt und Platzvorteile. Es ist kein Gewinn und kein Vergleich mit einem Basis-Ticket.</p>
         <p>Inklusivdrinks: vereinbarter Ansatz 15 € je enthaltenem Drink. Flasche Crémant: 50 €; Flasche Moët: vorläufig 129 €. Die jeweilige Aufschlüsselung steht beim Abend. Diese Werte beschreiben enthaltene Leistungen, nicht den tatsächlichen Verbrauch oder zusätzliche Einnahmen.</p>
@@ -63,22 +64,24 @@ export function AdminMonthView({ data, mode, retry }: { data: AdminSummary; mode
         return <details className="admin-night" key={night.id} name="admin-event">
           <summary>
             <span className="admin-night-title"><time dateTime={night.date}>{day(night.date)}</time><span>{night.name}</span></span>
-            <span className="admin-night-value"><small>Ticketwert</small><strong>{money(night.uncertain ? null : night.ticketCents)}</strong></span>
+            <span className="admin-night-value"><small>Ticket Tailor gesamt</small><strong>{money(ticketTotal(night))}</strong></span>
             <ChevronDown size={18} aria-hidden="true" />
           </summary>
           {night.uncertain ? <p className="admin-note">Zuordnung wird geprüft · keine verlässliche Aufteilung.</p> : <dl className="admin-values">
-            <div><dt>Ticketpakete</dt><dd>{money(night.ticketCents)}</dd></div>
-            <div><dt>{night.includedCents === null ? 'Bewertete Inklusivgetränke · Teilbetrag' : 'Davon Inklusivgetränke'}
+            <div><dt>Ticketpakete ohne Inklusivwert<small className="admin-value-note">Kalkulatorischer Ticketanteil</small></dt><dd>{money(night.admissionCents)}</dd></div>
+            <div><dt>{night.includedCents === null ? 'Bewertete Inklusivgetränke · Teilbetrag' : 'Bewertete Inklusivgetränke'}
               <small className="admin-value-note">Kalkulatorischer Wert</small>
               {night.includedItems.map(item => <small className="admin-value-note" key={`${item.label}:${item.unitCents}`}>
                 {item.quantity} × {item.label} à {money(item.unitCents)}{item.label === 'Flasche Moët' && ' · vorläufig'}
               </small>)}
               {night.unvaluedSupplies.length > 0 && <small className="admin-value-note">Noch ohne Rechenwert: {night.unvaluedSupplies.map(item => `${item.quantity} × ${item.label}`).join(' · ')}</small>}
             </dt><dd>{money(night.knownIncludedCents)}</dd></div>
-            {night.admissionCents !== null && <div><dt>Ticketanteil ohne Inklusivgetränke</dt><dd>{money(night.admissionCents)}</dd></div>}
+            {night.admissionCents === null && <div><dt>Ticketpakete inklusive Inklusivgetränke<small className="admin-value-note">Aufteilung noch unvollständig</small></dt><dd>{money(night.ticketCents)}</dd></div>}
+            <div><dt>Zusatzbestellungen über Ticket Tailor</dt><dd>{money(night.addonCents)}</dd></div>
+            <div><dt>Buchungsgebühren<small className="admin-value-note">Von Gästen bezahlt · in Ticket Tailor gesamt enthalten</small></dt><dd>{money(night.feeCents)}</dd></div>
             <div><dt>SumUp-Zahlungen des Abends</dt><dd>{money(bar)}</dd></div>
             {gastro !== null && <div><dt>SumUp + Inklusivwert<small className="admin-value-note">Kalkulatorisch</small></dt><dd>{money(gastro)}</dd></div>}
-            <div><dt>Zusatzbestellungen über Ticket Tailor</dt><dd>{money(night.addonCents)}</dd></div>
+
           </dl>}
         </details>;
       })}

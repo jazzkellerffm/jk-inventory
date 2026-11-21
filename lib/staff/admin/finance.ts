@@ -20,6 +20,11 @@ export type NightFinance = { id: string; name: string; date: string; ticketCents
 export const berlinDay = (time: string | number) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date(time));
 const cents = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
 
+// Included drinks are a portion of the ticket value, never an extra payment.
+export function ticketTotal(night: NightFinance): number | null {
+  return night.uncertain ? null : night.ticketCents + night.feeCents + night.addonCents;
+}
+
 export function summarizeTickets(orders: FinanceOrder[], month: string, valuation: Valuation) {
   let payments = 0, refunds = 0, paymentIssues = 0, eventIssues = 0, excludedEventOrders = 0;
   const nights = new Map<string, NightFinance>();

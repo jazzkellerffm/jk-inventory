@@ -172,3 +172,69 @@ test('invalid valuation cannot appear as a priced line in the included breakdown
   assert.equal(night.includedCents,null);assert.equal(night.admissionCents,null);
   assert.ok(night.unvaluedSupplies.some(item=>item.label==='Ticketbewertung zu prüfen'));
 });
+
+test('full event amount includes actual variable booking fees and add-ons once',async()=>{
+  const {ticketTotal}=await import('../lib/staff/admin/finance.ts');
+  const o=order();
+  o.line_items.push({...o.line_items[0],quantity:2,value:1500,booking_fee:500,total:4000,type:'product',description:'Bottle'});
+  o.total=13700;o.transactions[0].amount=13700;
+  const night=summarizeTickets([o,o],'2026-12',valuation).nights[0];
+  assert.equal(night.ticketCents,9400);assert.equal(night.addonCents,3000);assert.equal(night.feeCents,1300);
+  assert.equal(ticketTotal(night),13700);
+  assert.equal(night.admissionCents+night.includedCents+night.addonCents+night.feeCents,13700);
+  assert.equal(ticketTotal({...night,uncertain:true}),null);
+});
+
+test('daily overview combines providers once and keeps drinks in the ticket value',async()=>{
+  const {eveningDashboard}=await import('../lib/staff/admin/dashboard.ts');
+  const o=order(), now=Date.parse('2026-12-06T00:29:00+01:00');
+  const ticket=summarizeTickets([o],'2026-12',valuation);
+  const events=[{id:'ev_test',name:'Concert',date:'2026-12-05',start:Date.parse(o.line_items[0].event_summary.start_date)/1000}];
+  const bar={payments:5000,refunds:0,netPayments:5000,paymentIssues:0,nights:{'2026-12-05':5000}};
+  const result=eveningDashboard(events,ticket,bar,now);
+  assert.equal(result.date,'2026-12-05');assert.equal(result.phase,'ended');
+  assert.equal(result.ticketTotal,9700);assert.equal(result.combinedCents,14700);
+  assert.equal(result.includedCents,3000);assert.equal(result.barWithIncludedCents,8000);
+  assert.equal(eveningDashboard(events,ticket,bar,Date.parse('2026-12-06T02:59:59+01:00')).date,'2026-12-05');
+  const reset=eveningDashboard(events,ticket,bar,Date.parse('2026-12-06T03:00:00+01:00'));
+  assert.equal(reset.date,'2026-12-06');assert.equal(reset.ticketTotal,0);assert.equal(reset.sumupCents,0);assert.equal(reset.events.length,0);
+  const prior=eveningDashboard(events,ticket,bar,Date.parse('2026-12-05T23:59:59+01:00'));
+  assert.equal(prior.phase,'started');
+});
+
+test('daily service date uses Berlin through month-end and both clock changes',async()=>{
+  const {eveningDashboard}=await import('../lib/staff/admin/dashboard.ts');
+  for(const [timestamp,date] of [
+    ['2026-12-01T01:00:00+01:00','2026-11-30'],
+    ['2026-07-01T02:59:59+02:00','2026-06-30'],['2026-07-01T03:00:00+02:00','2026-07-01'],
+    ['2026-10-25T02:30:00+02:00','2026-10-24'],['2026-10-25T02:30:00+01:00','2026-10-24'],
+    ['2026-10-25T03:00:00+01:00','2026-10-25'],['2026-03-29T03:00:00+02:00','2026-03-29']]) {
+    assert.equal(eveningDashboard([],null,null,Date.parse(timestamp)).date,date);
+  }
+});
+
+test('daily failures and incomplete valuation are not presented as zero or a total',async()=>{
+  const {eveningDashboard}=await import('../lib/staff/admin/dashboard.ts');
+  const o=order(),ticket=summarizeTickets([o],'2026-12',valuation);
+  const now=Date.parse('2026-12-05T23:00:00+01:00'),events=[{id:'ev_test',name:'Concert',date:'2026-12-05',start:1}];
+  const bar={payments:5000,refunds:0,netPayments:5000,paymentIssues:0,nights:{'2026-12-05':5000}};
+  for(const [ev,tt,su] of [[null,ticket,bar],[events,null,bar],[events,ticket,null],[events,ticket,{...bar,paymentIssues:1}]]) {
+    assert.equal(eveningDashboard(ev,tt,su,now).combinedCents,null);
+  }
+  ticket.nights[0].includedCents=null;ticket.nights[0].unvaluedSupplies=[{label:'Glas Crémant',quantity:2}];
+  const partial=eveningDashboard(events,ticket,bar,now);
+  assert.equal(partial.ticketTotal,9700);assert.equal(partial.combinedCents,14700);
+  assert.equal(partial.knownIncludedCents,3000);assert.equal(partial.barWithIncludedCents,null);
+  // An unknown event must not disappear from the evening total.
+  assert.equal(eveningDashboard([],ticket,bar,now).ticketTotal,null);
+});
+
+test('multiple events share one service evening without duplicating SumUp',async()=>{
+  const {eveningDashboard}=await import('../lib/staff/admin/dashboard.ts');
+  const o=order(),ticket=summarizeTickets([o],'2026-12',valuation);
+  ticket.nights.push({...ticket.nights[0],id:'ev_second'});
+  const events=ticket.nights.map(n=>({id:n.id,name:n.name,date:n.date,start:1}));
+  const bar={payments:5000,refunds:0,netPayments:5000,paymentIssues:0,nights:{'2026-12-05':5000}};
+  const result=eveningDashboard(events,ticket,bar,Date.parse('2026-12-05T23:00:00+01:00'));
+  assert.equal(result.ticketTotal,19400);assert.equal(result.combinedCents,24400);assert.equal(result.barWithIncludedCents,11000);
+});

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, LockKeyhole } from 'lucide-react';
 import { Masthead } from './masthead';
 import { TicketLoader } from './ticket-loader';
+import { AdminDashboard } from './admin-dashboard';
 import { AdminMonthView, type AdminMode } from './admin-month-view';
 import type { AdminSummary } from '@/lib/staff/admin/data';
 
@@ -20,7 +21,7 @@ export function AdminPanel() {
   const [refresh, setRefresh] = useState(0);
   const request = useRef<AbortController | null>(null);
   const touch = useRef<{ x: number; y: number; id: number } | null>(null);
-  const clear = useCallback(() => { request.current?.abort(); setData(null); setUnlocked(false); setPin(''); }, []);
+  const clear = useCallback(() => { request.current?.abort(); setData(null); setBusy(false); setUnlocked(false); setPin(''); }, []);
   const lock = useCallback(async () => {
     clear();
     try { await fetch('/api/staff/admin/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'lock' }) }); }
@@ -83,6 +84,7 @@ export function AdminPanel() {
   return <div className="staff-shell"><Masthead signedIn /><main className="staff-admin">
     <div className="admin-heading"><h1>Administration</h1>{unlocked && <button onClick={() => void lock()}><LockKeyhole size={18} /> Sperren</button>}</div>
     <Link href="/staff#staff-tools">Zurück zum Team</Link>
+    {unlocked && <AdminDashboard onExpired={clear} />}
     {!unlocked ? <section className="staff-login">
       <LockKeyhole aria-hidden="true"/><h2>Geschützter Bereich</h2>
       {configured === null ? <TicketLoader label="Zugang wird geprüft"/> : configured ? <form onSubmit={unlock}>

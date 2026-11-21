@@ -581,3 +581,53 @@
   .admin-night-value strong { font-size:14px; }
   .admin-values>div { gap:8px; }
 }
+
+/* Private evening overview: the staff palette, with compact figures. */
+.admin-dashboard { margin:24px 0 30px; }
+.admin-evening { padding:20px; border-radius:22px; background:#294d43; color:#f5ecd2; }
+.admin-evening-heading, .admin-evening-footer, .admin-history-heading, .admin-history-selection { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.admin-evening-heading h2 { font-family:var(--font-poly-bulky-only),sans-serif; font-size:17px; }
+.admin-evening-heading time { font-size:12px; white-space:nowrap; color:#d7e1d9; }
+.admin-evening-name { font-size:14px; line-height:1.4; margin:8px 0 22px; max-width:65ch; }
+.admin-evening-total dt { color:#d7e1d9; font-size:13px; }
+.admin-evening-total dd { font-family:var(--staff-display),sans-serif; font-size:clamp(30px,7vw,46px); line-height:1.2; margin-top:5px; overflow-wrap:anywhere; }
+.admin-evening-split { display:flex; height:5px; gap:3px; border-radius:99px; overflow:hidden; background:#426357; margin:18px 0 12px; }
+.admin-evening-split span:first-child { background:#efc4ba; }
+.admin-evening-split span:last-child { background:#a9c7b6; }
+.admin-evening-sources { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+.admin-evening-sources dt { display:flex; align-items:center; gap:5px; font-size:12px; color:#d7e1d9; }
+.admin-evening-sources dd { font-family:var(--font-poly-bulky-only),sans-serif; font-size:clamp(18px,4.3vw,25px); margin-top:4px; overflow-wrap:anywhere; }
+.admin-evening-sources i { display:inline-block; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.admin-key-ticket { background:#efc4ba; }
+.admin-key-bar { background:#a9c7b6; }
+.admin-evening-bar { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px 16px; margin-top:20px; padding-top:14px; border-top:1px solid #668378; font-size:13px; }
+.admin-evening-bar small { display:block; color:#d7e1d9; font-size:11px; max-width:42ch; margin-top:3px; }
+.admin-evening-bar strong { font-family:var(--font-poly-bulky-only),sans-serif; font-size:21px; white-space:nowrap; }
+.admin-evening-note { font-size:12px; color:#d7e1d9; margin-top:12px; line-height:1.5; }
+.admin-evening-details { margin-top:8px; color:#d7e1d9; font-size:12px; }
+.admin-evening-details summary { min-height:44px; display:flex; align-items:center; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.admin-evening-details .admin-values { font-size:12px; margin:0 0 12px; }
+.admin-evening-details .admin-values>div { border-color:#668378; gap:8px; }
+.admin-evening-details p { line-height:1.5; }
+.admin-evening-footer { color:#d7e1d9; font-size:11px; line-height:1.5; margin-top:6px; }
+.admin-evening-footer button { min-width:44px; min-height:44px; display:grid; place-items:center; }
+.admin-evening-footer button:disabled { opacity:.45; }
+.admin-history { margin-top:24px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+.admin-history-heading { align-items:baseline; flex-wrap:wrap; gap:4px 12px; }
+.admin-history h2 { font-family:var(--font-poly-bulky-only),sans-serif; font-size:17px; }
+.admin-history-heading>span, .admin-history-axis, .admin-history-note { font-size:12px; color:var(--muted); }
+.admin-history-selection { margin-top:12px; flex-wrap:wrap; }
+.admin-history-selection label { font-size:11px; color:var(--muted); }
+.admin-history-selection select { display:block; color:var(--paper); font-size:14px; min-height:44px; padding:4px 28px 4px 0; max-width:100%; }
+.admin-history-selection strong { font-family:var(--staff-display),sans-serif; font-size:28px; }
+.admin-history svg { display:block; width:100%; height:auto; max-height:180px; overflow:visible; }
+.admin-chart-axis { stroke:var(--line); stroke-width:1; }
+.admin-chart-line, .admin-chart-partial { stroke:#426b5b; stroke-width:2.5; fill:none; vector-effect:non-scaling-stroke; }
+.admin-chart-partial { stroke-dasharray:5 5; }
+.admin-chart-dot { fill:#426b5b; }
+.admin-chart-selected { fill:#a3635b; stroke:var(--paper); stroke-width:2; }
+.admin-history-axis { display:flex; justify-content:space-between; margin-top:2px; }
+.admin-history-note { margin-top:12px; max-width:70ch; line-height:1.5; }
+.admin-history .ticket-loader { margin:12px 0; }
+.admin-dashboard summary:focus-visible, .admin-history select:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
+.admin-evening dd, .admin-evening-bar strong, .admin-history-selection strong { font-variant-numeric:tabular-nums; }

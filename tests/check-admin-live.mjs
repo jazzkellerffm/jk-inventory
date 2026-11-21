@@ -1,8 +1,11 @@
 // Manual, read-only verification in Vercel; never log customer data, secrets or amounts.
 import assert from 'node:assert/strict';
 import { readAdminSummary } from '../lib/staff/admin/data.ts';
+import { ticketTotal } from '../lib/staff/admin/finance.ts';
+import { readAdminEvening, readAdminHistory } from '../lib/staff/admin/dashboard-data.ts';
 const originalFetch = globalThis.fetch;
-let orders, history;
+const orders = new Map();
+let history = new Map();
 globalThis.fetch = async (...args) => {
   const response = await originalFetch(...args);
   const url = new URL(String(args[0]));
@@ -21,7 +24,7 @@ let checkedMonth = '', stage = '';
 try {
 for (const month of ['2026-11','2026-10']) {
   checkedMonth = month; stage = 'fetch and completeness';
-  orders = new Map(); history = new Map();
+  history = new Map();
   const result = await readAdminSummary(month);
   assert.ok(result.ticket, 'Ticket Tailor source unavailable');
   assert.ok(result.bar, 'SumUp source unavailable');
@@ -49,9 +52,40 @@ for (const month of ['2026-11','2026-10']) {
     assert.ok(Number.isSafeInteger(night.knownIncludedCents) && night.knownIncludedCents>=0);
     if (night.unvaluedSupplies.length) { assert.equal(night.includedCents,null); assert.equal(night.admissionCents,null); }
   }
+  stage = 'event fee/add-on reconciliation';
+  for (const night of result.ticket.nights) {
+    let expected = 0;
+    for (const order of orders.values()) {
+      if (order.status === 'cancelled') continue;
+      for (const line of order.line_items ?? []) if (line.type !== 'void' && line.event_summary?.event_id === night.id) expected += line.total;
+    }
+    assert.equal(ticketTotal(night), expected);
+  }
+  if (month === '2026-11') {
+    const friday = result.ticket.nights.find(n => n.date === '2026-11-06' && /Friday Night Club Band/i.test(n.name));
+    assert.ok(friday, 'Reference event absent');
+    assert.equal(ticketTotal(friday), 285300, 'Owner Ticket Tailor screenshot mismatch');
+    assert.equal(friday.feeCents, 9600, 'Reference fees mismatch');
+    const nyjb = result.ticket.nights.find(n => n.date === '2026-11-05' && /New York Jazz Bar/i.test(n.name));
+    assert.ok(nyjb, 'Second reference event absent');
+    assert.equal(ticketTotal(nyjb), 120000, 'Second owner Ticket Tailor screenshot mismatch');
+    assert.equal(nyjb.feeCents, 7800, 'Second reference fees mismatch');
+    console.log('ADMIN_REFERENCE PASS: event total matches owner Ticket Tailor screenshot; actual fees reconciled');
+  }
   console.log('ADMIN_EVENTS '+month+' PASS: valid packages reconciled; known drinks retained; cancelled orders excluded');
   console.log('ADMIN_VERIFY '+month+' PASS: both sources complete; refunds and combined total reconciled');
 }
+stage = 'current evening';
+const evening = await readAdminEvening();
+assert.equal(evening.eventsAvailable,true);
+assert.notEqual(evening.ticketTotal,null);assert.notEqual(evening.sumupCents,null);
+assert.equal(evening.combinedCents,evening.ticketTotal+evening.sumupCents);
+console.log('ADMIN_EVENING PASS: sources complete; date-bound sum reconciled');
+stage = 'SumUp archive';
+const archive = await readAdminHistory('2026-11');
+assert.ok(archive.firstMonth);assert.ok(archive.points.length);
+assert.ok(archive.points.every(p=>p.cents!==null));
+console.log('ADMIN_HISTORY PASS: first available month discovered; first archive batch reconciled');
 } catch {
   console.error('ADMIN_VERIFY '+checkedMonth+' FAIL: '+stage);
   process.exitCode = 1;

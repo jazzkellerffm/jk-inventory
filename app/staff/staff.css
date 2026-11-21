@@ -584,7 +584,13 @@
 
 /* Private evening overview: the staff palette, with compact figures. */
 .admin-dashboard { margin:24px 0 30px; }
-.admin-evening { padding:20px; border-radius:22px; background:#294d43; color:#f5ecd2; }
+.admin-evening { padding:0; border-radius:22px; background:#294d43; color:#f5ecd2; overflow:hidden; }
+.admin-evening-primary { padding:20px 20px 18px; }
+.admin-evening-secondary { padding:0 20px 12px; background:#f4e3e3; color:#294d43; border-top:1px dashed #b78e88; }
+.admin-evening-secondary .admin-evening-bar { border:0; padding-top:16px; margin-top:0; }
+.admin-evening-secondary .admin-evening-bar small, .admin-evening-secondary .admin-evening-note, .admin-evening-secondary .admin-evening-details, .admin-evening-secondary .admin-evening-footer { color:#53625a; }
+.admin-evening-secondary .admin-evening-details .admin-values>div { border-color:#d8bdbc; }
+.admin-evening-secondary .admin-evening-footer button { color:#294d43; }
 .admin-evening-heading, .admin-evening-footer, .admin-history-selection { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .admin-evening-heading h2 { font-family:var(--font-poly-bulky-only),sans-serif; font-size:17px; }
 .admin-evening-heading time { font-size:12px; white-space:nowrap; color:#d7e1d9; }

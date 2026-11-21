@@ -1,0 +1,128 @@
+import { includedDrinks, includedSupply, packageSize, ticketCategory } from '../entitlements';
+import { serviceDate } from '../service-day';
+
+export type FinanceLine = { type: string; description: string; quantity: number; value: number;
+  booking_fee: number; total: number; event_summary?: { event_id: string; name: string; start_date: string } };
+export type FinanceOrder = { id: string; status: string; total: number; currency: { code: string; base_multiplier: number };
+  line_items: FinanceLine[]; transactions: { transaction_id?: string; type: string; amount: number;
+    currency: string; pending: boolean; created_at: string; payment_method: string }[] };
+export type Valuation = { drinkCents: number; bottles: Record<string, number>;
+  // Explicit baseline per event; never infer a historic price from today's catalogue.
+  clubPerGuest: Record<string, number> };
+export type NightFinance = { id: string; name: string; date: string; ticketCents: number;
+  feeCents: number; addonCents: number; guests: number; includedCents: number | null;
+  admissionCents: number | null; upgradeCents: number | null; uncertain: boolean };
+export const berlinDay = (time: string | number) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date(time));
+const cents = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
+
+export function summarizeTickets(orders: FinanceOrder[], month: string, valuation: Valuation) {
+  let payments = 0, refunds = 0, paymentIssues = 0, eventIssues = 0;
+  const nights = new Map<string, NightFinance>();
+  const seen = new Set<string>();
+  for (const order of orders) {
+    if (seen.has(order.id)) continue;
+    seen.add(order.id);
+    if (order.currency?.code !== 'EUR' || order.currency.base_multiplier !== 100 || !Array.isArray(order.transactions)) {
+      paymentIssues++; eventIssues++; continue;
+    }
+    let settled = 0, refunded = 0, ledgerIssue = false;
+    for (const tx of order.transactions) {
+      if (tx.pending === true) continue;
+      if (!cents(tx.amount) || tx.currency !== 'EUR' || tx.pending !== false || !Number.isFinite(Date.parse(tx.created_at))) {
+        paymentIssues++; ledgerIssue = true; continue;
+      }
+      const selected = berlinDay(tx.created_at).startsWith(month);
+      // Credits/gift cards are not a new cash inflow. Unknown methods need review.
+      if (!['STRIPE', 'PAYPAL', 'SQUARE'].includes(tx.payment_method)) {
+        if (tx.amount) { if (selected) paymentIssues++; ledgerIssue = true; }
+        continue;
+      }
+      if (tx.type === 'payment') { settled += tx.amount; if (selected) payments += tx.amount; }
+      else if (tx.type === 'refund') { refunded += tx.amount; if (selected) refunds += tx.amount; }
+      else if (tx.amount) { if (selected) paymentIssues++; ledgerIssue = true; }
+    }
+    if (order.line_items.some(line => line.type === 'ticket' && (!line.event_summary?.event_id || !line.event_summary.start_date))) eventIssues++;
+    const lines = order.line_items.filter(line => line.event_summary?.start_date && berlinDay(line.event_summary.start_date).startsWith(month));
+    if (!lines.length) continue;
+    // Refunded/discounted/cancelled or multi-source allocations must reconcile before splitting revenue.
+    const balanced = !ledgerIssue && order.status === 'completed' && refunded === 0 && cents(order.total)
+      && settled === order.total && order.line_items.every(l => cents(l.total))
+      && order.line_items.reduce((sum, l) => sum + l.total, 0) === order.total;
+    if (!balanced) eventIssues++;
+    for (const line of lines) {
+      const event = line.event_summary!;
+      const night = nights.get(event.event_id) ?? { id: event.event_id, name: event.name, date: berlinDay(event.start_date),
+        ticketCents: 0, feeCents: 0, addonCents: 0, guests: 0, includedCents: 0,
+        admissionCents: 0, upgradeCents: 0, uncertain: false };
+      nights.set(event.event_id, night);
+      if (!balanced || !Number.isSafeInteger(line.quantity) || line.quantity < 0 || !cents(line.value) || !cents(line.booking_fee)
+        || (line.value + line.booking_fee) * line.quantity !== line.total) {
+        if (balanced) eventIssues++;
+        night.uncertain = true; continue;
+      }
+      night.feeCents += line.booking_fee * line.quantity;
+      if (line.type !== 'ticket') { night.addonCents += line.value * line.quantity; continue; }
+      const value = line.value * line.quantity;
+      night.ticketCents += value;
+      const guests = packageSize(line.description) * line.quantity;
+      night.guests += guests;
+      let drinks: number | null = includedDrinks(line.description) * valuation.drinkCents * line.quantity;
+      for (const supply of includedSupply(line.description)) {
+        const price = valuation.bottles[supply.label];
+        if (!cents(price)) { drinks = null; break; }
+        drinks += supply.quantity * line.quantity * price;
+      }
+      // Some old VIP labels omit the bottle; missing entitlement is not a zero value.
+      if (ticketCategory(line.description) === 'VIP' && !includedSupply(line.description).length) drinks = null;
+      if (drinks === null || drinks > value || !guests) {
+        night.includedCents = null; night.admissionCents = null; night.upgradeCents = null;
+        continue;
+      }
+      if (night.includedCents !== null) night.includedCents += drinks;
+      if (night.admissionCents !== null) night.admissionCents += value - drinks;
+      const base = valuation.clubPerGuest[event.event_id];
+      if (!cents(base)) night.upgradeCents = null;
+      else if (night.upgradeCents !== null) night.upgradeCents += value - drinks - base * guests;
+    }
+  }
+  return { payments, refunds, netPayments: paymentIssues ? null : payments - refunds, paymentIssues, eventIssues,
+    nights: [...nights.values()].sort((a, b) => a.date.localeCompare(b.date)) };
+}
+
+export type SumUpFinanceRow = { transaction_id?: string; id?: string; transaction_code?: string; type: string;
+  status: string; timestamp: string; amount: number; currency: string; refunded_amount?: number };
+export function summarizeSumUp(rows: SumUpFinanceRow[], month: string) {
+  let payments = 0, refunds = 0, paymentIssues = 0;
+  const nights: Record<string, number> = {};
+  const seen = new Set<string>();
+  for (const row of rows) {
+    if (['FAILED', 'PENDING', 'CANCELLED'].includes(row.status)) continue;
+    const id = row.transaction_id || row.id || row.transaction_code;
+    if (!id || !Number.isFinite(Date.parse(row.timestamp)) || row.currency !== 'EUR' ||
+      !Number.isFinite(row.amount) || !['SUCCESSFUL', 'REFUNDED'].includes(row.status)) throw new Error('Unclear SumUp transaction');
+    const key = `${id}:${row.type}:${row.timestamp}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const amount = Math.round(Math.abs(row.amount) * 100);
+    const selected = berlinDay(row.timestamp).startsWith(month);
+    if (row.type === 'PAYMENT') {
+      if (row.amount < 0) throw new Error('Negative SumUp payment');
+      if (selected) payments += amount;
+      const date = serviceDate(Date.parse(row.timestamp));
+      if (date.startsWith(month)) nights[date] = (nights[date] ?? 0) + amount;
+      // Event allocations of refunds require their original payment reference.
+      if ((row.refunded_amount ?? 0) > 0 || row.status === 'REFUNDED') {
+        nights[date] = NaN;
+        // History alone cannot prove that all refund events were returned and matched.
+        // Keep totals open until reconciliation against transaction_events is implemented.
+        if (selected) paymentIssues++;
+      }
+    } else if (row.type === 'REFUND' || row.type === 'CHARGE_BACK') {
+      if (selected) refunds += amount;
+      const date = serviceDate(Date.parse(row.timestamp));
+      if (date.startsWith(month)) nights[date] = NaN;
+    } else throw new Error('Unknown SumUp type');
+  }
+  return { payments, refunds, paymentIssues, netPayments: paymentIssues ? null : payments - refunds,
+    nights: Object.fromEntries(Object.entries(nights).map(([date, value]) => [date, Number.isFinite(value) ? value : null])) };
+}

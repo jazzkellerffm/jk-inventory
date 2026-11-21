@@ -1,4 +1,4 @@
-import { Boxes, CalendarDays, ChartNoAxesColumnIncreasing, type LucideIcon } from "lucide-react";
+import { LockKeyhole, Boxes, CalendarDays, ChartNoAxesColumnIncreasing, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import type { StaffBoard } from "@/lib/staff/types";
 import { FormatPerformance } from "./format-battle";
@@ -16,4 +16,5 @@ export const staffModules: StaffModule[] = [
     render: (board, error, _example, focus) => <Schedule key={focus?.request ?? 0} initialDate={focus?.date} shifts={board?.shifts ?? []}
       invalid={!!board?.scheduleError || (error && !board)} loading={!board && !error}/>,
   },
+  { id: "administration", title: "Administration", hint: "Geschützter Bereich", icon: LockKeyhole, href: "/staff/admin" },
 ];

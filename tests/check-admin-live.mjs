@@ -77,8 +77,12 @@ for (const month of ['2026-11','2026-10']) {
 }
 stage = 'current evening';
 const evening = await readAdminEvening();
+stage = 'current evening event metadata';
 assert.equal(evening.eventsAvailable,true);
-assert.notEqual(evening.ticketTotal,null);assert.notEqual(evening.sumupCents,null);
+stage = 'current evening Ticket Tailor reconciliation';
+assert.notEqual(evening.ticketTotal,null);
+stage = 'current evening SumUp reconciliation';
+assert.notEqual(evening.sumupCents,null);
 assert.equal(evening.combinedCents,evening.ticketTotal+evening.sumupCents);
 console.log('ADMIN_EVENING PASS: sources complete; date-bound sum reconciled');
 stage = 'SumUp archive';

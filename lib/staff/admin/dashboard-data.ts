@@ -10,8 +10,8 @@ async function events(date: string): Promise<EveningEvent[]> {
   if (!key) throw Error('Ticket Tailor unavailable');
   return privateMemo('evening-events:' + date, key, 60000, async () => {
     const next = new Date(Date.parse(date + 'T12:00:00Z') + 86400000).toISOString().slice(0, 10);
-    const query = new URLSearchParams({ limit: '100', start_at_gte: String(Date.parse(date + 'T00:00:00+02:00') / 1000),
-      start_at_lt: String(Date.parse(next + 'T00:00:00+01:00') / 1000) });
+    const query = new URLSearchParams({ limit: '100', 'start_at.gte': String(Date.parse(date + 'T00:00:00+02:00') / 1000),
+      'start_at.lt': String(Date.parse(next + 'T00:00:00+01:00') / 1000) });
     const result = new Map<string, EveningEvent>(), cursors = new Set<string>();
     for (let i = 0; i < 20; i++) {
       const response = await fetch('https://api.tickettailor.com/v1/events?' + query, {

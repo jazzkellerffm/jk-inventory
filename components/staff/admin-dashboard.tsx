@@ -13,7 +13,7 @@ const monthName = (month: string) => new Intl.DateTimeFormat('de-DE', { month: '
 export function AdminEveningView({ data, now, refresh, loading }: { data: EveningDashboard; now: number; refresh: () => void; loading: boolean }) {
   const ended = berlinDay(now) > data.date;
   const phase = ended ? 'Abend abgeschlossen' : data.phase === 'upcoming' ? 'Heute Abend' : data.phase === 'started' ? 'Abend läuft' : 'Dieser Abend';
-  return <section className="admin-evening" aria-label="Aktueller Serviceabend">
+  return <section className="admin-evening" aria-label="Aktueller Serviceabend"><div className="admin-evening-primary">
     <div className="admin-evening-heading"><h2>{phase}</h2><time dateTime={data.date}>{new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(data.date + 'T12:00:00Z'))}</time></div>
     <p className="admin-evening-name">{!data.eventsAvailable ? 'Veranstaltung wird noch abgeglichen' : data.events.length ? data.events.map(event => event.name).join(' · ') : 'Keine Veranstaltung eingetragen'}</p>
     {data.guests !== null && <p className="admin-evening-guests"><strong>{data.guests}</strong> {data.guests === 1 ? 'Gast gebucht' : 'Gäste gebucht'}</p>}
@@ -27,10 +27,10 @@ export function AdminEveningView({ data, now, refresh, loading }: { data: Evenin
       <div><dt><i className="admin-key-ticket"/>Ticket Tailor gesamt</dt><dd>{money(data.ticketTotal)}</dd></div>
       <div><dt><i className="admin-key-bar"/>SumUp</dt><dd>{money(data.sumupCents)}</dd></div>
     </dl>
-    <div className="admin-evening-bar"><span>SumUp + Inklusivgetränke<small>Kalkulatorisch · Inklusivwert bereits im Ticketwert enthalten</small></span><strong>{money(data.barWithIncludedCents)}</strong></div>
+    </div><div className="admin-evening-secondary"><div className="admin-evening-bar"><span>SumUp + Inklusivgetränke<small>Kalkulatorisch · bereits im Ticketwert enthalten</small></span><strong>{money(data.barWithIncludedCents)}</strong></div>
     {data.includedCents === null && data.knownIncludedCents !== null && <p className="admin-evening-note">Inklusivwert bisher {money(data.knownIncludedCents)}. Noch offen: {data.unvaluedSupplies.map(item => `${item.quantity} × ${item.label}`).join(' · ') || 'Ticketbewertung'}.</p>}
     {(data.ticketTotal === null || data.sumupCents === null) && <p className="admin-evening-note" role="status">{data.ticketTotal === null ? 'Ticket Tailor noch unvollständig. ' : ''}{data.sumupCents === null ? 'SumUp noch unvollständig. ' : ''}Die Gesamtsumme bleibt bis zum Abgleich offen.</p>}
-    <details className="admin-evening-details"><summary>Zusammensetzung</summary><dl className="admin-values">
+    <details className="admin-evening-details"><summary>Details</summary><dl className="admin-values">
       <div><dt>Ticketpakete inklusive Inklusivgetränke</dt><dd>{money(data.ticketCents)}</dd></div>
       <div><dt>Zusatzbestellungen</dt><dd>{money(data.addonCents)}</dd></div>
       <div><dt>Buchungsgebühren</dt><dd>{money(data.feeCents)}</dd></div>
@@ -38,7 +38,7 @@ export function AdminEveningView({ data, now, refresh, loading }: { data: Evenin
     </dl><p>Gültige Ticket-Tailor-Buchungen für diesen Abend, unabhängig vom Kaufdatum, plus SumUp von 03:00 bis 03:00. Vor Anbietergebühren und Kreditrückzahlung. Inklusivwerte sind kein zusätzlicher Zahlungseingang; kein Gewinn oder reiner Gastronomieumsatz.</p></details>
     <div className="admin-evening-footer"><span>Stand {new Date(data.asOf).toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' })} Uhr<br/>Wechsel zum nächsten Abend um 03:00</span>
       <button type="button" aria-label="Abendübersicht aktualisieren" disabled={loading} onClick={refresh}><RefreshCw size={18} aria-hidden="true" /></button>
-    </div>
+    </div></div>
   </section>;
 }
 

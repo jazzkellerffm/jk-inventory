@@ -1,9 +1,10 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { ChevronDown, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { serviceDate } from '@/lib/staff/service-day';
 import { berlinDay } from '@/lib/staff/admin/finance';
 import type { EveningDashboard, AdminHistory, HistoryPoint } from '@/lib/staff/admin/dashboard';
+import { clearHistoryWindow, historyMonth, loadHistoryWindow, type HistoryWindow } from '@/lib/staff/admin/history-window';
 import { TicketLoader } from './ticket-loader';
 
 const money = (value: number | null | undefined) => value == null ? '—' : new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value / 100);
@@ -15,6 +16,7 @@ export function AdminEveningView({ data, now, refresh, loading }: { data: Evenin
   return <section className="admin-evening" aria-label="Aktueller Serviceabend">
     <div className="admin-evening-heading"><h2>{phase}</h2><time dateTime={data.date}>{new Intl.DateTimeFormat('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' }).format(new Date(data.date + 'T12:00:00Z'))}</time></div>
     <p className="admin-evening-name">{!data.eventsAvailable ? 'Veranstaltung wird noch abgeglichen' : data.events.length ? data.events.map(event => event.name).join(' · ') : 'Keine Veranstaltung eingetragen'}</p>
+    {data.guests !== null && <p className="admin-evening-guests"><strong>{data.guests}</strong> {data.guests === 1 ? 'Gast gebucht' : 'Gäste gebucht'}</p>}
     <dl className="admin-evening-total"><dt>Gesamtwert des Abends</dt><dd>{money(data.combinedCents)}</dd></dl>
     <div className="admin-evening-split" aria-hidden="true">
       {data.ticketTotal !== null && data.sumupCents !== null && data.combinedCents !== null && data.combinedCents > 0 && <>
@@ -34,48 +36,89 @@ export function AdminEveningView({ data, now, refresh, loading }: { data: Evenin
       <div><dt>Buchungsgebühren</dt><dd>{money(data.feeCents)}</dd></div>
       <div><dt>Davon Inklusivgetränke · kalkulatorisch</dt><dd>{money(data.includedCents)}</dd></div>
     </dl><p>Gültige Ticket-Tailor-Buchungen für diesen Abend, unabhängig vom Kaufdatum, plus SumUp von 03:00 bis 03:00. Vor Anbietergebühren und Kreditrückzahlung. Inklusivwerte sind kein zusätzlicher Zahlungseingang; kein Gewinn oder reiner Gastronomieumsatz.</p></details>
-    <div className="admin-evening-footer"><span>{data.guests !== null ? `${data.guests} Gäste gebucht · ` : ''}Stand {new Date(data.asOf).toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' })} Uhr<br/>Wechsel zum nächsten Abend um 03:00</span>
+    <div className="admin-evening-footer"><span>Stand {new Date(data.asOf).toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' })} Uhr<br/>Wechsel zum nächsten Abend um 03:00</span>
       <button type="button" aria-label="Abendübersicht aktualisieren" disabled={loading} onClick={refresh}><RefreshCw size={18} aria-hidden="true" /></button>
     </div>
   </section>;
 }
 
-export function AdminHistoryView({ points, firstMonth, loading, error, retry }: { points: HistoryPoint[]; firstMonth: string | null; loading: boolean; error: string; retry: () => void }) {
+export function AdminHistoryView({ points, loading, error, retry }: { points: HistoryPoint[]; loading: boolean; error: string; retry: () => void }) {
   const [selected, setSelected] = useState('');
   const point = points.find(item => item.month === selected) ?? points[points.length - 1];
   const values = points.flatMap(item => item.cents === null ? [] : [item.cents]);
   const max = Math.max(1, ...values), min = Math.min(0, ...values), range = max - min;
-  const x = (index: number) => points.length < 2 ? 300 : 12 + index / (points.length - 1) * 576;
-  const y = (value: number) => 130 - (value - min) / range * 112;
-  // Missing months break the line; a source failure never becomes a zero month.
-  const segments = points.flatMap((item, index) => {
-    const prior = points[index - 1];
-    return index && item.cents !== null && prior.cents !== null ? [{ index, path: `M ${x(index - 1)} ${y(prior.cents)} L ${x(index)} ${y(item.cents)}`, partial: item.partial }] : [];
-  });
-  return <section className="admin-history" aria-label="SumUp-Monatsverlauf">
-    <div className="admin-history-heading"><h2>SumUp im Verlauf</h2>{firstMonth && <span>Seit {monthName(firstMonth)}</span>}</div>
+  const baseline = max / range * 100;
+  return <>
     {point && <>
-      <div className="admin-history-selection"><label>Monat<select value={point.month} onChange={event => setSelected(event.target.value)}>{points.map(item => <option value={item.month} key={item.month}>{monthName(item.month)}{item.partial ? ' · bisher' : ''}</option>)}</select></label><strong>{money(point.cents)}</strong></div>
-      <svg viewBox="0 0 600 150" role="img" aria-label="SumUp-Zahlungen pro Monat nach erfassten Rückzahlungen. Gestrichelt: laufender Monat. Fehlende Werte unterbrechen die Linie.">
-        <line x1="12" x2="588" y1={y(0)} y2={y(0)} className="admin-chart-axis" />
-        {segments.map(segment => <path key={segment.index} d={segment.path} className={segment.partial ? 'admin-chart-partial' : 'admin-chart-line'} />)}
-        {points.map((item, index) => item.cents === null ? null : <circle key={item.month} cx={x(index)} cy={y(item.cents)} r={item.month === point.month ? 5 : 2.5} className={item.month === point.month ? 'admin-chart-selected' : 'admin-chart-dot'}><title>{`${monthName(item.month)}: ${money(item.cents)}${item.partial ? ' · bisher' : ''}`}</title></circle>)}
-      </svg>
+      <div className="admin-history-selection"><label>Monat<select value={point.month} onChange={event => setSelected(event.target.value)}>{points.map(item => <option value={item.month} key={item.month}>{monthName(item.month)}{item.partial ? ' · bisher' : ''}</option>)}</select></label><strong aria-live="polite">{money(point.cents)}</strong></div>
+      <div className="admin-history-bars" role="group" aria-label="SumUp-Zahlungen pro Monat" style={{ gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))` }}>
+        {points.map(item => <button type="button" key={item.month} aria-pressed={item.month === point.month} onClick={() => setSelected(item.month)}
+          aria-label={`${monthName(item.month)}: ${item.cents === null ? 'noch nicht verfügbar' : money(item.cents)}${item.partial ? ' · bisher' : ''}`}>
+          <span className="admin-history-bar-area" aria-hidden="true">
+            <span className="admin-history-zero" style={{ top: `${baseline}%` }} />
+            {item.cents === null ? <span className="admin-history-missing">—</span> : <span className="admin-history-bar" data-partial={item.partial} data-zero={item.cents === 0}
+              style={{ top: `${item.cents >= 0 ? (max - item.cents) / range * 100 : baseline}%`, height: `${Math.abs(item.cents) / range * 100}%` }} />}
+          </span>
+          <span className="admin-history-month" aria-hidden="true">{item.month.slice(5)}</span>
+        </button>)}
+      </div>
       <div className="admin-history-axis"><span>{monthName(points[0].month)}</span><span>{monthName(points[points.length - 1].month)}</span></div>
     </>}
-    {loading && <TicketLoader label={points.length ? 'Ältere Monate werden ergänzt' : 'SumUp-Verlauf wird geladen'} />}
+    {loading && <TicketLoader label="Monate werden geladen" />}
     {!loading && !points.length && !error && <p className="admin-note">Noch keine SumUp-Zahlungen erfasst.</p>}
     {(error || points.some(item => item.cents === null)) && <p className="admin-note" role="status">{error || 'Einzelne Monate sind noch nicht vollständig abgeglichen.'} <button type="button" className="admin-retry" onClick={retry} disabled={loading}>Erneut laden</button></p>}
-    {points.length > 0 && <p className="admin-history-note">Zahlungen nach Rückzahlungen, vor Gebühren und Kreditrückzahlung. Laufender Monat nur bis jetzt; erster Monat ab der ersten verfügbaren Zahlung.</p>}
+    {points.length > 0 && <p className="admin-history-note">Zahlungen nach Rückzahlungen, vor Gebühren und Kreditrückzahlung. Laufender Monat nur bis jetzt. Rosé markiert die Auswahl.</p>}
+  </>;
+}
+
+export function AdminHistorySection({ month, onExpired }: { month: string; onExpired: () => void }) {
+  const [open, setOpen] = useState(false), [end, setEnd] = useState('');
+  const [data, setData] = useState<HistoryWindow | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const [refresh, setRefresh] = useState(0);
+  const pages = useRef(new Map<string, AdminHistory>()), contentId = useId();
+  const endMonth = end || month;
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    const read = async () => {
+      setBusy(true); setError('');
+      let partial: HistoryWindow | null = null;
+      try {
+        const result = await loadHistoryWindow(endMonth, pages.current, controller.signal, async (before, signal) => {
+          const response = await fetch('/api/staff/admin/history?before=' + before, { cache: 'no-store', signal });
+          if (response.status === 401) { onExpired(); throw Error('Sitzung abgelaufen.'); }
+          if (!response.ok) throw Error('Der SumUp-Verlauf konnte nicht vollständig geladen werden.');
+          return response.json();
+        }, value => { partial = value; });
+        if (!controller.signal.aborted) setData(result);
+      } catch (error) { if (!controller.signal.aborted) { if (partial) setData(partial); setError(error instanceof Error ? error.message : 'Verbindung unterbrochen.'); } }
+      finally { if (!controller.signal.aborted) setBusy(false); }
+    };
+    const initial = window.setTimeout(() => void read(), 0);
+    return () => { controller.abort(); window.clearTimeout(initial); };
+  }, [open, endMonth, refresh, onExpired]);
+  const visible = data?.endMonth === endMonth ? data.points : [];
+  const start = historyMonth(endMonth, -11);
+  const retry = () => { clearHistoryWindow(endMonth, pages.current); setRefresh(value => value + 1); };
+  return <section className="admin-history" aria-label="SumUp-Monatsverlauf">
+    <h2><button type="button" className="admin-history-toggle" aria-expanded={open} aria-controls={contentId} onClick={() => setOpen(value => !value)}>
+      <span>SumUp im Verlauf<small>{data?.firstMonth ? `Seit ${monthName(data.firstMonth)}` : 'Monatsübersicht'}</small></span><ChevronDown size={20} aria-hidden="true" />
+    </button></h2>
+    <div id={contentId} hidden={!open}>
+      <div className="admin-history-window"><span>{monthName(data?.firstMonth && data.firstMonth > start ? data.firstMonth : start)} – {monthName(endMonth)}</span>
+        <div><button type="button" aria-label="Ältere zwölf Monate" disabled={busy || !data?.firstMonth || start <= data.firstMonth} onClick={() => setEnd(historyMonth(endMonth, -12))}><ChevronLeft size={20} aria-hidden="true" /></button>
+          <button type="button" aria-label="Neuere zwölf Monate" disabled={busy || endMonth >= month} onClick={() => setEnd(historyMonth(endMonth, 12) >= month ? '' : historyMonth(endMonth, 12))}><ChevronRight size={20} aria-hidden="true" /></button></div>
+      </div>
+      <AdminHistoryView points={visible} loading={busy || (open && data?.endMonth !== endMonth && !error)} error={error} retry={retry} />
+      {visible.length > 0 && data && <div className="admin-history-footer"><span>Stand {new Date(data.asOf).toLocaleString('de-DE', { timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} Uhr</span><button type="button" aria-label="SumUp-Verlauf aktualisieren" disabled={busy} onClick={retry}><RefreshCw size={18} aria-hidden="true" /></button></div>}
+    </div>
   </section>;
 }
 
 export function AdminDashboard({ onExpired }: { onExpired: () => void }) {
   const [clock, setClock] = useState(() => Date.now()), [evening, setEvening] = useState<EveningDashboard | null>(null);
   const [eveningBusy, setEveningBusy] = useState(true), [eveningError, setEveningError] = useState('');
-  const [points, setPoints] = useState<HistoryPoint[]>([]), [firstMonth, setFirstMonth] = useState<string | null>(null);
-  const [historyBusy, setHistoryBusy] = useState(true), [historyError, setHistoryError] = useState('');
-  const [refresh, setRefresh] = useState(0), [historyRefresh, setHistoryRefresh] = useState(0);
+  const [refresh, setRefresh] = useState(0);
   const date = serviceDate(clock), month = berlinDay(clock).slice(0, 7);
   useEffect(() => { const timer = window.setInterval(() => setClock(Date.now()), 15000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {
@@ -96,34 +139,9 @@ export function AdminDashboard({ onExpired }: { onExpired: () => void }) {
     const initial = window.setTimeout(() => void read(), 0), timer = window.setInterval(() => void read(), 60000);
     return () => { controller.abort(); window.clearTimeout(initial); window.clearInterval(timer); };
   }, [date, refresh, onExpired]);
-  useEffect(() => {
-    const controller = new AbortController();
-    const read = async () => {
-      setHistoryBusy(true); setHistoryError(''); setPoints([]); setFirstMonth(null);
-      let before: string | null = month;
-      const seen = new Set<string>(), collected = new Map<string, HistoryPoint>();
-      try {
-        while (before && !controller.signal.aborted) {
-          if (seen.has(before)) throw Error('Der Verlauf konnte nicht vollständig geladen werden.');
-          seen.add(before);
-          const response = await fetch('/api/staff/admin/history?before=' + before, { cache: 'no-store', signal: controller.signal });
-          if (response.status === 401) { onExpired(); return; }
-          if (!response.ok) throw Error('Der SumUp-Verlauf konnte nicht vollständig geladen werden.');
-          const result: AdminHistory = await response.json();
-          if (controller.signal.aborted) return;
-          for (const point of result.points) collected.set(point.month, point);
-          setPoints([...collected.values()].sort((a, b) => a.month.localeCompare(b.month))); setFirstMonth(result.firstMonth);
-          before = result.nextBefore;
-        }
-      } catch (error) { if (!controller.signal.aborted) setHistoryError(error instanceof Error ? error.message : 'Verbindung unterbrochen.'); }
-      finally { if (!controller.signal.aborted) setHistoryBusy(false); }
-    };
-    const initial = window.setTimeout(() => void read(), 0);
-    return () => { controller.abort(); window.clearTimeout(initial); };
-  }, [month, historyRefresh, onExpired]);
   return <div className="admin-dashboard">
     {evening?.date === date ? <AdminEveningView data={evening} now={clock} loading={eveningBusy} refresh={() => setRefresh(value => value + 1)} /> : !eveningError ? <TicketLoader label="Abendübersicht wird geladen" /> : null}
     {eveningError && <p className="admin-note" role="status">{eveningError} <button type="button" className="admin-retry" onClick={() => setRefresh(value => value + 1)}>Erneut laden</button></p>}
-    <AdminHistoryView points={points} firstMonth={firstMonth} loading={historyBusy} error={historyError} retry={() => setHistoryRefresh(value => value + 1)} />
+    <AdminHistorySection month={month} onExpired={onExpired} />
   </div>;
 }

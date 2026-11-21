@@ -63,8 +63,8 @@ Bottle keys are `Flasche Crémant` and `Flasche Moët`; Club keys are event IDs.
 - Read-only sample of 50 real Ticket Tailor v2 orders: zero payment/line reconciliation issues, eight November event groups. This does not certify a whole month.
 - Actual database transaction verified wrong-secret denial, five-attempt limit, revision rejection, idle/absolute expiry, revocation and lack of anonymous table access. Test writes rolled back.
 - Browser rendering check attempted but unavailable: installed Chromium cannot create its required process socket in this environment. Mobile visual review remains outstanding; do not claim Safari testing.
-- Live month totals still need reconciliation against provider exports before relying on them for accounting. No live financial totals have been certified.
-- Next: verify representative live months/refunds, agree bottle valuations and historic baselines. Then refine fee/discount/refund allocation and classify SumUp products for a true gastronomy share.
+- Read-only live checks for November and October 2026 passed: complete provider pages, zero payment reconciliation issues, and Ticket Tailor, SumUp and combined net totals match independently summed source ledgers. An external accounting/export reconciliation remains separate.
+- Next: agree bottle valuations and historic baselines. Then refine fee/discount/refund allocation and classify SumUp products for a true gastronomy share.
 - Public drink mix/seasonal curve, weekly finance and payout builder are not part of this change.
 
 ## Rollback
@@ -76,6 +76,6 @@ Restore that deployment or revert this feature commit. The isolated private auth
 
 Observed after PIN activation: monthly payment figures were withheld even though both provider APIs returned complete pages. Ticket Tailor negative refund amounts failed the original non-negative validator; SumUp refund reconciliation had been intentionally left incomplete.
 
-Correction adds signed Ticket Tailor refund handling, SumUp transaction-event reconciliation, duplicate event protection, cross-month fixtures and a read-only live verifier (`tests/check-admin-live.mjs`). The verifier checks November and October against independently summed provider transaction history. It logs only pass/fail stages, never amounts, customer data or secrets. Deployment verification is recorded separately after the check runs.
+Correction adds signed Ticket Tailor refund handling, SumUp transaction-event reconciliation, duplicate event protection, cross-month fixtures and a read-only live verifier (`tests/check-admin-live.mjs`). The verifier checks November and October against independently summed provider transaction history. It logs only pass/fail stages, never amounts, customer data or secrets. Read-only preview verification passed for both months on 2026-11-21. TypeScript, targeted ESLint and all 94 Staff tests passed. Event allocations with credits, refunds or missing valuation inputs remain explicitly incomplete; payment totals are independently available.
 
 Pre-correction production checkpoint: `e11abe56dfe06fed79c5b36694727a02bc36f5bd`. Existing PIN/session configuration and Safari select are unchanged.

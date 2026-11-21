@@ -44,8 +44,26 @@ export async function readAdminEvening() {
       const { rows, details } = await readSumUpRange(serviceStart(now), now);
       return summarizeSumUp(rows, month, details);
     })]);
-  return eveningDashboard(ev.status === 'fulfilled' ? ev.value : null,
+  const current = eveningDashboard(ev.status === 'fulfilled' ? ev.value : null,
     tt.status === 'fulfilled' ? tt.value : null, su.status === 'fulfilled' ? su.value : null, now);
+  // Same weekday, seven calendar days earlier; previous night is complete.
+  // Share existing private monthly reads, never infer missing/uncertain figures as zero.
+  const previousDate = new Date(date + 'T12:00:00Z');
+  previousDate.setUTCDate(previousDate.getUTCDate() - 7);
+  const previous = previousDate.toISOString().slice(0, 10);
+  const previousMonth = previous.slice(0, 7);
+  const [priorTickets, priorBar] = await Promise.allSettled([
+    previousMonth === month && tt.status === 'fulfilled' ? Promise.resolve(tt.value) : tickets(previousMonth),
+    previousMonth === month && su.status === 'fulfilled' ? Promise.resolve(su.value) : sumup(previousMonth),
+  ]);
+  const oldNights = priorTickets.status === 'fulfilled' ? priorTickets.value.nights.filter(night => night.date === previous) : [];
+  const oldTicket = priorTickets.status === 'fulfilled' && priorTickets.value.eventIssues === 0 &&
+    oldNights.length === 1 && !oldNights[0].uncertain
+    ? oldNights[0].ticketCents + oldNights[0].feeCents + oldNights[0].addonCents : null;
+  const oldSumup = priorBar.status === 'fulfilled' && priorBar.value.paymentIssues === 0 &&
+    Object.hasOwn(priorBar.value.nights, previous) ? priorBar.value.nights[previous] : null;
+  return { ...current, comparison: { date: previous, combinedCents: oldTicket !== null && oldSumup !== null ? oldTicket + oldSumup : null,
+    sumupCents: oldSumup } };
 }
 
 async function firstSumUpMonth(): Promise<string | null> {

@@ -125,7 +125,7 @@ export function AdminPanel() {
             </dl>}
           </section>;
         })}
-        <p className="admin-note">Inklusivdrinks: vereinbarter Ansatz 15 € je enthaltenem Drink, keine Aussage über den tatsächlichen Verbrauch. Unbewertete Flaschen werden separat genannt. Abgeleitete Summen und Club-Vergleiche erscheinen erst, wenn alle nötigen Rechenwerte feststehen. SumUp kann Trinkgelder und weitere Artikel enthalten; deshalb ist die Summe noch kein reiner Gastronomieumsatz. Vor Anbietergebühren und Kreditrückzahlung. Serviceabend: 03:00 bis 03:00.</p>
+        <p className="admin-note">Inklusivdrinks: vereinbarter Ansatz 15 € je enthaltenem Drink, keine Aussage über den tatsächlichen Verbrauch. Flasche Crémant: 50 €; Flasche Moët: vorläufig 129 €. Weitere unbewertete Inklusivleistungen werden separat genannt. Abgeleitete Summen und Club-Vergleiche erscheinen erst, wenn alle nötigen Rechenwerte feststehen. SumUp kann Trinkgelder und weitere Artikel enthalten; deshalb ist die Summe noch kein reiner Gastronomieumsatz. Vor Anbietergebühren und Kreditrückzahlung. Serviceabend: 03:00 bis 03:00.</p>
       </>)}
       {data && <p className="admin-note">Stand {new Date(data.asOf).toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' })} Uhr</p>}
     </>}

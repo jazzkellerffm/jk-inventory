@@ -54,7 +54,7 @@ Optional `STAFF_ADMIN_VALUATION_JSON` (integer euro cents):
 {"bottles":{},"clubPerGuest":{}}
 ```
 
-Bottle keys are `Flasche Crémant` and `Flasche Moët`; Club keys are event IDs. Values are agreed integer euro cents. Missing values stay unknown. Agree real valuation amounts with Philipp before configuring. Historic Club baseline needs event-specific validation; do not use today's prices for past events.
+Bottle keys are `Flasche Crémant` and `Flasche Moët`; Club keys are event IDs. Default values agreed by Philipp on 2026-11-21: Crémant EUR 50, Moët provisional EUR 129. These are sale-value allocations, not cost or added revenue. Environment values may override them. Other missing entitlement values (such as historic Crémant glasses) stay unknown. Historic Club baseline needs event-specific validation; do not use today's prices for past events.
 
 ## Verification and remaining work
 
@@ -64,7 +64,7 @@ Bottle keys are `Flasche Crémant` and `Flasche Moët`; Club keys are event IDs.
 - Actual database transaction verified wrong-secret denial, five-attempt limit, revision rejection, idle/absolute expiry, revocation and lack of anonymous table access. Test writes rolled back.
 - Browser rendering check attempted but unavailable: installed Chromium cannot create its required process socket in this environment. Mobile visual review remains outstanding; do not claim Safari testing.
 - Read-only live checks for November and October 2026 passed: complete provider pages, zero payment reconciliation issues, and Ticket Tailor, SumUp and combined net totals match independently summed source ledgers. An external accounting/export reconciliation remains separate.
-- Next: agree bottle valuations and historic baselines. Then refine fee/discount/refund allocation and classify SumUp products for a true gastronomy share.
+- Next: confirm the provisional Moët valuation and agree historic Club baselines and any missing glass values. Then refine fee/discount/refund allocation and classify SumUp products for a true gastronomy share.
 - Public drink mix/seasonal curve, weekly finance and payout builder are not part of this change.
 
 ## Rollback
@@ -85,3 +85,5 @@ Pre-correction production checkpoint: `e11abe56dfe06fed79c5b36694727a02bc36f5bd`
 Checkpoint before change: `388df42d2a0b97ee6009f41dac445f16e0e81fe4`. Reuse the existing rose/green TicketLoader for admin session and finance loading. Disclose SumUp figures as before provider fees and credit repayment. No provider payouts, repayment deductions or invented bottle/Club valuation values are introduced.
 
 Five new regression tests cover known drink portions beside unknown bottles, configured bottle values, cancelled bookings with refunds or retained credit, and void lines not becoming add-ons. Cash calculations are unchanged.
+
+Philipp supplied bottle values during this correction: EUR 50 Crémant, EUR 129 Moët (provisional). Defaults live in `lib/staff/admin/data.ts`; both remain overridable through `STAFF_ADMIN_VALUATION_JSON`. UI discloses these assumptions. Cash totals are unaffected.

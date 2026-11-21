@@ -5,7 +5,10 @@ import { summarizeSumUp, summarizeTickets, type FinanceOrder, type SumUpFinanceR
 import { needsRefundDetail, sumupId } from './sumup-refunds';
 
 function valuation(): Valuation {
-  const config: Valuation = { drinkCents: 1500, bottles: {}, clubPerGuest: {} };
+  // Agreed sale-value allocation, not cost or additional revenue (2026-11-21).
+  // Moët is Philipp's provisional EUR 129 estimate and can be overridden.
+  const config: Valuation = { drinkCents: 1500,
+    bottles: { 'Flasche Crémant': 5000, 'Flasche Moët': 12900 }, clubPerGuest: {} };
   const raw = process.env.STAFF_ADMIN_VALUATION_JSON;
   if (!raw) return config;
   const data = JSON.parse(raw);

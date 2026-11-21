@@ -33,6 +33,9 @@ export function paidSupply(description: string, quantity: number): Supply {
 }
 
 export function includedSupply(ticket: string): Supply[] {
+  if (ticketCategory(ticket) === "Worldstar VIP") {
+    return [{ label: "Flasche Moët", quantity: 1, kind: "included" }];
+  }
   const bottle = ticket.match(/(\d+)\s*(?:bottles?|flaschen?)\s*(?:of\s+)?cr[eé]mant/i);
   if (bottle) return [{ label: "Flasche Crémant", quantity: Number(bottle[1]), kind: "included" }];
   if (/cr[eé]mant\s+(for|für)/i.test(ticket)) return [{ label: "Glas Crémant", quantity: packageSize(ticket), kind: "included" }];

@@ -1,5 +1,17 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {includedSupply, combine} from '../lib/staff/entitlements.ts';
+
+test('Worldstar VIP includes one Moët bottle per table, separately from regular VIP Crémant',()=>{
+ const worldstar='VIP Table - World Star VIP · 2 Guests · Moët & Chandon';
+ const vip='VIP Table - 2 Guests · incl. 1 Bottle Crémant';
+ assert.deepEqual(includedSupply(worldstar),[{label:'Flasche Moët',quantity:1,kind:'included'}]);
+ assert.deepEqual(combine([worldstar,'Worldstar VIP - 2 Guests',vip].flatMap(includedSupply)),[
+  {label:'Flasche Moët',quantity:2,kind:'included'},
+  {label:'Flasche Crémant',quantity:1,kind:'included'},
+ ]);
+ assert.deepEqual(includedSupply('Premium - 2 Guests · incl. 2 Drinks'),[]);
+});
 import {readServicePlan} from '../lib/staff/tickets.ts';
 const order={id:'or_1',status:'completed',buyer_details:{name:'Test'},line_items:[
  {type:'ticket',description:'Club - Cremant for 2',quantity:2,event_summary:{event_id:'ev_1'}},

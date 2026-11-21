@@ -43,8 +43,8 @@ Personal PIN configured in Production on 2026-11-21; owner confirmed successful 
 - Event value means valid ticket packages: cancelled orders and void lines are excluded, with their count disclosed. Their payments/refunds remain in the payment-month ledger. Active refunded, discounted/unbalanced or otherwise uncertain allocations are withheld; no proportional refund split is guessed.
 - Ticket value excludes booking fees and add-ons. Add-ons remain separately visible.
 - Included drinks: agreed valuation EUR 15 per included drink. This is entitlement valuation, not redemption, cost or extra revenue. Known drink values remain visible even if a VIP bottle has no configured value. Unvalued entitlements are named with their quantities; the displayed amount is explicitly a partial value.
-- Entry & seating = ticket value minus included valuation.
-- Upgrade comparison = entry & seating minus explicitly configured historic Club value per guest. It is incremental revenue, not profit. Hide this row until the needed baseline and entitlement values exist. Likewise hide dependent admission/combined valuation rows when incomplete.
+- Ticketanteil ohne Inklusivgetränke = ticket value minus included valuation. The remainder includes admission and seating advantages; it is not profit or a uniform base-ticket price.
+- Base-ticket/Club upgrade comparison is omitted from the UI by owner decision (2026-11-21). Package discounts and Single prices do not define one universal baseline. Legacy optional server configuration is retained but not presented. Hide dependent ticket-remainder/combined valuation rows when included values are incomplete.
 - SumUp evening allocation uses Berlin 03:00–03:00. Multiple events on one date or uncertain refund allocation produce no guessed event amount. Future service nights remain open.
 - SumUp + included valuation is shown as a calculated sum, **not pure gastronomy revenue**, because SumUp can contain tips, admission or other products. TT add-ons are separately visible; they are not silently classified as food/drink.
 
@@ -64,7 +64,7 @@ Bottle keys are `Flasche Crémant` and `Flasche Moët`; Club keys are event IDs.
 - Actual database transaction verified wrong-secret denial, five-attempt limit, revision rejection, idle/absolute expiry, revocation and lack of anonymous table access. Test writes rolled back.
 - Browser rendering check attempted but unavailable: installed Chromium cannot create its required process socket in this environment. Mobile visual review remains outstanding; do not claim Safari testing.
 - Read-only live checks for November and October 2026 passed: complete provider pages, zero payment reconciliation issues, and Ticket Tailor, SumUp and combined net totals match independently summed source ledgers. An external accounting/export reconciliation remains separate.
-- Next: confirm the provisional Moët valuation and agree historic Club baselines and any missing glass values. Then refine fee/discount/refund allocation and classify SumUp products for a true gastronomy share.
+- Next: confirm the provisional Moët valuation and any missing glass values. Club baseline comparisons are deferred. Later refine fee/discount/refund allocation and classify SumUp products for a true gastronomy share.
 - Public drink mix/seasonal curve, weekly finance and payout builder are not part of this change.
 
 ## Rollback
@@ -89,3 +89,18 @@ Five new regression tests cover known drink portions beside unknown bottles, con
 Philipp supplied bottle values during this correction: EUR 50 Crémant, EUR 129 Moët (provisional). Defaults live in `lib/staff/admin/data.ts`; both remain overridable through `STAFF_ADMIN_VALUATION_JSON`. UI discloses these assumptions. Cash totals are unaffected.
 
 Verification: 99 automated tests, TypeScript and targeted ESLint passed. Read-only November and October 2026 checks both passed for payment/refund reconciliation and valid event package completeness. The production build passed in preview. Historic glass entitlements remain explicitly unvalued until a glass price is agreed.
+
+
+## Compact admin month view — 2026-11-21
+
+Checkpoint before change: `0581bd1338557834386870b37cc15f02e7a37580`.
+
+- Month navigation uses the same swipe direction and 60 px / 1.5 horizontal-to-vertical threshold as the team month overview. A rightward swipe selects the previous month; leftward returns to newer months. June 2026 and the current calendar month remain the bounds. Plain arrows retain 44 px tap targets. Vertical scrolling, multi-touch, cancelled gestures and touches starting on buttons/links do not switch months. While a request runs, navigation is disabled.
+- Reuse the team pill switch for Zahlungen / Veranstaltungen. No horizontal slide animation or new carousel.
+- Compact rose month total; detailed definitions and cancellation counts are under Berechnung. Actual source/reconciliation failures stay visible.
+- Events are collapsed rows showing date, full wrapping name and ticket value. Native details elements support keyboard access and one open event at a time. A month or mode change starts with collapsed details.
+- Rename Eintritt & Platzkomfort to Ticketanteil ohne Inklusivgetränke. Omit the Club/base-ticket comparison entirely from the view.
+- Included value breakdown now exposes every priced entitlement with quantity and the actual configured unit value, including bottles. The sum equals knownIncludedCents; unknown or invalid valuations remain explicitly unvalued. No cash or total valuation formula changed.
+- Existing API authentication, private/no-store responses, provider reads and Safari event selector are unchanged. No new persistent storage of finance data.
+
+Verification: 101 Staff tests, TypeScript and targeted ESLint passed. Synthetic render checks cover collapsed event rows, bottle/drink breakdown, omitted baseline comparison, partial/failed sources and empty months. Synthetic touch-handler checks cover both directions, range/loading boundaries and ignored vertical/cancelled/multitouch/control gestures. Local Chromium still cannot start because its process socket is unavailable, so these are not an iPhone/Safari visual test. Production build must pass before publishing.

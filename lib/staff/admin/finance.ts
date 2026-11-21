@@ -11,9 +11,11 @@ export type FinanceOrder = { id: string; status: string; total: number; currency
 export type Valuation = { drinkCents: number; bottles: Record<string, number>;
   // Explicit baseline per event; never infer a historic price from today's catalogue.
   clubPerGuest: Record<string, number> };
+export type IncludedValue = { label: string; quantity: number; unitCents: number };
 export type NightFinance = { id: string; name: string; date: string; ticketCents: number;
   feeCents: number; addonCents: number; guests: number; includedCents: number | null;
   includedDrinkCount: number; knownIncludedCents: number; unvaluedSupplies: { label: string; quantity: number }[];
+  includedItems: IncludedValue[];
   admissionCents: number | null; upgradeCents: number | null; uncertain: boolean };
 export const berlinDay = (time: string | number) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date(time));
 const cents = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
@@ -68,7 +70,7 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
       const event = line.event_summary!;
       const night = nights.get(event.event_id) ?? { id: event.event_id, name: event.name, date: berlinDay(event.start_date),
         ticketCents: 0, feeCents: 0, addonCents: 0, guests: 0, includedCents: 0,
-        includedDrinkCount: 0, knownIncludedCents: 0, unvaluedSupplies: [],
+        includedDrinkCount: 0, knownIncludedCents: 0, unvaluedSupplies: [], includedItems: [],
         admissionCents: 0, upgradeCents: 0, uncertain: false };
       nights.set(event.event_id, night);
       if (!balanced || !Number.isSafeInteger(line.quantity) || line.quantity < 0 || !cents(line.value) || !cents(line.booking_fee)
@@ -84,19 +86,31 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
       night.guests += guests;
       const drinkCount = includedDrinks(line.description) * line.quantity;
       let drinks = drinkCount * valuation.drinkCents;
+      const valued: IncludedValue[] = drinkCount ? [{ label: 'Drink', quantity: drinkCount, unitCents: valuation.drinkCents }] : [];
       const missing: { label: string; quantity: number }[] = [];
       const supplies = includedSupply(line.description);
       for (const supply of supplies) {
         const price = valuation.bottles[supply.label];
         if (!cents(price)) missing.push({ label: supply.label, quantity: supply.quantity * line.quantity });
-        else drinks += supply.quantity * line.quantity * price;
+        else {
+          const quantity = supply.quantity * line.quantity;
+          drinks += quantity * price;
+          if (quantity) valued.push({ label: supply.label, quantity, unitCents: price });
+        }
       }
       // Old VIP labels may omit the entitlement. Do not invent a bottle or its price.
       if (ticketCategory(line.description) === 'VIP' && !supplies.length)
         missing.push({ label: 'VIP-Inklusivleistung', quantity: line.quantity });
       night.includedDrinkCount += drinkCount;
       if (drinks > value || !guests) missing.push({ label: 'Ticketbewertung zu prüfen', quantity: line.quantity });
-      else night.knownIncludedCents += drinks;
+      else {
+        night.knownIncludedCents += drinks;
+        for (const item of valued) {
+          const existing = night.includedItems.find(other => other.label === item.label && other.unitCents === item.unitCents);
+          if (existing) existing.quantity += item.quantity;
+          else night.includedItems.push({ ...item });
+        }
+      }
       for (const supply of missing) {
         const existing = night.unvaluedSupplies.find(item => item.label === supply.label);
         if (existing) existing.quantity += supply.quantity;

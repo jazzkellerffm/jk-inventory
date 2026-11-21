@@ -4,10 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, LockKeyhole } from 'lucide-react';
 import { Masthead } from './masthead';
 import { TicketLoader } from './ticket-loader';
-import { serviceDate } from '@/lib/staff/service-day';
+import { AdminMonthView, type AdminMode } from './admin-month-view';
 import type { AdminSummary } from '@/lib/staff/admin/data';
 
-const money = (value: number | null | undefined) => value == null ? '—' : new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value / 100);
 const currentMonth = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Berlin' }).format(new Date()).slice(0, 7);
 function shifted(month: string, delta: number) {
   return new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5)) - 1 + delta, 1)).toISOString().slice(0, 7);
@@ -16,10 +15,11 @@ function shifted(month: string, delta: number) {
 export function AdminPanel() {
   const [unlocked, setUnlocked] = useState(false), [configured, setConfigured] = useState<boolean | null>(null);
   const [pin, setPin] = useState(''), [message, setMessage] = useState(''), [busy, setBusy] = useState(false);
-  const [month, setMonth] = useState(currentMonth), [mode, setMode] = useState<'payments' | 'events'>('payments');
+  const [month, setMonth] = useState(currentMonth), [mode, setMode] = useState<AdminMode>('payments');
   const [data, setData] = useState<AdminSummary | null>(null);
   const [refresh, setRefresh] = useState(0);
   const request = useRef<AbortController | null>(null);
+  const touch = useRef<{ x: number; y: number; id: number } | null>(null);
   const clear = useCallback(() => { request.current?.abort(); setData(null); setUnlocked(false); setPin(''); }, []);
   const lock = useCallback(async () => {
     clear();
@@ -75,9 +75,11 @@ export function AdminPanel() {
     finally { setBusy(false); }
   }
   const label = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(month + '-01T12:00:00Z'));
-  const nights = data?.ticket?.nights ?? [];
-  const eventComplete = data?.ticket && data.ticket.eventIssues === 0;
-  const ticketTotal = eventComplete ? nights.reduce((sum, night) => sum + night.ticketCents, 0) : null;
+  const move = (delta: number) => {
+    const next = shifted(month, delta);
+    if (busy || next < '2026-06' || next > currentMonth()) return;
+    request.current?.abort(); setData(null); setBusy(true); setMonth(next);
+  };
   return <div className="staff-shell"><Masthead signedIn /><main className="staff-admin">
     <div className="admin-heading"><h1>Administration</h1>{unlocked && <button onClick={() => void lock()}><LockKeyhole size={18} /> Sperren</button>}</div>
     <Link href="/staff#staff-tools">Zurück zum Team</Link>
@@ -87,48 +89,41 @@ export function AdminPanel() {
         <label htmlFor="admin-pin">Admin-PIN</label><input id="admin-pin" type="password" inputMode="numeric" autoComplete="off" pattern="[0-9]{6}" maxLength={6} minLength={6} value={pin} onChange={e => setPin(e.target.value)} required />
         <button className="staff-submit" disabled={busy}>{busy ? 'Prüfen …' : 'Entsperren'}</button>
       </form> : <p>Der Admin-Zugang ist vorbereitet. Die persönliche PIN muss noch eingerichtet werden.</p>}
-    </section> : <>
-      <div className="admin-month"><h2>{label}</h2><div><button aria-label="Vorheriger Monat" disabled={month <= '2026-06' || busy} onClick={() => setMonth(shifted(month, -1))}><ChevronLeft /></button><button aria-label="Nächster Monat" disabled={month >= currentMonth() || busy} onClick={() => setMonth(shifted(month, 1))}><ChevronRight /></button></div></div>
-      <div className="service-switch" role="group" aria-label="Berechnungsbasis"><button aria-pressed={mode === 'payments'} className={mode === 'payments' ? 'active' : ''} onClick={() => setMode('payments')}>Zahlungen</button><button aria-pressed={mode === 'events'} className={mode === 'events' ? 'active' : ''} onClick={() => setMode('events')}>Veranstaltungen</button></div>
-      {busy && <TicketLoader label="Zahlungsvorgänge werden abgeglichen"/>}
-      {data && (mode === 'payments' ? <>
-        <section className="admin-total"><p>Zahlungen im Monat · nach erfassten Rückzahlungen</p><strong>{money(data.combinedPayments)}</strong><p>Ticket Tailor + SumUp · vor Anbietergebühren und Kreditrückzahlung · inklusive etwaiger Trinkgelder</p></section>
-        <dl className="admin-values"><div><dt>Ticket Tailor</dt><dd>{money(data.ticket?.netPayments)}</dd></div><div><dt>SumUp</dt><dd>{money(data.bar?.netPayments)}</dd></div><div><dt>Erfasste Rückzahlungen</dt><dd>{money(data.ticket?.netPayments != null && data.bar?.netPayments != null ? data.ticket.refunds + data.bar.refunds : null)}</dd></div></dl>
-        {(data.combinedPayments === null) && <div role="status">
-          {!data.ticket ? <p>Ticket Tailor konnte nicht vollständig geladen werden.</p> : data.ticket.paymentIssues > 0 && <p>Ticket Tailor: {data.ticket.paymentIssues} Zahlungsvorgänge benötigen noch einen Abgleich.</p>}
-          {!data.bar ? <p>SumUp konnte nicht vollständig geladen werden.</p> : data.bar.paymentIssues > 0 && <p>SumUp: {data.bar.paymentIssues} Erstattungen konnten noch nicht vollständig zugeordnet werden.</p>}
-          <p>Die Gesamtsumme erscheint, sobald beide Quellen vollständig abgeglichen sind.</p>
-          <button onClick={() => setRefresh(value => value + 1)} disabled={busy}>Erneut laden</button>
-        </div>}
-        <p className="admin-note">Zahlungsdatum in Europe/Berlin. Ticketkäufe für spätere Veranstaltungen zählen hier mit. Stripe wird nicht nochmals addiert. Auszahlungen und Gewinn sind andere Größen.</p>
-      </> : <>
-        <section className="admin-total"><p>Gültige Ticketpakete im Veranstaltungsmonat</p><strong>{money(ticketTotal)}</strong><p>Ohne Buchungsgebühren und Zusatzbestellungen · unabhängig vom Kaufmonat · stornierte Tickets ausgenommen</p></section>
-        {!!data.ticket?.excludedEventOrders && <p className="admin-note">{data.ticket.excludedEventOrders} stornierte {data.ticket.excludedEventOrders === 1 ? 'Buchung ist' : 'Buchungen sind'} hier ausgenommen. Zugehörige Zahlungen und Rückzahlungen bleiben unter „Zahlungen“ berücksichtigt.</p>}
-        {!eventComplete && <p>Einige Bestellungen benötigen einen Abgleich, etwa wegen Erstattungen oder Guthaben. Eine vollständige Monatssumme bleibt bis dahin offen.</p>}
-        {nights.map(night => {
-          const sameDate = nights.filter(other => other.date === night.date).length;
-          const bar = data.bar && sameDate === 1 && night.date <= serviceDate(data.asOf)
-            ? Object.hasOwn(data.bar.nights, night.date) ? data.bar.nights[night.date] : 0 : null;
-          const gastro = !night.uncertain && bar != null && night.includedCents != null ? bar + night.includedCents : null;
-          return <section className="admin-night" key={night.id}><p>{new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit' }).format(new Date(night.date + 'T12:00:00Z'))}</p><h3>{night.name}</h3>
-            {night.uncertain ? <p>Zuordnung wird geprüft · keine verlässliche Aufteilung.</p> : <dl className="admin-values">
-              <div><dt>Ticketpakete</dt><dd>{money(night.ticketCents)}</dd></div>
-              <div><dt>{night.includedCents === null ? 'Bewertete Inklusivgetränke · Teilbetrag' : 'Davon Inklusivgetränke · kalkulatorisch'}
-                <small className="admin-value-note">{night.includedDrinkCount} {night.includedDrinkCount === 1 ? 'Drink' : 'Drinks'} à 15 €</small>
-                {night.unvaluedSupplies.length > 0 && <small className="admin-value-note">Noch ohne Rechenwert: {night.unvaluedSupplies.map(item => `${item.quantity} × ${item.label}`).join(' · ')}</small>}
-              </dt><dd>{money(night.knownIncludedCents)}</dd></div>
-              {night.admissionCents !== null && <div><dt>Eintritt & Platzkomfort</dt><dd>{money(night.admissionCents)}</dd></div>}
-              {night.upgradeCents !== null && <div><dt>Mehrerlös gegenüber Club · nach Inklusivwert</dt><dd>{money(night.upgradeCents)}</dd></div>}
-              <div><dt>SumUp-Zahlungen des Abends</dt><dd>{money(bar)}</dd></div>
-              {gastro !== null && <div><dt>SumUp + Inklusivwert · kalkulatorisch</dt><dd>{money(gastro)}</dd></div>}
-              <div><dt>Zusatzbestellungen über Ticket Tailor</dt><dd>{money(night.addonCents)}</dd></div>
-            </dl>}
-          </section>;
-        })}
-        <p className="admin-note">Inklusivdrinks: vereinbarter Ansatz 15 € je enthaltenem Drink, keine Aussage über den tatsächlichen Verbrauch. Flasche Crémant: 50 €; Flasche Moët: vorläufig 129 €. Weitere unbewertete Inklusivleistungen werden separat genannt. Abgeleitete Summen und Club-Vergleiche erscheinen erst, wenn alle nötigen Rechenwerte feststehen. SumUp kann Trinkgelder und weitere Artikel enthalten; deshalb ist die Summe noch kein reiner Gastronomieumsatz. Vor Anbietergebühren und Kreditrückzahlung. Serviceabend: 03:00 bis 03:00.</p>
-      </>)}
-      {data && <p className="admin-note">Stand {new Date(data.asOf).toLocaleTimeString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' })} Uhr</p>}
-    </>}
+    </section> : <section className="admin-month-view" aria-label="Monatsauswertung"
+      onTouchStart={event => {
+        if (busy || event.touches.length !== 1 || (event.target as Element).closest('button, a, input, select, textarea')) { touch.current = null; return; }
+        const finger = event.touches[0]; touch.current = { x: finger.clientX, y: finger.clientY, id: finger.identifier };
+      }}
+      onTouchMove={event => {
+        const start = touch.current;
+        if (!start) return;
+        if (event.touches.length !== 1) { touch.current = null; return; }
+        const finger = event.touches[0], dx = finger.clientX - start.x, dy = finger.clientY - start.y;
+        if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) touch.current = null;
+      }}
+      onTouchCancel={() => { touch.current = null; }}
+      onTouchEnd={event => {
+        const start = touch.current; touch.current = null;
+        if (!start || event.touches.length) return;
+        const finger = Array.from(event.changedTouches).find(item => item.identifier === start.id);
+        if (!finger) return;
+        const dx = finger.clientX - start.x, dy = finger.clientY - start.y;
+        // Same direction and threshold as the team month overview.
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) move(dx > 0 ? -1 : 1);
+      }}>
+      <div className="admin-month"><h2 aria-live="polite">{label}</h2><div role="group" aria-label="Monat wechseln">
+        <button type="button" aria-label="Vorheriger Monat" disabled={month <= '2026-06' || busy} onClick={() => move(-1)}><ChevronLeft aria-hidden="true" /></button>
+        <button type="button" aria-label="Nächster Monat" disabled={month >= currentMonth() || busy} onClick={() => move(1)}><ChevronRight aria-hidden="true" /></button>
+      </div></div>
+      <div className="service-switch admin-switch" role="group" aria-label="Berechnungsbasis">
+        <button type="button" aria-pressed={mode === 'payments'} onClick={() => setMode('payments')}>Zahlungen</button>
+        <button type="button" aria-pressed={mode === 'events'} onClick={() => setMode('events')}>Veranstaltungen</button>
+      </div>
+      <div aria-busy={busy}>
+        {busy && <TicketLoader label="Monatsauswertung wird geladen"/>}
+        {data?.month === month && <AdminMonthView key={month + mode} data={data} mode={mode} retry={() => setRefresh(value => value + 1)} />}
+      </div>
+    </section>}
     {message && <p role="alert">{message}</p>}
   </main></div>;
 }

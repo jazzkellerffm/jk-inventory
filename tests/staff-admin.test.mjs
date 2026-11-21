@@ -114,6 +114,7 @@ test('unvalued VIP bottles preserve the known drink portion and explicit missing
   vip.line_items[0].quantity=2;vip.line_items[0].total=19400;vip.total=19400;vip.transactions[0].amount=19400;
   const night=summarizeTickets([premium,vip],'2026-12',valuation).nights[0];
   assert.equal(night.includedDrinkCount,2);assert.equal(night.knownIncludedCents,3000);
+  assert.deepEqual(night.includedItems,[{label:'Drink',quantity:2,unitCents:1500}]);
   assert.equal(night.includedCents,null);assert.equal(night.admissionCents,null);assert.equal(night.upgradeCents,null);
   assert.deepEqual(night.unvaluedSupplies,[{label:'Flasche Crémant',quantity:2}]);
   assert.equal(night.ticketCents,28200);
@@ -122,6 +123,7 @@ test('valued bottles complete the included total without duplicating drink value
   const premium=order(),vip=order({id:'or_vip'});vip.line_items[0].description='VIP Table - 2 Guests · incl. 1 Bottle Crémant';
   const night=summarizeTickets([premium,vip],'2026-12',{...valuation,bottles:{'Flasche Crémant':3000}}).nights[0];
   assert.equal(night.knownIncludedCents,6000);assert.equal(night.includedCents,6000);
+  assert.deepEqual(night.includedItems,[{label:'Drink',quantity:2,unitCents:1500},{label:'Flasche Crémant',quantity:1,unitCents:3000}]);
   assert.equal(night.admissionCents,12800);assert.deepEqual(night.unvaluedSupplies,[]);
 });
 test('cancelled bookings are excluded from valid event packages but cash and refunds remain',()=>{
@@ -145,4 +147,28 @@ test('void lines in a completed order cannot become add-on revenue or included e
   const o=order();o.line_items.push({...o.line_items[0],type:'void'});o.total=19400;o.transactions[0].amount=19400;
   const night=summarizeTickets([o],'2026-12',valuation).nights[0];
   assert.equal(night.ticketCents,9400);assert.equal(night.addonCents,0);assert.equal(night.includedDrinkCount,2);
+});
+test('included breakdown reconciles mixed package quantities, bottles and configured prices',()=>{
+  const premium=order(),vip=order({id:'or_vip'}),worldstar=order({id:'or_worldstar'});
+  vip.line_items[0].description='VIP Table - 2 Guests · incl. 1 Bottle Crémant';
+  worldstar.line_items[0].description='VIP Table - World Star VIP · 2 Guests · Moët & Chandon';
+  worldstar.line_items[0].value=20000;
+  for(const o of [premium,vip,worldstar]) {
+    o.line_items[0].quantity=2;o.line_items[0].total=(o.line_items[0].value+300)*2;
+    o.total=o.line_items[0].total;o.transactions[0].amount=o.total;
+  }
+  const night=summarizeTickets([premium,vip,worldstar,order({id:'or_more'}),vip],'2026-12',{
+    ...valuation,drinkCents:1400,bottles:{'Flasche Crémant':5000,'Flasche Moët':12900},
+  }).nights[0];
+  assert.deepEqual(night.includedItems,[{label:'Drink',quantity:6,unitCents:1400},{label:'Flasche Crémant',quantity:2,unitCents:5000},{label:'Flasche Moët',quantity:2,unitCents:12900}]);
+  assert.equal(night.includedItems.reduce((sum,item)=>sum+item.quantity*item.unitCents,0),night.knownIncludedCents);
+  assert.equal(night.knownIncludedCents,44200);
+  assert.equal(night.admissionCents+night.includedCents,night.ticketCents);
+});
+test('invalid valuation cannot appear as a priced line in the included breakdown',()=>{
+  const o=order();o.line_items[0].description='VIP Table - World Star VIP · 2 Guests · Moët & Chandon';
+  const night=summarizeTickets([o],'2026-12',{...valuation,bottles:{'Flasche Moët':12900}}).nights[0];
+  assert.deepEqual(night.includedItems,[]);assert.equal(night.knownIncludedCents,0);
+  assert.equal(night.includedCents,null);assert.equal(night.admissionCents,null);
+  assert.ok(night.unvaluedSupplies.some(item=>item.label==='Ticketbewertung zu prüfen'));
 });

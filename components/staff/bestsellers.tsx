@@ -114,7 +114,7 @@ function CocktailCounter({example}:{example:boolean}){
   },[example]);
   const total=(counts?.sumup??0)+(counts?.included??0);
   return <div className="cocktail-counter" aria-label="Cocktail Counter des Abends">
-    <div className="cocktail-counter-label"><Martini size={16}/> HEUTE BESTELLT</div>
+    <div className="cocktail-counter-label"><Martini size={16}/> Heute bestellt</div>
     {counts?<><div className="cocktail-counter-hero"><div className="cocktail-counter-number"><strong>{total}</strong><span>Cocktails &amp; Mocktails</span></div><button type="button" className={"cocktail-cheers"+(cheering?" is-cheering":"")} aria-label="Cheers! Dream Cocktail anstoßen" title="Cheers!" onClick={()=>{setCheering(false);requestAnimationFrame(()=>setCheering(true));}} onAnimationEnd={()=>setCheering(false)}><img src="/branding/dream-3d.webp" alt="" width="104" height="104" draggable={false}/></button></div>
       <div className="cocktail-counter-bars" aria-hidden="true">
         <i style={{flex:counts.sumup||0.001}}/><i style={{flex:counts.included||0.001}}/>

@@ -301,7 +301,7 @@
 .staff-bestsellers ol { padding:0; margin:14px 0; list-style:none; }
 .staff-bestsellers li { display:grid; grid-template-columns:20px minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 0; }
 .staff-bestsellers li>span,.staff-bestsellers small { color:var(--muted); }
-.staff-bestsellers strong { font:700 22px var(--staff-display),sans-serif; }
+.staff-bestsellers ol strong { font:400 22px var(--font-poly-bulky-only),sans-serif; }
 .best-track { margin-top:4px; border-radius:100px; height:6px; background:#e5ebe4; overflow:hidden; }
 .best-track i { display:block; height:100%; background:#456d5d; border-radius:inherit; }
 
@@ -677,3 +677,13 @@
 .admin-rose-compare .admin-compare-current { background:#bd8279; }
 .admin-rose-compare .admin-compare-previous { background:#a9c7b6; }
 .admin-evening-secondary .admin-evening-bar strong { font-size:clamp(30px,6.5vw,36px); line-height:1.15; }
+
+/* Cocktail ranking: quiet nested disclosure, no extra fetch until expanded. */
+.bestseller-cocktail-section { margin-top:18px; border-top:1px solid var(--line); }
+.bestseller-cocktail-toggle { display:flex; justify-content:space-between; align-items:center; width:100%; min-height:64px; gap:12px; padding:12px 0; text-align:left; color:var(--accent); }
+.bestseller-cocktail-toggle>span { display:grid; grid-template-columns:20px 1fr; align-items:center; gap:2px 8px; font-family:var(--font-poly-bulky-only),sans-serif; font-size:17px; }
+.bestseller-cocktail-toggle small { grid-column:2; font-family:var(--font-poly),sans-serif; font-size:12px; font-weight:400; color:var(--muted); }
+.bestseller-cocktail-toggle[aria-expanded="true"]>svg { transform:rotate(180deg); }
+.bestseller-cocktail-section>.staff-bestsellers { border:0; border-radius:0; padding:4px 0 0; margin:0; background:transparent; box-shadow:none; }
+.bestseller-cocktail-section>.staff-bestsellers>.staff-section-head { display:none; }
+.bestseller-cocktail-section>.staff-bestsellers>h2 { font-size:19px; margin:0; }

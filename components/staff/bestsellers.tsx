@@ -91,6 +91,7 @@ export function Bestsellers({example,category="all"}:{example:boolean;category?:
 function CocktailCounter({example}:{example:boolean}){
   const [counts,setCounts]=useState<{sumup:number;included:number}|null>(example?{sumup:29,included:19}:null);
   const [unavailable,setUnavailable]=useState(false);
+  const [cheering,setCheering]=useState(false);
   useEffect(()=>{
     if(example)return;
     const controller=new AbortController();
@@ -114,7 +115,7 @@ function CocktailCounter({example}:{example:boolean}){
   const total=(counts?.sumup??0)+(counts?.included??0);
   return <div className="cocktail-counter" aria-label="Cocktail Counter des Abends">
     <div className="cocktail-counter-label"><Martini size={16}/> HEUTE BESTELLT</div>
-    {counts?<><div className="cocktail-counter-number"><strong>{total}</strong><span>Cocktails &amp; Mocktails</span></div>
+    {counts?<><div className="cocktail-counter-hero"><div className="cocktail-counter-number"><strong>{total}</strong><span>Cocktails &amp; Mocktails</span></div><button type="button" className={"cocktail-cheers"+(cheering?" is-cheering":"")} aria-label="Cheers! Cocktail-Tray anstoßen" title="Cheers!" onClick={()=>{setCheering(false);requestAnimationFrame(()=>setCheering(true));}} onAnimationEnd={()=>setCheering(false)}><Martini size={38} aria-hidden="true"/></button></div>
       <div className="cocktail-counter-bars" aria-hidden="true">
         <i style={{flex:counts.sumup||0.001}}/><i style={{flex:counts.included||0.001}}/>
       </div>

@@ -722,9 +722,13 @@
 /* Cheers: a small user-triggered toast, never a looping distraction. */
 .cocktail-counter-hero { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .cocktail-counter-hero .cocktail-counter-number { min-width:0; }
-.cocktail-cheers { flex:0 0 88px; width:88px; height:88px; border:0; background:transparent; color:var(--accent); display:grid; place-items:center; transform-origin:50% 75%; touch-action:manipulation; }
+.cocktail-cheers { flex:0 0 68px; width:68px; height:68px; border:0; background:transparent; color:var(--accent); display:grid; place-items:center; transform-origin:50% 75%; touch-action:manipulation; }
 .cocktail-cheers.is-cheering { animation:jkos-cheers .85s cubic-bezier(.22,.7,.2,1) both; }
 @keyframes jkos-cheers { 0%,100%{transform:translateY(0) rotate(0)} 23%{transform:translateY(-10px) rotate(-13deg)} 48%{transform:translateY(-6px) rotate(12deg)} 70%{transform:translateY(-2px) rotate(-5deg)} }
 @media(prefers-reduced-motion:reduce){.cocktail-cheers.is-cheering{animation:none}}
 
 .cocktail-cheers img { display:block; width:100%; height:100%; object-fit:contain; pointer-events:none; }
+
+/* The Included Drinks source already has a martini icon; avoid repeating it in its bestseller disclosure. */
+.included-ranking-toggle>span { grid-template-columns:minmax(0,1fr); }
+.included-ranking-toggle small { grid-column:1; }

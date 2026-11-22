@@ -247,8 +247,9 @@ async function rankSales(merchant:string,token:string,start:number,now:number,ca
       else totals.set(key,{name,quantity});
     }
   }
+  const totalQuantity=[...totals.values()].reduce((sum,item)=>sum+item.quantity,0);
   const products=[...totals.values()].sort((a,b)=>b.quantity-a.quantity || a.name.localeCompare(b.name,"de")).slice(0,10);
-  return {products: incomplete ? [] : products,incomplete,excluded,asOf:new Date(now).toISOString()};
+  return {products: incomplete ? [] : products,totalQuantity:incomplete?undefined:totalQuantity,incomplete,excluded,asOf:new Date(now).toISOString()};
 }
 
 const rankings = new Map<string, { until: number; data: Promise<BestsellerFeed> }>();

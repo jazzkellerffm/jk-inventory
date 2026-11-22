@@ -55,8 +55,8 @@ function IncludedRankingPanel(){
     return()=>{controller.abort();clearInterval(timer);};
   },[open,period]);
   return <div className="bestseller-cocktail-section">
-    <button type="button" className="bestseller-cocktail-toggle" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>
-      <span><Martini size={18} aria-hidden="true"/> Included Drinks · Bestseller <small>Beliebteste inkludierte Getränke</small></span>
+    <button type="button" className="bestseller-cocktail-toggle included-ranking-toggle" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>
+      <span>Included Drinks · Bestseller <small>Beliebteste inkludierte Getränke</small></span>
       <ChevronDown size={20} aria-hidden="true"/>
     </button>
     {open&&<div className="included-ranking">

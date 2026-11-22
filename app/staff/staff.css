@@ -687,3 +687,6 @@
 .bestseller-cocktail-section>.staff-bestsellers { border:0; border-radius:0; padding:4px 0 0; margin:0; background:transparent; box-shadow:none; }
 .bestseller-cocktail-section>.staff-bestsellers>.staff-section-head { display:none; }
 .bestseller-cocktail-section>.staff-bestsellers>h2 { font-size:19px; margin:0; }
+
+.booking-history-packages { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px; min-width:0; }
+.booking-history-packages .booking-history-package { width:auto; max-width:100%; }

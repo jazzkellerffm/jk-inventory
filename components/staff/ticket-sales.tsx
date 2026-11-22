@@ -139,7 +139,7 @@ function BookingHistory({day}: {day: TicketFeed["bookingDay"]}) {
               <b>{concert.getUTCDate()}</b><span>{concertWeekday.format(concert)}<small>{concertMonth.format(concert)} {concert.getUTCFullYear()}</small></span>
             </time>}
             <b className="booking-history-title">{line.event || "Konzert noch offen"}</b>
-            {lines.map((item, index) => {
+            <div className="booking-history-packages">{lines.map((item, index) => {
               const category = ticketCategory(item.ticket);
               const qty = Number(item.ticket.match(/^(\d+) × /)?.[1] ?? 1);
               const guests = packageSize(item.ticket) * qty;
@@ -149,7 +149,7 @@ function BookingHistory({day}: {day: TicketFeed["bookingDay"]}) {
                 <b>{category === "Weitere Tickets" ? item.ticket : (qty > 1 ? qty + " × " : "") + category}</b>
                 {detail && <span>{detail}</span>}
               </div>;
-            })}
+            })}</div>
           </div>;
         })}
         <small className="booking-history-stamp">Gebucht am {date.format(record.at * 1000)} · {clock.format(record.at * 1000)} Uhr</small>

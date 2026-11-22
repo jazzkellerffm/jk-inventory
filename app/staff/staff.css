@@ -698,7 +698,7 @@
 .included-ranking-list li strong { font:400 22px var(--font-poly-bulky-only),sans-serif; }
 .included-ranking>small { display:block; margin-top:12px; color:var(--muted); font-size:12px; }
 .cocktail-counter { margin-top:14px; padding:16px; border-radius:16px; background:#f1f3ee; }
-.cocktail-counter-label { display:flex; align-items:center; gap:7px; font-size:11px; letter-spacing:.06em; font-weight:700; color:var(--muted); }
+.cocktail-counter-label { display:flex; align-items:center; gap:7px; font-family:var(--font-poly),sans-serif; font-size:11px; letter-spacing:0; font-weight:700; color:var(--muted); text-transform:none; }
 .cocktail-counter-number { display:flex; align-items:baseline; gap:12px; margin:8px 0 14px; flex-wrap:wrap; }
 .cocktail-counter-number strong { font:400 clamp(42px,9vw,64px)/1 var(--font-poly-bulky-only),sans-serif; color:var(--paper); font-variant-numeric:tabular-nums; }
 .cocktail-counter-number span { font-size:14px; color:var(--muted); }
@@ -715,3 +715,6 @@
 .included-ranking-list li + li { border-top:0; }
 .included-ranking-list li>div { border:0; }
 .cocktail-counter-number strong { font:700 clamp(42px,9vw,64px)/1 var(--staff-display),sans-serif; }
+
+/* Orders already have separators; avoid a second rule above Included bestseller. */
+.staff-orders .bestseller-cocktail-section { border-top:0; }

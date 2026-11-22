@@ -115,7 +115,7 @@ function CocktailCounter({example}:{example:boolean}){
   const total=(counts?.sumup??0)+(counts?.included??0);
   return <div className="cocktail-counter" aria-label="Cocktail Counter des Abends">
     <div className="cocktail-counter-label"><Martini size={16}/> HEUTE BESTELLT</div>
-    {counts?<><div className="cocktail-counter-hero"><div className="cocktail-counter-number"><strong>{total}</strong><span>Cocktails &amp; Mocktails</span></div><button type="button" className={"cocktail-cheers"+(cheering?" is-cheering":"")} aria-label="Cheers! Cocktail-Tray anstoßen" title="Cheers!" onClick={()=>{setCheering(false);requestAnimationFrame(()=>setCheering(true));}} onAnimationEnd={()=>setCheering(false)}><img src="/branding/cocktail-tray-cheers.svg" alt="" width="120" height="110" draggable={false}/></button></div>
+    {counts?<><div className="cocktail-counter-hero"><div className="cocktail-counter-number"><strong>{total}</strong><span>Cocktails &amp; Mocktails</span></div><button type="button" className={"cocktail-cheers"+(cheering?" is-cheering":"")} aria-label="Cheers! Cocktail-Tray anstoßen" title="Cheers!" onClick={()=>{setCheering(false);requestAnimationFrame(()=>setCheering(true));}} onAnimationEnd={()=>setCheering(false)}><img src="/branding/kawaii-whisky-sour.svg" alt="" width="120" height="110" draggable={false}/></button></div>
       <div className="cocktail-counter-bars" aria-hidden="true">
         <i style={{flex:counts.sumup||0.001}}/><i style={{flex:counts.included||0.001}}/>
       </div>

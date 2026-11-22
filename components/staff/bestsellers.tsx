@@ -84,5 +84,42 @@ export function Bestsellers({example,category="all"}:{example:boolean;category?:
     {!!feed?.excluded && !feed.incomplete && <small>Freie Zahlungen ohne zugeordneten Artikel sind nicht enthalten.</small>}
     <small>Verkaufte Stückzahl · Tageswechsel 03:00 Uhr</small>
     {category==="all" && <div className="bestseller-cocktail-section"><button type="button" className="bestseller-cocktail-toggle" aria-expanded={cocktailsOpen} onClick={()=>setCocktailsOpen(value=>!value)}><span><Martini size={18} aria-hidden="true"/> Cocktail-Bestseller <small>Cocktails + Mocktails</small></span><ChevronDown size={20} aria-hidden="true"/></button>{cocktailsOpen && <Bestsellers example={example} category="cocktails" />}</div>}
+    {category==="all" && <CocktailCounter example={example}/>}
   </section>;
+}
+
+function CocktailCounter({example}:{example:boolean}){
+  const [counts,setCounts]=useState<{sumup:number;included:number}|null>(example?{sumup:29,included:19}:null);
+  const [unavailable,setUnavailable]=useState(false);
+  useEffect(()=>{
+    if(example)return;
+    const controller=new AbortController();
+    async function refresh(){
+      try{
+        const responses=await Promise.all([
+          fetch("/api/staff/bestsellers?period=evening&category=cocktails",{cache:"no-store",signal:controller.signal}),
+          fetch("/api/staff/included-bestsellers?period=evening",{cache:"no-store",signal:controller.signal})
+        ]);
+        if(responses.some(r=>r.status===401)){window.location.replace("/staff");return;}
+        if(responses.some(r=>!r.ok))throw new Error();
+        const [sumup,included]=await Promise.all(responses.map(r=>r.json()));
+        if(sumup.feed?.incomplete||included.feed?.incomplete||typeof sumup.feed?.totalQuantity!=="number"||typeof included.feed?.cocktailTotal!=="number")throw new Error();
+        if(!controller.signal.aborted){setCounts({sumup:sumup.feed.totalQuantity,included:included.feed.cocktailTotal});setUnavailable(false);}
+      }catch{if(!controller.signal.aborted){setCounts(null);setUnavailable(true);}}
+    }
+    void refresh();
+    const timer=setInterval(refresh,60000);
+    return()=>{controller.abort();clearInterval(timer);};
+  },[example]);
+  const total=(counts?.sumup??0)+(counts?.included??0);
+  return <div className="cocktail-counter" aria-label="Cocktail Counter des Abends">
+    <div className="cocktail-counter-label"><Martini size={16}/> HEUTE BESTELLT</div>
+    {counts?<><div className="cocktail-counter-number"><strong>{total}</strong><span>Cocktails &amp; Mocktails</span></div>
+      <div className="cocktail-counter-bars" aria-hidden="true">
+        <i style={{flex:counts.sumup||0.001}}/><i style={{flex:counts.included||0.001}}/>
+      </div>
+      <div className="cocktail-counter-sources"><span>SumUp {counts.sumup}</span><span>Included {counts.included}</span></div>
+    </>:<p className="cocktail-counter-pending">{unavailable?"Zählung derzeit nicht vollständig verfügbar.":"Cocktails werden gezählt …"}</p>}
+    <small>Erfasste Bestellungen · Tageswechsel 03:00 Uhr</small>
+  </div>;
 }

@@ -3,7 +3,7 @@
 import { TicketLoader } from "./ticket-loader";
 
 import { useEffect, useState } from "react";
-import { ChartBar } from "lucide-react";
+import { ChartBar, ChevronDown, Martini } from "lucide-react";
 import { bestsellerStart, type BestsellerPeriod } from "@/lib/staff/bestseller-period";
 import type { BestsellerFeed } from "@/lib/staff/types";
 
@@ -24,7 +24,8 @@ function demoFeed(period:BestsellerPeriod):BestsellerFeed {
   return {...sample,products:sample.products.map(p=>({...p,quantity:p.quantity*factor}))};
 }
 
-export function Bestsellers({example}:{example:boolean}) {
+export function Bestsellers({example,category="all"}:{example:boolean;category?:"all"|"cocktails"}) {
+  const [cocktailsOpen,setCocktailsOpen]=useState(false);
   const [period,setPeriod]=useState<BestsellerPeriod>("evening");
   const [limit,setLimit]=useState(3);
   const [feed,setFeed]=useState<BestsellerFeed|null>(example ? demoFeed("evening") : null);
@@ -41,7 +42,7 @@ export function Bestsellers({example}:{example:boolean}) {
       busy=true;
       setLoading(true);
       try {
-        const res=await fetch("/api/staff/bestsellers?period="+period,{cache:"no-store",signal:controller.signal});
+        const res=await fetch("/api/staff/bestsellers?period="+period+"&category="+category,{cache:"no-store",signal:controller.signal});
         if(res.status===401){window.location.replace("/staff");return;}
         if(!res.ok) throw new Error();
         const data=await res.json();
@@ -56,11 +57,11 @@ export function Bestsellers({example}:{example:boolean}) {
     const timer=setInterval(refresh,60000);
     document.addEventListener("visibilitychange",refresh);
     return ()=>{controller.abort();clearInterval(timer);document.removeEventListener("visibilitychange",refresh);};
-  },[example,period]);
+  },[example,period,category]);
   return <section id="bestseller" className="staff-panel staff-bestsellers">
     <div className="staff-section-head"><span className="staff-eyebrow"><ChartBar size={16}/> SumUp</span>
       <small>{example ? "Beispieldaten" : loading && feed ? "Wird aktualisiert …" : feed ? "Stand "+clock.format(Date.parse(feed.asOf))+" Uhr" : ""}</small></div>
-    <h2>{titles[period]}</h2>
+    <h2>{category==="cocktails" ? (period==="evening"?"Cocktail-Bestseller des Abends":period==="week"?"Cocktail-Bestseller der Woche":"Cocktail-Bestseller des Monats") : titles[period]}</h2>
     <div className="bestseller-controls">
       <select aria-label="Zeitraum der Bestseller" value={period} onChange={event=>{
         const next=event.target.value as BestsellerPeriod;
@@ -72,15 +73,16 @@ export function Bestsellers({example}:{example:boolean}) {
     <p className="bestseller-period">{feed ? dates.format(bestsellerStart(Date.parse(feed.asOf),period))+" – "+dates.format(Date.parse(feed.asOf)) : "Zeitraum wird geladen"}</p>
     {!example && !feed && loading && !message && <TicketLoader label="Artikel werden geladen"/>}
     {feed && !feed.incomplete && <ol>{feed.products.slice(0,limit).map((p,i)=><li key={p.name}>
-      <span>{i+1}</span><div><b>{p.name}</b><div className="best-track"><i style={{width:100*p.quantity/feed.products[0].quantity+"%"}}/></div></div><strong>{p.quantity} ×</strong>
+      <span>{i+1}</span><div><b>{p.name}</b><div className="best-track"><i style={{width:feed.products[0].quantity>0?100*p.quantity/feed.products[0].quantity+"%":"0%"}}/></div></div><strong>{p.quantity} ×</strong>
     </li>)}</ol>}
     {feed && !feed.products.length && !feed.incomplete && <p>In diesem Zeitraum noch keine zugeordneten Artikel verkauft.</p>}
     {!example && message && <p role="status">{message}</p>}
     {!!feed?.incomplete && <div className="bestseller-unavailable" role="status">
       <b>Für diesen Zeitraum fehlt eine verlässliche Artikelübersicht.</b>
-      <p>Bei {feed.incomplete} Zahlungen fehlen eindeutige Artikel oder Stückzahlen. Deshalb zeigen wir hier keine Rangliste.</p>
+      <p>{category==="cocktails" ? "Bei einzelnen Zahlungen fehlen verlässliche Produktkategorien oder Stückzahlen. Deshalb zeigen wir keine möglicherweise falsche Cocktail-Rangliste." : `Bei ${feed.incomplete} Zahlungen fehlen eindeutige Artikel oder Stückzahlen. Deshalb zeigen wir hier keine Rangliste.`}</p>
     </div>}
     {!!feed?.excluded && !feed.incomplete && <small>Freie Zahlungen ohne zugeordneten Artikel sind nicht enthalten.</small>}
     <small>Verkaufte Stückzahl · Tageswechsel 03:00 Uhr</small>
+    {category==="all" && <div className="bestseller-cocktail-section"><button type="button" className="bestseller-cocktail-toggle" aria-expanded={cocktailsOpen} onClick={()=>setCocktailsOpen(value=>!value)}><span><Martini size={18} aria-hidden="true"/> Cocktail-Bestseller <small>Cocktails + Mocktails</small></span><ChevronDown size={20} aria-hidden="true"/></button>{cocktailsOpen && <Bestsellers example={example} category="cocktails" />}</div>}
   </section>;
 }

@@ -215,7 +215,7 @@ function countable(item: ReceiptItem) {
   return !item.nonProduct && item.quantity !== null && !generic.test(item.name);
 }
 
-async function rankSales(merchant:string,token:string,start:number,now:number):Promise<BestsellerFeed> {
+async function rankSales(merchant:string,token:string,start:number,now:number,category: "all" | "cocktails" = "all"):Promise<BestsellerFeed> {
   const payments = await history(merchant,token,start,now);
   await attachSaleItems(merchant, token, payments, now);
   const totals = new Map<string,{name:string;quantity:number}>();
@@ -226,8 +226,10 @@ async function rankSales(merchant:string,token:string,start:number,now:number):P
     if (payment.saleId && countedSales.has(payment.saleId)) continue;
     if (payment.saleId) countedSales.add(payment.saleId);
     // Free payments remain revenue, but are not individual catalogue products.
-    const rankedItems = payment.items.filter(item => item.catalogItem === true && !generic.test(item.name));
-    if (payment.items.length && rankedItems.length < payment.items.length) excluded++;
+    const catalogItems = payment.items.filter(item => item.catalogItem === true && !generic.test(item.name));
+    const rankedItems = category === "cocktails" ? catalogItems.filter(item => item.categories?.some(name => /^(cocktails|mocktails)$/i.test(name.trim()))) : catalogItems;
+    if (category === "cocktails" && catalogItems.some(item => !item.categories?.length)) { incomplete++; continue; }
+    if (payment.items.length && catalogItems.length < payment.items.length) excluded++;
     if (!payment.items.length) {
       if (generic.test(payment.summary ?? "")) excluded++;
       else incomplete++;
@@ -250,12 +252,12 @@ async function rankSales(merchant:string,token:string,start:number,now:number):P
 }
 
 const rankings = new Map<string, { until: number; data: Promise<BestsellerFeed> }>();
-export function readBestsellers(merchant: string, token: string, period: BestsellerPeriod = "evening") {
+export function readBestsellers(merchant: string, token: string, period: BestsellerPeriod = "evening", category: "all" | "cocktails" = "all") {
   const now = Date.now(), start = bestsellerStart(now, period);
-  const key = merchant + "/" + period + "/" + start;
+  const key = merchant + "/" + category + "/" + period + "/" + start;
   const cached = rankings.get(key);
   if (cached && cached.until > now) return cached.data;
-  const data = rankSales(merchant, token, start, now);
+  const data = rankSales(merchant, token, start, now, category);
   if (rankings.size >= 12) rankings.delete(rankings.keys().next().value!);
   const entry = { until: Infinity, data };
   rankings.set(key, entry);

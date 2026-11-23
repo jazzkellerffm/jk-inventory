@@ -91,6 +91,7 @@ export function Bestsellers({example,category="all"}:{example:boolean;category?:
 function CocktailCounter({example}:{example:boolean}){
   const [counts,setCounts]=useState<{sumup:number;included:number}|null>(example?{sumup:29,included:19}:null);
   const [unavailable,setUnavailable]=useState(false);
+  const [lastEvening,setLastEvening]=useState<{date:string;total:number}|null>(null);
   const [cheering,setCheering]=useState(false);
   useEffect(()=>{
     if(example)return;
@@ -112,6 +113,22 @@ function CocktailCounter({example}:{example:boolean}){
     const timer=setInterval(refresh,60000);
     return()=>{controller.abort();clearInterval(timer);};
   },[example]);
+  useEffect(()=>{
+    if(example)return;
+    const controller=new AbortController();
+    async function load(){
+      try{
+        const response=await fetch("/api/staff/cocktail-last-evening",{cache:"no-store",signal:controller.signal});
+        if(response.status===401){window.location.replace("/staff");return;}
+        if(!response.ok)throw new Error();
+        const data=await response.json();
+        if(!controller.signal.aborted)setLastEvening(data.last??null);
+      }catch{if(!controller.signal.aborted)setLastEvening(null);}
+    }
+    void load();
+    const timer=setInterval(load,600000);
+    return()=>{controller.abort();clearInterval(timer);};
+  },[example]);
   const total=(counts?.sumup??0)+(counts?.included??0);
   return <div className="cocktail-counter" aria-label="Cocktail Counter des Abends">
     <div className="cocktail-counter-label">Heute bestellt</div>
@@ -122,5 +139,6 @@ function CocktailCounter({example}:{example:boolean}){
       <div className="cocktail-counter-sources"><span>SumUp {counts.sumup}</span><span>Included {counts.included}</span></div>
     </>:<p className="cocktail-counter-pending">{unavailable?"Zählung derzeit nicht vollständig verfügbar.":"Cocktails werden gezählt …"}</p>}
     <small>Erfasste Bestellungen · Tageswechsel 03:00 Uhr</small>
+    {lastEvening && <div className="cocktail-counter-previous"><span>Letzter Verkaufsabend · {new Intl.DateTimeFormat("de-DE",{day:"2-digit",month:"2-digit",timeZone:"UTC"}).format(new Date(lastEvening.date+"T12:00:00Z"))}</span><strong>{lastEvening.total} Cocktails</strong></div>}
   </div>;
 }

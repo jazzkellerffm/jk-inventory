@@ -98,7 +98,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
           <ChevronDown size={20} aria-hidden="true"/>
         </button>
         {analyticsOpen && <div className="food-ranking-content">
-          <div className="food-ranking-filter" role="group" aria-label="Anzahl Snack-Bestseller">
+          <div className="service-switch food-ranking-filter" role="group" aria-label="Anzahl Snack-Bestseller">
             {([3,5] as const).map(n=><button key={n} type="button" aria-pressed={rankingLimit===n} onClick={()=>setRankingLimit(n)}>Top {n}</button>)}
           </div>
           {feed.bestsellers?.length ? <ol aria-label="Meistverkaufte Snacks nach Stückzahl">

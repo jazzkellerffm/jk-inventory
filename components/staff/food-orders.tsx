@@ -149,7 +149,7 @@ function FoodWeekdayHistory({example}:{example:boolean}){
   const dateLabel=data?.strongest?new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"}).format(new Date(data.strongest.date+"T12:00:00Z")):null;
   return <div className="food-weekday-history">
     <h3>Snackverkäufe nach Wochentag</h3>
-    <p>Verkaufte Portionen · letzte 28 Veranstaltungstage</p>
+    <p>Verkaufte Portionen · letzte 28 Kalendertage</p>
     {data?<><div className="food-weekday-bars" role="img" aria-label={data.byWeekday.map(d=>labels[d.weekday]+": "+d.portions+" Portionen").join(", ")}>
       {data.byWeekday.map(d=><div className="food-weekday-column" key={d.weekday}>
         <strong>{d.portions}</strong><div className="food-weekday-track"><i style={{height:(d.portions?Math.max(5,100*d.portions/max):0)+"%"}}/></div>

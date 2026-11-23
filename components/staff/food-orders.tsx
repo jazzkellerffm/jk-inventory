@@ -123,7 +123,8 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
   </section>;
 }
 
-type SnackHistory={byWeekday:{weekday:number;portions:number}[];strongest:{date:string;portions:number}|null;total:number};
+type SnackNight={date:string;weekday:number;portions:number};
+type SnackHistory={days:SnackNight[];strongest:{date:string;portions:number}|null;total:number};
 function FoodWeekdayHistory({example}:{example:boolean}){
   const [history,setHistory]=useState<SnackHistory|null>(null);
   const [error,setError]=useState(false);
@@ -143,17 +144,19 @@ function FoodWeekdayHistory({example}:{example:boolean}){
     const timer=setInterval(()=>{if(!document.hidden)void load();},600000);
     return()=>{controller.abort();clearInterval(timer);};
   },[example]);
-  const data=example?{byWeekday:[0,0,12,8,21,25,17].map((portions,weekday)=>({weekday,portions})),strongest:{date:"2026-11-21",portions:25},total:83}:history;
-  const labels=["Mo","Di","Mi","Do","Fr","Sa","So"];
-  const max=Math.max(1,...(data?.byWeekday.map(d=>d.portions)??[1]));
+  const data=example?{
+    days:["04","05","06","07","11","12","13","14"].map((day,i)=>({date:"2026-11-"+day,weekday:[2,3,4,5,2,3,4,5][i],portions:[6,3,12,8,4,9,7,15][i]})),
+    strongest:{date:"2026-11-14",portions:15},total:64
+  }:history;
+  const max=Math.max(1,...(data?.days.map(d=>d.portions)??[1]));
   const dateLabel=data?.strongest?new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"}).format(new Date(data.strongest.date+"T12:00:00Z")):null;
   return <div className="food-weekday-history">
-    <h3>Snackverkäufe nach Wochentag</h3>
-    <p>Verkaufte Portionen · letzte 28 Kalendertage</p>
-    {data?<><div className="food-weekday-bars" role="img" aria-label={data.byWeekday.map(d=>labels[d.weekday]+": "+d.portions+" Portionen").join(", ")}>
-      {data.byWeekday.map(d=><div className="food-weekday-column" key={d.weekday}>
+    <h3>Snackverkäufe im Vergleich</h3>
+    <p>Verkaufte Portionen · letzte 8 Verkaufsabende</p>
+    {data?<><div className="food-weekday-bars" role="img" aria-label={data.days.map(d=>d.date+": "+d.portions+" Portionen").join(", ")}>
+      {data.days.map(d=><div className="food-weekday-column" key={d.date}>
         <strong>{d.portions}</strong><div className="food-weekday-track"><i style={{height:(d.portions?Math.max(5,100*d.portions/max):0)+"%"}}/></div>
-        <span>{labels[d.weekday]}</span>
+        <span>{d.date.slice(8)}.{d.date.slice(5,7)}.</span>
       </div>)}
     </div>
     <small>{dateLabel?("Stärkster Abend · "+dateLabel+" · "+data.strongest?.portions+" Portionen"):"Noch keine Snackverkäufe im Zeitraum."}</small>

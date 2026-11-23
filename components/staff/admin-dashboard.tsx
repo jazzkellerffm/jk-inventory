@@ -12,6 +12,19 @@ const shortDay = (date: string) => new Intl.DateTimeFormat('de-DE', { weekday: '
 const monthName = (month: string) => new Intl.DateTimeFormat('de-DE', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(month + '-01T12:00:00Z'));
 
 export function AdminEveningView({ data, now, refresh, loading }: { data: EveningDashboard; now: number; refresh: () => void; loading: boolean }) {
+  const [greenOpen,setGreenOpen]=useState(false),[roseOpen,setRoseOpen]=useState(false);
+  const [comparison,setComparison]=useState<EveningDashboard['comparison']>();
+  const [compareError,setCompareError]=useState(false);
+  const open=greenOpen||roseOpen;
+  useEffect(()=>{
+    if(!open)return;
+    const controller=new AbortController();
+    fetch('/api/staff/admin/evening?comparison=1',{cache:'no-store',signal:controller.signal})
+      .then(async response=>{if(!response.ok)throw Error();return response.json();})
+      .then(result=>{if(!controller.signal.aborted&&result.date===data.date){setComparison(result.comparison);setCompareError(false);}})
+      .catch(()=>{if(!controller.signal.aborted)setCompareError(true);});
+    return()=>controller.abort();
+  },[open,data.date]);
   const ended = berlinDay(now) > data.date;
   const phase = ended ? 'Abend abgeschlossen' : data.phase === 'upcoming' ? 'Heute Abend' : data.phase === 'started' ? 'Abend läuft' : 'Dieser Abend';
   return <section className="admin-evening" aria-label="Aktueller Serviceabend"><div className="admin-evening-primary">
@@ -29,25 +42,27 @@ export function AdminEveningView({ data, now, refresh, loading }: { data: Evenin
       <div><dt><i className="admin-key-bar"/>SumUp</dt><dd>{money(data.sumupCents)}</dd></div>
     </dl>
     <div className="admin-week-compare" aria-label="Gesamtumsatz im Vergleich zur Vorwoche">
-      <h3>Vorwochenvergleich <small>Ticket Tailor + SumUp</small></h3>
-      {([{label:ended?'Letzter Abend':'Heute · live',date:data.date,cents:data.combinedCents},{label:'Vorwoche',date:data.comparison?.date,cents:data.comparison?.combinedCents ?? null}] as const).map((item,index) => {
-        const peak = Math.max(1, data.combinedCents ?? 0, data.comparison?.combinedCents ?? 0);
+      <button type="button" className="admin-compare-toggle" aria-expanded={greenOpen} onClick={()=>setGreenOpen(v=>!v)}>Vorwochenvergleich <ChevronDown size={18}/></button>
+      {greenOpen && <>{!comparison && <p>{compareError?"Vergleich derzeit nicht verfügbar.":"Vergleich wird geladen …"}</p>}<h3><small>Ticket Tailor + SumUp</small></h3>
+      {([{label:ended?'Letzter Abend':'Heute · live',date:data.date,cents:data.combinedCents},{label:'Vorwoche',date:comparison?.date,cents:comparison?.combinedCents ?? null}] as const).map((item,index) => {
+        const peak = Math.max(1, data.combinedCents ?? 0, comparison?.combinedCents ?? 0);
         return <div className="admin-compare-row" key={index}>
           <div className="admin-compare-label"><span>{item.label}{item.date ? ' · ' + shortDay(item.date) : ''}</span><strong>{money(item.cents)}</strong></div>
           <div className="admin-compare-track"><span className={index===0?'admin-compare-current':'admin-compare-previous'} style={{width:item.cents===null?'0%':Math.max(0,item.cents)/peak*100+'%'}} /></div>
         </div>;
-      })}
+      })}</>}
     </div>
     </div><div className="admin-evening-secondary"><div className="admin-evening-bar"><span>SumUp + Inklusivgetränke<small>Kalkulatorisch · bereits im Ticketwert enthalten</small></span><strong>{money(data.barWithIncludedCents)}</strong></div>
     <div className="admin-rose-compare" aria-label="SumUp-Umsatz im Vergleich zur Vorwoche">
-      <h3>SumUp · Vorwochenvergleich</h3>
-      {([{label:ended?'Letzter Abend':'Heute · live',cents:data.sumupCents},{label:'Vorwoche · '+(data.comparison?.date ? shortDay(data.comparison.date) : '–'),cents:data.comparison?.sumupCents ?? null}] as const).map((item,index) => {
-        const peak = Math.max(1,data.sumupCents ?? 0,data.comparison?.sumupCents ?? 0);
+      <button type="button" className="admin-compare-toggle" aria-expanded={roseOpen} onClick={()=>setRoseOpen(v=>!v)}>SumUp · Vorwochenvergleich <ChevronDown size={18}/></button>
+      {roseOpen && <>{!comparison && <p>{compareError?"Vergleich derzeit nicht verfügbar.":"Vergleich wird geladen …"}</p>}
+      {([{label:ended?'Letzter Abend':'Heute · live',cents:data.sumupCents},{label:'Vorwoche · '+(comparison?.date ? shortDay(comparison.date) : '–'),cents:comparison?.sumupCents ?? null}] as const).map((item,index) => {
+        const peak = Math.max(1,data.sumupCents ?? 0,comparison?.sumupCents ?? 0);
         return <div className="admin-compare-row" key={index}>
           <div className="admin-compare-label"><span>{item.label}</span><strong>{money(item.cents)}</strong></div>
           <div className="admin-compare-track"><span className={index===0?'admin-compare-current':'admin-compare-previous'} style={{width:item.cents===null?'0%':Math.max(0,item.cents)/peak*100+'%'}} /></div>
         </div>;
-      })}
+      })}</>}
     </div>
     {data.includedCents === null && data.knownIncludedCents !== null && <p className="admin-evening-note">Inklusivwert bisher {money(data.knownIncludedCents)}. Noch offen: {data.unvaluedSupplies.map(item => `${item.quantity} × ${item.label}`).join(' · ') || 'Ticketbewertung'}.</p>}
     {(data.ticketTotal === null || data.sumupCents === null) && <p className="admin-evening-note" role="status">{data.ticketTotal === null ? 'Ticket Tailor noch unvollständig. ' : ''}{data.sumupCents === null ? 'SumUp noch unvollständig. ' : ''}Die Gesamtsumme bleibt bis zum Abgleich offen.</p>}

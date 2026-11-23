@@ -832,4 +832,7 @@
 .admin-compare-toggle { display:flex; align-items:center; justify-content:space-between; width:100%; gap:10px; font:inherit; font-weight:700; color:inherit; text-align:left; padding:4px 0; }
 .admin-compare-toggle[aria-expanded=true] { margin-bottom:12px; }
 .admin-compare-toggle[aria-expanded=true] svg { transform:rotate(180deg); }
-.admin-month h2 select { max-width:100%; font:inherit; color:inherit; background:transparent; border:0; padding:6px 2px; }
+.admin-month h2 select { max-width:100%; min-height:44px; font:inherit; color:inherit; background:transparent; border:1px solid var(--line); border-radius:999px; padding:8px 24px 8px 12px; }
+.admin-month h2 select:focus { outline:none; }
+.admin-month h2 select:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+@media (hover:none) and (pointer:coarse) { .admin-month h2 select:focus-visible { outline:none; border-color:var(--accent); } }

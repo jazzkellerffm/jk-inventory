@@ -88,6 +88,10 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
           <small><time dateTime={order.at}>{time.format(new Date(order.at))}</time> · {euro.format(order.cents / 100)}</small>
         </li>)}
       </ul> : <p>Heute noch keine Bar Snacks verkauft.</p>}
+    <div className="food-preorders">
+      <small>Ticket Tailor · Food-Vorbestellungen</small>
+      <div className="food-preorder-row">{preorders == null ? <b>Vorbestellungen derzeit nicht verfügbar</b> : <><b>Hummus-Platte</b><strong className="food-preorder-count">{preorders} ×</strong></>}</div>
+    </div>
       <div className="food-ranking">
         <button type="button" className="food-ranking-toggle" aria-expanded={analyticsOpen} onClick={()=>setAnalyticsOpen(v=>!v)}>
           <span><b>Snack-Bestseller</b><small>Beliebteste Snacks des Abends</small></span>
@@ -118,8 +122,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
         {paymentSnacks.map(snack => <li key={snack.id}><b>{snack.label}</b>
           <small>{time.format(new Date(snack.at))} · SumUp-Zahlung</small></li>)}
       </ul>}
-    <div className="food-preorders"><small>Ticket Tailor · Vorbestellungen für diesen Abend</small>
-      <div className="food-preorder-row">{preorders == null ? <b>Vorbestellungen derzeit nicht verfügbar</b> : <><strong className="food-preorder-count">{preorders} ×</strong><b>Hummus-Platte</b></>}</div></div>
+
   </section>;
 }
 
@@ -161,11 +164,12 @@ function FoodWeekdayHistory({example}:{example:boolean}){
     {data?<>{chosen && <div className="food-history-selected"><span>{formatDate(chosen.date)}</span><strong>{chosen.portions} Portionen</strong></div>}
       <div className="food-weekday-bars" ref={scroller} aria-label="Snackverkäufe nach Abend, horizontal scrollen">
       {nights.map(d=><button type="button" className="food-weekday-column" key={d.date} aria-pressed={chosen?.date===d.date} onClick={()=>setSelected(d.date)} aria-label={formatDate(d.date)+": "+d.portions+" Portionen"}>
-        <strong>{d.portions}</strong><span className="food-weekday-track"><i style={{height:(d.portions?Math.max(5,100*d.portions/max):0)+"%"}}/></span>
+        <span className="food-weekday-track"><i style={{height:(d.portions?Math.max(5,100*d.portions/max):0)+"%"}}/></span>
         <span>{d.date.slice(8)}.{d.date.slice(5,7)}.</span>
       </button>)}
     </div>
-    <small>Stärkster Abend · {data.strongest?formatDate(data.strongest.date)+" · "+data.strongest.portions+" Portionen":"noch keine Snackverkäufe"} · Tageswechsel 03:00 Uhr</small>
+    {chosen && <small className="food-history-insight">{(()=>{const avg=nights.length?data.total/nights.length:0;const difference=chosen.portions-avg;const percent=avg>0?Math.round(Math.abs(difference)/avg*100):0;return avg===0?"Noch keine Snackverkäufe im Vergleichszeitraum":Math.abs(difference)<0.5?"Entspricht dem Durchschnitt der letzten "+nights.length+" Verkaufsabende":(difference>0?"+":"−")+percent+" % gegenüber dem Durchschnitt der letzten "+nights.length+" Verkaufsabende";})()}</small>}
+    <small className="food-history-footnote">Tageswechsel 03:00 Uhr</small>
     </>:<p role="status">{error?"Snackstatistik derzeit nicht verfügbar.":"Snackstatistik wird geladen …"}</p>}
   </div>;
 }

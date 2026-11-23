@@ -737,3 +737,35 @@
 /* The Included Drinks source already has a martini icon; avoid repeating it in its bestseller disclosure. */
 .included-ranking-toggle>span { grid-template-columns:minmax(0,1fr); }
 .included-ranking-toggle small { grid-column:1; }
+
+/* Food analytics: compact apricot styling matching the staff roster. */
+.food-ranking { margin-top:18px; padding-top:12px; border-top:1px solid #dfcbb8; }
+.food-ranking-toggle { width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:8px 0; text-align:left; color:var(--paper); }
+.food-ranking-toggle>span { display:grid; gap:3px; }
+.food-ranking-toggle b { font-family:var(--font-poly-bulky-only),sans-serif; font-size:17px; font-weight:400; }
+.food-ranking-toggle small { font-size:12px; font-weight:400; color:var(--muted); }
+.food-ranking-toggle[aria-expanded="true"]>svg { transform:rotate(180deg); }
+.food-ranking-content { padding-top:10px; }
+.food-ranking-filter { display:inline-flex; padding:4px; background:#f5dfd0; border-radius:999px; gap:3px; margin-bottom:12px; }
+.food-ranking-filter button { border:0; border-radius:999px; padding:7px 13px; font-size:13px; font-weight:700; color:var(--paper); }
+.food-ranking-filter button[aria-pressed="true"] { background:#e8a67e; }
+.food-ranking-content ol { display:grid; gap:13px; margin:0; padding:0; list-style:none; }
+.food-ranking-content li { display:grid; grid-template-columns:18px minmax(0,1fr) auto; gap:9px; align-items:center; }
+.food-ranking-content li>.food-ranking-position { color:var(--muted); }
+.food-ranking-content .food-ranking-item { min-width:0; }
+.food-ranking-content .food-ranking-item>b { display:block; font-size:14px; font-family:var(--font-poly),sans-serif; font-weight:700; overflow-wrap:anywhere; }
+.food-ranking-content li>strong { font-family:var(--font-poly-bulky-only),sans-serif; font-weight:400; font-size:20px; white-space:nowrap; }
+.food-ranking-content .food-meter { height:6px; margin-top:5px; background:#ecd7c7; }
+.food-ranking-content .food-meter i { background:#e8a67e; }
+.food-ranking-content>small { display:block; margin-top:12px; color:var(--muted); font-size:12px; }
+.food-weekday-history { margin-top:18px; padding-top:16px; border-top:1px solid #dfcbb8; }
+.food-weekday-history h3 { font-family:var(--font-poly-bulky-only),sans-serif; font-size:18px; font-weight:400; margin:0 0 3px; }
+.food-weekday-history p { color:var(--muted); font-size:12px; margin:0 0 14px; }
+.food-weekday-bars { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:7px; }
+.food-weekday-column { display:flex; flex-direction:column; align-items:center; min-width:0; gap:5px; font-size:12px; }
+.food-weekday-column>strong { font-family:var(--font-poly-bulky-only),sans-serif; font-size:14px; font-weight:400; }
+.food-weekday-column>span { font-size:12px; }
+.food-weekday-track { width:100%; height:94px; display:flex; align-items:end; }
+.food-weekday-track i { width:100%; background:#f0b28c; border-radius:8px 8px 2px 2px; }
+.food-weekday-column:nth-child(5) .food-weekday-track i,.food-weekday-column:nth-child(6) .food-weekday-track i { background:#e8a67e; }
+.food-weekday-history>small { display:block; margin-top:12px; color:var(--muted); font-size:12px; }

@@ -799,7 +799,7 @@
 /* Food chart refinement: selected value replaces numbers above bars. */
 .food-weekday-column>strong { display:none; }
 .food-weekday-column { justify-content:end; }
-.food-history-selected span { font-family:var(--font-poly),sans-serif; font-weight:700; }
+.food-history-selected span { font-family:var(--font-poly-bulky-only),sans-serif; font-weight:400; }
 .food-history-insight { display:block; margin-top:12px; font-family:var(--font-poly),sans-serif; font-weight:600; color:var(--paper); font-size:13px; }
 .food-history-footnote { display:block; margin-top:4px; color:var(--muted); font-size:11px; }
 .food-preorders { margin:16px 0 4px; padding:14px 0; border-top:1px solid #dfcbb8; }

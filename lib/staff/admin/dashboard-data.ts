@@ -36,7 +36,7 @@ async function events(date: string): Promise<EveningEvent[]> {
   });
 }
 
-export async function readAdminEvening() {
+export async function readAdminEvening(includeComparison = false) {
   const now = Date.now(), date = serviceDate(now), month = date.slice(0, 7);
   const identity = (process.env.SUMUP_MERCHANT_CODE ?? '') + (process.env.SUMUP_API_KEY ?? '');
   const [ev, tt, su] = await Promise.allSettled([events(date), tickets(month),
@@ -46,6 +46,7 @@ export async function readAdminEvening() {
     })]);
   const current = eveningDashboard(ev.status === 'fulfilled' ? ev.value : null,
     tt.status === 'fulfilled' ? tt.value : null, su.status === 'fulfilled' ? su.value : null, now);
+  if (!includeComparison) return current;
   // Same weekday, seven calendar days earlier; previous night is complete.
   // Share existing private monthly reads, never infer missing/uncertain figures as zero.
   const previousDate = new Date(date + 'T12:00:00Z');

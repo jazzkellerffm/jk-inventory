@@ -90,7 +90,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
       </ul> : <p>In der letzten Stunde sind keine Snackbestellungen eingegangen.</p>}
     <div className="food-preorders">
       <small>Ticket Tailor · Food-Vorbestellungen</small>
-      <div className="food-preorder-row">{preorders == null ? <b>Vorbestellungen derzeit nicht verfügbar</b> : <><strong className="food-preorder-count">{preorders} ×</strong><span className="food-preorder-product">Hummus-Platte</span></>}</div>
+      <div className="food-preorder-row">{preorders == null ? <b>Vorbestellungen derzeit nicht verfügbar</b> : preorders === 0 ? <span className="food-preorder-empty">Keine Food-Vorbestellungen</span> : <><strong className="food-preorder-count">{preorders} ×</strong><span className="food-preorder-product">Hummus-Platte</span></>}</div>
     </div>
       <div className="food-ranking">
         <button type="button" className="food-ranking-toggle" aria-expanded={analyticsOpen} onClick={()=>setAnalyticsOpen(v=>!v)}>

@@ -320,3 +320,10 @@ export async function readBattleRevenue(merchant:string,token:string,start:numbe
   }
   return totals;
 }
+
+// Completed service-night cocktail quantity for the Counter comparison.
+export async function readCocktailRange(merchant:string,token:string,start:number,end:number){
+  const result=await rankSales(merchant,token,start,end,"cocktails");
+  if(result.incomplete || typeof result.totalQuantity!=="number")throw new Error("Incomplete cocktail history");
+  return result.totalQuantity;
+}

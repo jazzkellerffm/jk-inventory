@@ -795,3 +795,14 @@
 .food-preorder-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .food-preorder-row>b { font-family:var(--font-poly),sans-serif; font-size:16px; }
 .food-preorder-count { display:inline-flex; align-items:center; justify-content:center; min-width:54px; padding:8px 12px; border-radius:12px; background:#f0ad84; color:#38291f; font:700 23px/1 var(--staff-display),sans-serif; white-space:nowrap; }
+
+/* Food chart refinement: selected value replaces numbers above bars. */
+.food-weekday-column>strong { display:none; }
+.food-weekday-column { justify-content:end; }
+.food-history-selected span { font-family:var(--font-poly),sans-serif; font-weight:700; }
+.food-history-insight { display:block; margin-top:12px; font-family:var(--font-poly),sans-serif; font-weight:600; color:var(--paper); font-size:13px; }
+.food-history-footnote { display:block; margin-top:4px; color:var(--muted); font-size:11px; }
+.food-preorders { margin:16px 0 4px; padding:14px 0; border-top:1px solid #dfcbb8; }
+.food-preorder-row { justify-content:space-between; flex-wrap:nowrap; }
+.food-preorder-row>b { min-width:0; }
+.food-preorder-count { min-width:0; padding:6px 12px; border-radius:10px; background:#f4d0b9; color:#563725; font:700 16px/1.2 var(--font-poly),sans-serif; }

@@ -373,3 +373,35 @@ Build und vorhandene Staff-Tests werden vor Veröffentlichung geprüft. Die Best
 Der native Service-Select ist auf dem echten iPhone von Philipp als funktionierend bestätigt. Gesicherter Stand: `d6c1eaa447cbd27c365ed11b4d5c094e2567d510`, Branch `checkpoint/staff-safari-select-2026-11-19`. Dieser Eintrag ersetzt die zuvor offenen Safari-Prüfhinweise. Select im normalen Fluss, separates Label und `overflow:hidden` direkt am Select beibehalten.
 
 Anschließend ergänzt: TicketLoader für die initiale Veranstaltungsliste, getrennte Fehler-/Setup-/Leerzustände sowie eine dynamische Übersicht der tatsächlich gebuchten Ticketkategorien, Gäste, Tickets und Paketgrößen des ausgewählten Abends. Keine Null-Kategorien; keine zusätzlichen API-Abrufe. Vollständige Übergabe: [Checkpoint und Service-Erweiterungen](JKOS-Service-Door-Checkpoint-2026-11-19.md).
+
+
+## Update 23. November 2026 · Bar, Drinks und Food UI
+
+GitHub `main` bleibt die verbindliche technische Quelle; die vorstehenden datierten Notizen sind historische Checkpoints. Dieser Abschnitt dokumentiert den im Code implementierten Stand, nicht eine separat bestätigte Live-Abnahme.
+
+### Bar · Bestseller und Cocktail Counter
+
+- `components/staff/bestsellers.tsx`, `app/api/staff/bestsellers/route.ts`: Allgemeine SumUp-Bestseller nach Abend/Woche/Monat mit Top-Auswahl; separat aufklappbare **Cocktail-Bestseller** für SumUp-Kategorien Cocktails und Mocktails (nicht sämtliche Getränke).
+- Cocktail Counter kombiniert gezählte SumUp-Cocktails/Mocktails mit den zugehörigen Included Drinks zu **einer Abend-Gesamtzahl**, darunter ein schmaler zweifarbiger Herkunftsbalken. Nur erfasste Artikel zählen; bei fehlenden Daten keine erfundene Gesamtsumme. Tageswechsel 03:00 Uhr; Aktualisierung etwa alle 60 Sekunden.
+- Rechts neben der Gustavo-Zahl steht das transparente 3D-Artwork `public/branding/dream-3d.webp`, 76 px, um 12 px angehoben, auf Tap mit kurzer Cheers-Animation. Label **„Heute bestellt“** in normaler Groß-/Kleinschreibung ohne zusätzliches Martini-Icon.
+- Die Bestseller-Ansichten sind standardmäßig geschlossen und laden die aufwendigere Rangliste erst beim Öffnen.
+
+### Drinks · Included Bestseller
+
+- `components/staff/included-drinks.tsx`, `app/api/staff/included-bestsellers/route.ts`, `lib/staff/included-bestsellers.ts`: Aufklappbare Included-Drinks-Rangliste für Abend/Woche/Monat, Top 3/5/10. Das Martini-Icon steht bereits im Kopf der Drink-Bestellungen und wird im Untertitel nicht wiederholt.
+- Operative Drink-Bestellungen zeigen die letzte Stunde; ihre Ranglisten sind davon unabhängig.
+
+### Food · operative Bestellungen, Vorbestellungen und Statistik
+
+- `lib/staff/food.ts`, `components/staff/food-orders.tsx`: Operative SumUp-Snack-Kacheln zeigen **höchstens die letzten fünf Bestellungen aus den vergangenen 60 Minuten**. Alte Kacheln verschwinden; Umsatz des Betriebsabends, Küchenpegel und Bestseller werden dadurch **nicht** verkürzt. Der Küchenpegel verwendet weiter das 10-Minuten-Fenster.
+- Food-Vorbestellungen aus Ticket Tailor stehen **oberhalb** der aufklappbaren Auswertungen. Darstellung: **„2 ×“ zuerst in PolySans Bulky**, danach eine deckende hellapricotfarbene Produkt-Pille „Hummus-Platte“, beides kompakt links. Die derzeitige Datenanbindung liefert Hummus-Mengen; weitere vorbestellbare Speisen sind eine mögliche spätere Erweiterung, **noch nicht implementiert**.
+- **Snack-Bestseller** mit Popcorn-Icon, Top 3/5 und dünnen apricotfarbenen Balken; **Snackverkäufe im Vergleich** befinden sich im **gleichen**, standardmäßig geschlossenen Aufklappbereich.
+- `lib/staff/food-history.ts`, `app/api/staff/food-history/route.ts`: SumUp-Sales der Kategorie `Bar Snacks` werden nach `serviceDate` gruppiert (03:00 Uhr Frankfurt). Die **letzten 16 Tage mit bezahlten SumUp-Verkäufen** bilden den horizontal scrollbaren Verlauf; rund **8 Abende gleichzeitig sichtbar**. Auch Abende mit Zahlungen, aber 0 Snackportionen bleiben erhalten; Tage ohne Zahlungen nicht.
+- Balken sind einzeln auswählbar; der gewählte Balken ist kräftiger apricotfarben. Über dem Diagramm stehen **Datum links in PolySans Bulky** und **Portionszahl rechts**; keine doppelt angezeigten Zahlen über den Balken. Unter dem Diagramm erscheint die prozentuale Abweichung vom **Durchschnitt aller geladenen Verkaufsabende** (bis zu 16), nicht nur der acht sichtbaren.
+- Einheitliche Farblogik: Icons, Aufklapppfeile und ausgewählte Datumsbeschriftung in der normalen dunklen Staff-OS-Schriftfarbe; Apricot für Balken und aktive Top-Pills, nicht für Fließtext. Kein Icon-Duplikat in den Cocktail- und Included-Drinks-Unterkacheln.
+
+### Technische Grenzen und Abnahme
+
+- Die Food-Historie liest SumUp-Sales paginiert mit Einzelpositionen; ein Server-Cache von zehn Minuten reduziert die Last. Es gibt kein zusätzliches persistentes Food-Analytics-Backend.
+- Der letzte hier dokumentierte UI-Farbcommit vor diesem Dokumentationsupdate war `00a7aadf206392c39daa1df4c37994225dc9c681`. Für den tatsächlichen Produktionsstand immer das neueste Vercel-Deployment prüfen.
+- Die historisch in diesem Dokument genannten alten Commit-IDs, Builds und Datenstände sind nicht als heutige Live-Bestätigung zu lesen.

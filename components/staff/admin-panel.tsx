@@ -75,7 +75,6 @@ export function AdminPanel() {
     } catch { setMessage('Verbindung derzeit nicht verfügbar.'); }
     finally { setBusy(false); }
   }
-  const label = new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(month + '-01T12:00:00Z'));
   const move = (delta: number) => {
     const next = shifted(month, delta);
     if (busy || next < '2026-06' || next > currentMonth()) return;
@@ -113,7 +112,7 @@ export function AdminPanel() {
         // Same direction and threshold as the team month overview.
         if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) move(dx > 0 ? -1 : 1);
       }}>
-      <div className="admin-month"><h2 aria-live="polite">{label}</h2><div role="group" aria-label="Monat wechseln">
+      <div className="admin-month"><h2><select aria-label="Monat direkt auswählen" value={month} onChange={event=>{request.current?.abort();setData(null);setMonth(event.target.value);}}>{Array.from({length:Math.max(1,(Number(currentMonth().slice(0,4))-2026)*12+Number(currentMonth().slice(5))-5)},(_,i)=>shifted("2026-06",i)).reverse().map(value=><option key={value} value={value}>{new Intl.DateTimeFormat("de-DE",{month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(value+"-01T12:00:00Z"))}</option>)}</select></h2><div role="group" aria-label="Monat wechseln">
         <button type="button" aria-label="Vorheriger Monat" disabled={month <= '2026-06' || busy} onClick={() => move(-1)}><ChevronLeft aria-hidden="true" /></button>
         <button type="button" aria-label="Nächster Monat" disabled={month >= currentMonth() || busy} onClick={() => move(1)}><ChevronRight aria-hidden="true" /></button>
       </div></div>

@@ -139,6 +139,6 @@ function CocktailCounter({example}:{example:boolean}){
       <div className="cocktail-counter-sources"><span>SumUp {counts.sumup}</span><span>Included {counts.included}</span></div>
     </>:<p className="cocktail-counter-pending">{unavailable?"Zählung derzeit nicht vollständig verfügbar.":"Cocktails werden gezählt …"}</p>}
     <small>Erfasste Bestellungen · Tageswechsel 03:00 Uhr</small>
-    {lastEvening && <div className="cocktail-counter-previous"><span>Letzter Verkaufsabend · {new Intl.DateTimeFormat("de-DE",{day:"2-digit",month:"2-digit",timeZone:"UTC"}).format(new Date(lastEvening.date+"T12:00:00Z"))}</span><strong>{lastEvening.total} Cocktails</strong></div>}
+    {lastEvening && <div className="cocktail-counter-previous"><span>Letzter Verkaufsabend · {new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"UTC"}).format(new Date(lastEvening.date+"T12:00:00Z"))}</span><strong>{lastEvening.total} Cocktails</strong></div>}
   </div>;
 }

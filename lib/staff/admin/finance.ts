@@ -67,9 +67,16 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
     const lines = selectedLines.filter(line => line.type !== 'void');
     if (!lines.length) continue;
     // Refunded/discounted/cancelled or multi-source allocations must reconcile before splitting revenue.
+    // Ticket Tailor v2 pre_paid lines transfer previously paid credit, not new cash.
+    const credits = order.line_items.filter(l => l.type === 'pre_paid');
+    const ordinary = order.line_items.filter(l => l.type !== 'pre_paid');
+    const validCredits = credits.every(l => Number.isSafeInteger(l.total) && l.total < 0 &&
+      l.quantity === 1 && l.value === l.total && l.booking_fee === 0 && !l.event_summary?.event_id);
+    const creditCents = -credits.reduce((sum,l) => sum + l.total,0);
     const balanced = !ledgerIssue && order.status === 'completed' && refunded === 0 && cents(order.total)
-      && settled === order.total && order.line_items.every(l => cents(l.total))
-      && order.line_items.reduce((sum, l) => sum + l.total, 0) === order.total;
+      && validCredits && creditCents <= order.total && settled + creditCents === order.total
+      && ordinary.every(l => cents(l.total))
+      && ordinary.reduce((sum,l) => sum + l.total,0) === order.total;
     if (!balanced) eventIssues++;
     for (const line of lines) {
       const event = line.event_summary!;

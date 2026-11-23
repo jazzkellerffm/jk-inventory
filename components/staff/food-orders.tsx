@@ -160,7 +160,7 @@ function FoodWeekdayHistory({example}:{example:boolean}){
   useEffect(()=>{if(scroller.current)scroller.current.scrollLeft=scroller.current.scrollWidth;},[history,example]);
   return <div className="food-weekday-history">
     <h3>Snackverkäufe im Vergleich</h3>
-    <p>Verkaufte Portionen · letzte 8 Abende sichtbar · ältere nach links</p>
+    <p>Verkaufte Portionen · letzte 14 Tage · ältere nach links</p>
     {data?<>{chosen && <div className="food-history-selected"><span>{formatDate(chosen.date)}</span><strong>{chosen.portions} Portionen</strong></div>}
       <div className="food-weekday-bars" ref={scroller} aria-label="Snackverkäufe nach Abend, horizontal scrollen">
       {nights.map(d=><button type="button" className="food-weekday-column" key={d.date} aria-pressed={chosen?.date===d.date} onClick={()=>setSelected(d.date)} aria-label={formatDate(d.date)+": "+d.portions+" Portionen"}>

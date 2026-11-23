@@ -769,3 +769,29 @@
 .food-weekday-track i { width:100%; background:#f0b28c; border-radius:8px 8px 2px 2px; }
 .food-weekday-column:nth-child(5) .food-weekday-track i,.food-weekday-column:nth-child(6) .food-weekday-track i { background:#e8a67e; }
 .food-weekday-history>small { display:block; margin-top:12px; color:var(--muted); font-size:12px; }
+
+/* Compact, horizontally browsable apricot Food analytics. */
+.food-ranking-toggle { color:var(--paper); }
+.food-ranking-toggle[aria-expanded="true"]>svg { color:#bd7147; }
+.food-ranking-filter { background:#f6d8c3; }
+.food-ranking-filter button[aria-pressed="true"] { background:#efa77f; color:#33271f; }
+.food-ranking-content .food-meter i { background:#efa77f; }
+.food-weekday-history { margin-top:14px; padding-top:14px; }
+.food-weekday-bars { display:flex; gap:4px; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x proximity; scrollbar-width:thin; padding-bottom:4px; }
+.food-weekday-column { box-sizing:border-box; border:0; background:transparent; color:inherit; flex:0 0 calc((100% - 28px) / 8); min-width:0; padding:2px 1px; display:flex; flex-direction:column; justify-content:end; align-items:stretch; gap:4px; scroll-snap-align:start; cursor:pointer; }
+.food-weekday-column>strong { text-align:center; font-size:13px; }
+.food-weekday-column>span:last-child { font-size:clamp(9px,2.5vw,11px); text-align:center; white-space:nowrap; }
+.food-weekday-track { height:76px; width:100%; display:flex; align-items:end; }
+.food-weekday-track i { width:100%; background:#f1b18e; border-radius:5px 5px 2px 2px; }
+.food-weekday-column:nth-child(5) .food-weekday-track i,.food-weekday-column:nth-child(6) .food-weekday-track i { background:#f1b18e; }
+.food-weekday-column[aria-pressed="true"] .food-weekday-track i { background:#dc895d; }
+.food-weekday-column[aria-pressed="true"]>span:last-child { font-weight:700; color:#9b4f2e; }
+.food-weekday-column:focus-visible { outline:2px solid #bd7147; outline-offset:-2px; border-radius:4px; }
+.food-history-selected { display:flex; justify-content:space-between; gap:8px; align-items:baseline; margin:6px 0 8px; color:var(--paper); }
+.food-history-selected strong { font-family:var(--font-poly-bulky-only),sans-serif; font-weight:400; font-size:18px; }
+.food-history-selected span { font-size:13px; }
+.food-preorders { margin-top:16px; padding-top:14px; border-top:1px solid #dfcbb8; }
+.food-preorders>small { color:var(--muted); font-size:12px; margin-bottom:9px; }
+.food-preorder-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.food-preorder-row>b { font-family:var(--font-poly),sans-serif; font-size:16px; }
+.food-preorder-count { display:inline-flex; align-items:center; justify-content:center; min-width:54px; padding:8px 12px; border-radius:12px; background:#f0ad84; color:#38291f; font:700 23px/1 var(--staff-display),sans-serif; white-space:nowrap; }

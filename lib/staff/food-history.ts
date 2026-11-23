@@ -22,7 +22,7 @@ export async function readFoodHistory(merchant:string,token:string):Promise<Food
       if(!res.ok)throw Error("SumUp history search unavailable");
       const page:{items:{id:string;closed_at:string}[];pagination_token?:string}=await res.json();
       if(!Array.isArray(page.items))throw Error("Invalid history page");
-      // The search is newest first. Keep the latest eight distinct service days
+      // The search is newest first. Keep the latest sixteen distinct service days
       // with paid SumUp sales, even when no snacks were sold on a given day.
       let reachedStart=false;
       const ids:{id:string;closed:number}[]=[];
@@ -30,7 +30,7 @@ export async function readFoodHistory(merchant:string,token:string):Promise<Food
         const closed=Date.parse(row.closed_at);
         if(!row.id||!Number.isFinite(closed))throw Error("Invalid history row");
         const day=serviceDate(closed);
-        if(dayMap.size>=8 && !dayMap.has(day)){reachedStart=true;continue;}
+        if(dayMap.size>=16 && !dayMap.has(day)){reachedStart=true;continue;}
         if(!dayMap.has(day))dayMap.set(day,0);
         if(closed>now||seen.has(row.id))continue;
         seen.add(row.id);ids.push({id:row.id,closed});

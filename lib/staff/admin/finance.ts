@@ -73,7 +73,13 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
     const validCredits = credits.every(l => Number.isSafeInteger(l.total) && l.total < 0 &&
       l.quantity === 1 && l.value === l.total && l.booking_fee === 0 && !l.event_summary?.event_id);
     const creditCents = -credits.reduce((sum,l) => sum + l.total,0);
-    const balanced = !ledgerIssue && order.status === 'completed' && refunded === 0 && cents(order.total)
+    // Explicitly confirmed refund of the unavailable Mediterranean Snack Plate.
+    // Do not infer the target of other partial refunds from amount alone.
+    const refundedAddon = order.id === 'or_81338244' && refunded === 1700
+      ? ordinary.filter(l => l.type === 'product' && l.total === 1700 && l.event_summary?.start_date?.startsWith('2026-09-26'))
+      : [];
+    const resolvedRefund = refunded === 0 || refundedAddon.length === 1;
+    const balanced = !ledgerIssue && order.status === 'completed' && resolvedRefund && cents(order.total)
       && validCredits && creditCents <= order.total && settled + creditCents === order.total
       && ordinary.every(l => cents(l.total))
       && ordinary.reduce((sum,l) => sum + l.total,0) === order.total;
@@ -90,6 +96,7 @@ export function summarizeTickets(orders: FinanceOrder[], month: string, valuatio
         if (balanced) eventIssues++;
         night.uncertain = true; continue;
       }
+      if (refundedAddon.includes(line)) continue;
       night.feeCents += line.booking_fee * line.quantity;
       if (line.type !== 'ticket') { night.addonCents += line.value * line.quantity; continue; }
       const value = line.value * line.quantity;

@@ -2,7 +2,7 @@
 
 import { TicketLoader } from "./ticket-loader";
 import { MaskedRevenue } from "./masked-revenue";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Utensils } from "lucide-react";
 import type { FoodFeed } from "@/lib/staff/food";
 
@@ -24,8 +24,8 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
   const [feed,setFeed] = useState<FoodFeed|null>(example ? demo : null);
   const [message,setMessage] = useState("");
   const [loading,setLoading] = useState(!example);
-  const [rankingOpen,setRankingOpen] = useState(false);
   const [rankingLimit,setRankingLimit] = useState<3|5>(3);
+  const [analyticsOpen,setAnalyticsOpen] = useState(false);
   useEffect(()=>{
     if (example) return;
     const controller = new AbortController();
@@ -89,11 +89,11 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
         </li>)}
       </ul> : <p>Heute noch keine Bar Snacks verkauft.</p>}
       <div className="food-ranking">
-        <button type="button" className="food-ranking-toggle" aria-expanded={rankingOpen} onClick={()=>setRankingOpen(v=>!v)}>
+        <button type="button" className="food-ranking-toggle" aria-expanded={analyticsOpen} onClick={()=>setAnalyticsOpen(v=>!v)}>
           <span><b>Snack-Bestseller</b><small>Beliebteste Snacks des Abends</small></span>
           <ChevronDown size={20} aria-hidden="true"/>
         </button>
-        {rankingOpen && <div className="food-ranking-content">
+        {analyticsOpen && <div className="food-ranking-content">
           <div className="food-ranking-filter" role="group" aria-label="Anzahl Snack-Bestseller">
             {([3,5] as const).map(n=><button key={n} type="button" aria-pressed={rankingLimit===n} onClick={()=>setRankingLimit(n)}>Top {n}</button>)}
           </div>
@@ -108,8 +108,8 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
           </ol> : <p>Heute noch keine Snackverkäufe.</p>}
           <small>Verkaufte Portionen · Tageswechsel 03:00 Uhr</small>
         </div>}
+        {analyticsOpen && <FoodWeekdayHistory example={example}/>}
       </div>
-      <FoodWeekdayHistory example={example}/>
 
     </>}
     {!example && message && <p role="status">{message}</p>}
@@ -119,7 +119,7 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
           <small>{time.format(new Date(snack.at))} · SumUp-Zahlung</small></li>)}
       </ul>}
     <div className="food-preorders"><small>Ticket Tailor · Vorbestellungen für diesen Abend</small>
-      <b>{preorders == null ? "Vorbestellungen derzeit nicht verfügbar" : preorders + " × Hummus-Platte"}</b></div>
+      <div className="food-preorder-row">{preorders == null ? <b>Vorbestellungen derzeit nicht verfügbar</b> : <><strong className="food-preorder-count">{preorders} ×</strong><b>Hummus-Platte</b></>}</div></div>
   </section>;
 }
 
@@ -128,6 +128,8 @@ type SnackHistory={days:SnackNight[];strongest:{date:string;portions:number}|nul
 function FoodWeekdayHistory({example}:{example:boolean}){
   const [history,setHistory]=useState<SnackHistory|null>(null);
   const [error,setError]=useState(false);
+  const [selected,setSelected]=useState("");
+  const scroller=useRef<HTMLDivElement>(null);
   useEffect(()=>{
     if(example)return;
     const controller=new AbortController();
@@ -148,18 +150,22 @@ function FoodWeekdayHistory({example}:{example:boolean}){
     days:["04","05","06","07","11","12","13","14"].map((day,i)=>({date:"2026-11-"+day,weekday:[2,3,4,5,2,3,4,5][i],portions:[6,3,12,8,4,9,7,15][i]})),
     strongest:{date:"2026-11-14",portions:15},total:64
   }:history;
-  const max=Math.max(1,...(data?.days.map(d=>d.portions)??[1]));
-  const dateLabel=data?.strongest?new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"Europe/Berlin"}).format(new Date(data.strongest.date+"T12:00:00Z")):null;
+  const nights=data?.days??[];
+  const chosen=nights.find(n=>n.date===selected)??nights.at(-1);
+  const max=Math.max(1,...nights.map(d=>d.portions));
+  const formatDate=(date:string)=>new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"UTC"}).format(new Date(date+"T12:00:00Z"));
+  useEffect(()=>{if(scroller.current)scroller.current.scrollLeft=scroller.current.scrollWidth;},[history,example]);
   return <div className="food-weekday-history">
     <h3>Snackverkäufe im Vergleich</h3>
-    <p>Verkaufte Portionen · letzte 8 Verkaufsabende</p>
-    {data?<><div className="food-weekday-bars" role="img" aria-label={data.days.map(d=>d.date+": "+d.portions+" Portionen").join(", ")}>
-      {data.days.map(d=><div className="food-weekday-column" key={d.date}>
-        <strong>{d.portions}</strong><div className="food-weekday-track"><i style={{height:(d.portions?Math.max(5,100*d.portions/max):0)+"%"}}/></div>
+    <p>Verkaufte Portionen · letzte 8 Abende sichtbar · ältere nach links</p>
+    {data?<>{chosen && <div className="food-history-selected"><span>{formatDate(chosen.date)}</span><strong>{chosen.portions} Portionen</strong></div>}
+      <div className="food-weekday-bars" ref={scroller} aria-label="Snackverkäufe nach Abend, horizontal scrollen">
+      {nights.map(d=><button type="button" className="food-weekday-column" key={d.date} aria-pressed={chosen?.date===d.date} onClick={()=>setSelected(d.date)} aria-label={formatDate(d.date)+": "+d.portions+" Portionen"}>
+        <strong>{d.portions}</strong><span className="food-weekday-track"><i style={{height:(d.portions?Math.max(5,100*d.portions/max):0)+"%"}}/></span>
         <span>{d.date.slice(8)}.{d.date.slice(5,7)}.</span>
-      </div>)}
+      </button>)}
     </div>
-    <small>{dateLabel?("Stärkster Abend · "+dateLabel+" · "+data.strongest?.portions+" Portionen"):"Noch keine Snackverkäufe im Zeitraum."}</small>
+    <small>Stärkster Abend · {data.strongest?formatDate(data.strongest.date)+" · "+data.strongest.portions+" Portionen":"noch keine Snackverkäufe"} · Tageswechsel 03:00 Uhr</small>
     </>:<p role="status">{error?"Snackstatistik derzeit nicht verfügbar.":"Snackstatistik wird geladen …"}</p>}
   </div>;
 }

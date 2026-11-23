@@ -58,3 +58,36 @@ export function readIncludedRanking(period:BestsellerPeriod):Promise<IncludedRan
   value.catch(()=>{if(cache.get(key)?.value===value)cache.delete(key);});
   return value;
 }
+
+// Same cocktail classification as the live Included Drinks Counter, for one completed night.
+export async function readIncludedCocktailRange(start:number,end:number):Promise<number>{
+  const origin=process.env.INCLUDED_DRINKS_SUPABASE_URL,apiKey=process.env.INCLUDED_DRINKS_PUBLISHABLE_KEY;
+  if(!origin||!apiKey)throw new Error("Included Drinks not configured");
+  const url=new URL("/rest/v1/orders",origin);
+  url.searchParams.set("select","id,status,items");
+  url.searchParams.append("created_at","gte."+new Date(start).toISOString());
+  url.searchParams.append("created_at","lt."+new Date(end).toISOString());
+  url.searchParams.set("status","in.(open,served)");
+  url.searchParams.set("order","created_at.desc,id.desc");
+  url.searchParams.set("limit","500");
+  let total=0;
+  for(let offset=0;offset<10000;offset+=500){
+    url.searchParams.set("offset",String(offset));
+    const res=await fetch(url,{headers:{apikey:apiKey},cache:"no-store",signal:AbortSignal.timeout(10000)});
+    if(!res.ok)throw new Error("Included Drinks history unavailable");
+    const rows:Row[]=await res.json();
+    if(!Array.isArray(rows))throw new Error("Invalid Included Drinks history");
+    for(const row of rows){
+      if(!Array.isArray(row.items))throw new Error("Incomplete Included Drinks order");
+      for(const item of row.items){
+        const id=typeof item.drinkId==="string"?item.drinkId.trim():"";
+        const name=typeof item.drinkName==="string"?item.drinkName.trim():id;
+        const quantity=item.quantity;
+        if(!name||typeof quantity!=="number"||!Number.isFinite(quantity)||quantity<=0)throw new Error("Incomplete Included Drinks item");
+        if(cocktailIds.has(id)||(!excludedIds.has(id)&&!id&&!/^(birra moretti|tegernseer hell|lugana|sauvignon blanc|primitivo|1664 blanc)$/i.test(name)))total+=quantity;
+      }
+    }
+    if(rows.length<500)return total;
+  }
+  throw new Error("Included Drinks pagination limit reached");
+}

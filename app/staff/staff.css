@@ -813,3 +813,9 @@
 .food-preorder-row { justify-content:flex-start; gap:10px; flex-wrap:wrap; }
 .food-preorder-count { padding:0; background:transparent; color:var(--paper); border-radius:0; font:400 20px/1.2 var(--font-poly-bulky-only),sans-serif; }
 .food-preorder-product { display:inline-flex; align-items:center; padding:8px 13px; background:#f4d0b9; color:#493124; border-radius:999px; font:700 14px/1.25 var(--font-poly),sans-serif; }
+
+/* Match the shared Staff OS segmented-control proportions, with Food apricot accents. */
+.food-ranking-filter { gap:0; padding:4px; background:#f4f0eb; border-radius:999px; }
+.food-ranking-filter button { padding:9px clamp(11px,3vw,18px); min-height:40px; border-radius:999px; font:700 14px/1.2 var(--font-poly),sans-serif; color:#52605a; background:transparent; }
+.food-ranking-filter button[aria-pressed="true"] { background:#efa77f; color:var(--paper); }
+.food-preorder-row { gap:5px; }

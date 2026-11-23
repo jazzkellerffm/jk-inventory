@@ -3,7 +3,7 @@
 import { TicketLoader } from "./ticket-loader";
 import { MaskedRevenue } from "./masked-revenue";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Utensils } from "lucide-react";
+import { ChevronDown, Popcorn, Utensils } from "lucide-react";
 import type { FoodFeed } from "@/lib/staff/food";
 
 import type { Payment } from "@/lib/staff/types";
@@ -87,14 +87,14 @@ export function FoodOrders({example, eveningCents, preorders, onOrders, payments
         {feed.orders.map(order => <li key={order.id}><b>{order.description}</b>
           <small><time dateTime={order.at}>{time.format(new Date(order.at))}</time> · {euro.format(order.cents / 100)}</small>
         </li>)}
-      </ul> : <p>Heute noch keine Bar Snacks verkauft.</p>}
+      </ul> : <p>In der letzten Stunde sind keine Snackbestellungen eingegangen.</p>}
     <div className="food-preorders">
       <small>Ticket Tailor · Food-Vorbestellungen</small>
-      <div className="food-preorder-row">{preorders == null ? <b>Vorbestellungen derzeit nicht verfügbar</b> : <><b>Hummus-Platte</b><strong className="food-preorder-count">{preorders} ×</strong></>}</div>
+      <div className="food-preorder-row">{preorders == null ? <b>Vorbestellungen derzeit nicht verfügbar</b> : <><strong className="food-preorder-count">{preorders} ×</strong><span className="food-preorder-product">Hummus-Platte</span></>}</div>
     </div>
       <div className="food-ranking">
         <button type="button" className="food-ranking-toggle" aria-expanded={analyticsOpen} onClick={()=>setAnalyticsOpen(v=>!v)}>
-          <span><b>Snack-Bestseller</b><small>Beliebteste Snacks des Abends</small></span>
+          <span><b className="food-ranking-heading"><Popcorn size={19} aria-hidden="true"/> Snack-Bestseller</b><small>Beliebteste Snacks des Abends</small></span>
           <ChevronDown size={20} aria-hidden="true"/>
         </button>
         {analyticsOpen && <div className="food-ranking-content">

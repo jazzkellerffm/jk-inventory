@@ -828,3 +828,8 @@
 .service-switch.food-ranking-filter { display:inline-flex; flex-wrap:nowrap; gap:0; max-width:100%; padding:4px; border-radius:999px; background:#f4f5f3; margin-bottom:12px; }
 .service-switch.food-ranking-filter button { border:0; border-radius:999px; padding:9px clamp(9px,3vw,18px); min-height:0; background:transparent; color:#52605a; font:700 1rem/normal var(--font-poly),sans-serif; }
 .service-switch.food-ranking-filter button[aria-pressed="true"] { background:#efa77f; color:var(--paper); }
+
+.admin-compare-toggle { display:flex; align-items:center; justify-content:space-between; width:100%; gap:10px; font:inherit; font-weight:700; color:inherit; text-align:left; padding:4px 0; }
+.admin-compare-toggle[aria-expanded=true] { margin-bottom:12px; }
+.admin-compare-toggle[aria-expanded=true] svg { transform:rotate(180deg); }
+.admin-month h2 select { max-width:100%; font:inherit; color:inherit; background:transparent; border:0; padding:6px 2px; }

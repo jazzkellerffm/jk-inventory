@@ -13,6 +13,7 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
   const now = Date.now();
   const start = serviceStart(now);
   const recentStart = now - 10 * 60_000;
+  const visibleStart = now - 60 * 60_000;
   const base = "https://api.sumup.com/v1.0/merchants/" + encodeURIComponent(merchant) + "/sales";
   const headers = {Authorization: "Bearer " + key, "Content-Type": "application/json"};
   const orders: FoodOrder[] = [];
@@ -84,5 +85,5 @@ export async function readFood(merchant: string, key: string): Promise<FoodFeed>
   const bestsellers = [...snackCounts.values()]
     .sort((a,b) => b.quantity - a.quantity || a.name.localeCompare(b.name, "de"))
     .slice(0, 5);
-  return {recentPortions, recentHummus, recentIncomplete, totalCents:orders.reduce((sum,order)=>sum+order.cents,0), orders:orders.slice(0,5), bestsellers, uncategorized};
+  return {recentPortions, recentHummus, recentIncomplete, totalCents:orders.reduce((sum,order)=>sum+order.cents,0), orders:orders.filter(order => Date.parse(order.at) >= visibleStart).slice(0,5), bestsellers, uncategorized};
 }

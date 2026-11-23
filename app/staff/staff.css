@@ -772,7 +772,7 @@
 
 /* Compact, horizontally browsable apricot Food analytics. */
 .food-ranking-toggle { color:var(--paper); }
-.food-ranking-toggle[aria-expanded="true"]>svg { color:#bd7147; }
+.food-ranking-toggle[aria-expanded="true"]>svg { color:var(--paper); }
 .food-ranking-filter { background:#f6d8c3; }
 .food-ranking-filter button[aria-pressed="true"] { background:#efa77f; color:#33271f; }
 .food-ranking-content .food-meter i { background:#efa77f; }
@@ -785,7 +785,7 @@
 .food-weekday-track i { width:100%; background:#f1b18e; border-radius:5px 5px 2px 2px; }
 .food-weekday-column:nth-child(5) .food-weekday-track i,.food-weekday-column:nth-child(6) .food-weekday-track i { background:#f1b18e; }
 .food-weekday-column[aria-pressed="true"] .food-weekday-track i { background:#dc895d; }
-.food-weekday-column[aria-pressed="true"]>span:last-child { font-weight:700; color:#9b4f2e; }
+.food-weekday-column[aria-pressed="true"]>span:last-child { font-weight:700; color:var(--paper); }
 .food-weekday-column:focus-visible { outline:2px solid #bd7147; outline-offset:-2px; border-radius:4px; }
 .food-history-selected { display:flex; justify-content:space-between; gap:8px; align-items:baseline; margin:6px 0 8px; color:var(--paper); }
 .food-history-selected strong { font-family:var(--font-poly-bulky-only),sans-serif; font-weight:400; font-size:18px; }
@@ -809,7 +809,7 @@
 
 /* Food: service-style preorders and an unobtrusive snack category icon. */
 .food-ranking-heading { display:inline-flex; align-items:center; gap:9px; }
-.food-ranking-heading svg { flex:none; stroke-width:1.8; color:#b9744c; }
+.food-ranking-heading svg { flex:none; stroke-width:1.8; color:var(--paper); }
 .food-preorder-row { justify-content:flex-start; gap:10px; flex-wrap:wrap; }
 .food-preorder-count { padding:0; background:transparent; color:var(--paper); border-radius:0; font:400 20px/1.2 var(--font-poly-bulky-only),sans-serif; }
 .food-preorder-product { display:inline-flex; align-items:center; padding:8px 13px; background:#f4d0b9; color:#493124; border-radius:999px; font:700 14px/1.25 var(--font-poly),sans-serif; }

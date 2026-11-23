@@ -10,6 +10,10 @@ export async function readFoodHistory(merchant:string,token:string):Promise<Food
   if(hit && hit.until>now)return hit.value;
   const promise=(async()=>{
     const dayMap=new Map<string,number>();
+    // Same rolling 14 service dates as the Barumsatz comparison, including today.
+    const firstDay=new Date(today+"T12:00:00Z");
+    firstDay.setUTCDate(firstDay.getUTCDate()-13);
+    const earliest=firstDay.toISOString().slice(0,10);
     const base="https://api.sumup.com/v1.0/merchants/"+encodeURIComponent(merchant)+"/sales";
     const headers={Authorization:"Bearer "+token,"Content-Type":"application/json"};
     const seen=new Set<string>(),cursors=new Set<string>();
@@ -22,15 +26,15 @@ export async function readFoodHistory(merchant:string,token:string):Promise<Food
       if(!res.ok)throw Error("SumUp history search unavailable");
       const page:{items:{id:string;closed_at:string}[];pagination_token?:string}=await res.json();
       if(!Array.isArray(page.items))throw Error("Invalid history page");
-      // The search is newest first. Keep the latest sixteen distinct service days
-      // with paid SumUp sales, even when no snacks were sold on a given day.
+      // Search newest first. Only service days in the last 14 calendar dates count;
+      // include paid evenings with zero snacks, omit days without payments.
       let reachedStart=false;
       const ids:{id:string;closed:number}[]=[];
       for(const row of page.items){
         const closed=Date.parse(row.closed_at);
         if(!row.id||!Number.isFinite(closed))throw Error("Invalid history row");
         const day=serviceDate(closed);
-        if(dayMap.size>=16 && !dayMap.has(day)){reachedStart=true;continue;}
+        if(day<earliest){reachedStart=true;continue;}
         if(!dayMap.has(day))dayMap.set(day,0);
         if(closed>now||seen.has(row.id))continue;
         seen.add(row.id);ids.push({id:row.id,closed});

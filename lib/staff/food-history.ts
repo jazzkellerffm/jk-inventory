@@ -1,22 +1,15 @@
 import "server-only";
-import { serviceDate, serviceStart } from "./service-day";
+import { serviceDate } from "./service-day";
 
-export type FoodHistory = { days:{date:string;weekday:number;portions:number}[]; byWeekday:{weekday:number;portions:number}[]; strongest:{date:string;portions:number}|null; total:number };
+export type FoodHistory = { days:{date:string;weekday:number;portions:number}[]; strongest:{date:string;portions:number}|null; total:number };
 const cache=new Map<string,{until:number;value:Promise<FoodHistory>}>();
-const weekdays=["Mo","Di","Mi","Do","Fr","Sa","So"];
+
 export async function readFoodHistory(merchant:string,token:string):Promise<FoodHistory>{
   const now=Date.now(),today=serviceDate(now),key=merchant+"/"+today;
   const hit=cache.get(key);
   if(hit && hit.until>now)return hit.value;
   const promise=(async()=>{
-    const date=new Date(today+"T12:00:00Z");
-    date.setUTCDate(date.getUTCDate()-27);
-    const start=serviceStart(date.getTime());
     const dayMap=new Map<string,number>();
-    for(let i=0;i<28;i++){
-      const d=new Date(date.getTime());d.setUTCDate(d.getUTCDate()+i);
-      dayMap.set(d.toISOString().slice(0,10),0);
-    }
     const base="https://api.sumup.com/v1.0/merchants/"+encodeURIComponent(merchant)+"/sales";
     const headers={Authorization:"Bearer "+token,"Content-Type":"application/json"};
     const seen=new Set<string>(),cursors=new Set<string>();
@@ -29,12 +22,16 @@ export async function readFoodHistory(merchant:string,token:string):Promise<Food
       if(!res.ok)throw Error("SumUp history search unavailable");
       const page:{items:{id:string;closed_at:string}[];pagination_token?:string}=await res.json();
       if(!Array.isArray(page.items))throw Error("Invalid history page");
+      // The search is newest first. Keep the latest eight distinct service days
+      // with paid SumUp sales, even when no snacks were sold on a given day.
       let reachedStart=false;
       const ids:{id:string;closed:number}[]=[];
       for(const row of page.items){
         const closed=Date.parse(row.closed_at);
         if(!row.id||!Number.isFinite(closed))throw Error("Invalid history row");
-        if(closed<start){reachedStart=true;continue;}
+        const day=serviceDate(closed);
+        if(dayMap.size>=8 && !dayMap.has(day)){reachedStart=true;continue;}
+        if(!dayMap.has(day))dayMap.set(day,0);
         if(closed>now||seen.has(row.id))continue;
         seen.add(row.id);ids.push({id:row.id,closed});
       }
@@ -63,10 +60,9 @@ export async function readFoodHistory(merchant:string,token:string):Promise<Food
       if(cursor && cursors.has(cursor))throw Error("Repeated sales cursor");
       if(cursor)cursors.add(cursor);
     }while(cursor);
-    const days=[...dayMap].map(([d,portions])=>({date:d,weekday:(new Date(d+"T12:00:00Z").getUTCDay()+6)%7,portions}));
-    const byWeekday=weekdays.map((_,weekday)=>({weekday,portions:days.filter(d=>d.weekday===weekday).reduce((n,d)=>n+d.portions,0)}));
+    const days=[...dayMap].sort(([a],[b])=>a.localeCompare(b)).map(([d,portions])=>({date:d,weekday:(new Date(d+"T12:00:00Z").getUTCDay()+6)%7,portions}));
     const strongest=days.reduce<{date:string;portions:number}|null>((best,d)=>!best||d.portions>best.portions?{date:d.date,portions:d.portions}:best,null);
-    return {days,byWeekday,strongest:strongest?.portions?strongest:null,total:days.reduce((n,d)=>n+d.portions,0)};
+    return {days,strongest:strongest?.portions?strongest:null,total:days.reduce((n,d)=>n+d.portions,0)};
   })();
   cache.set(key,{until:now+600000,value:promise});
   if(cache.size>8)cache.delete(cache.keys().next().value!);

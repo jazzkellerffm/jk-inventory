@@ -806,3 +806,10 @@
 .food-preorder-row { justify-content:space-between; flex-wrap:nowrap; }
 .food-preorder-row>b { min-width:0; }
 .food-preorder-count { min-width:0; padding:6px 12px; border-radius:10px; background:#f4d0b9; color:#563725; font:700 16px/1.2 var(--font-poly),sans-serif; }
+
+/* Food: service-style preorders and an unobtrusive snack category icon. */
+.food-ranking-heading { display:inline-flex; align-items:center; gap:9px; }
+.food-ranking-heading svg { flex:none; stroke-width:1.8; color:#b9744c; }
+.food-preorder-row { justify-content:flex-start; gap:10px; flex-wrap:wrap; }
+.food-preorder-count { padding:0; background:transparent; color:var(--paper); border-radius:0; font:400 20px/1.2 var(--font-poly-bulky-only),sans-serif; }
+.food-preorder-product { display:inline-flex; align-items:center; padding:8px 13px; background:#f4d0b9; color:#493124; border-radius:999px; font:700 14px/1.25 var(--font-poly),sans-serif; }

@@ -4,6 +4,7 @@ import { TicketLoader } from "./ticket-loader";
 
 import { useEffect, useState } from "react";
 import { ChartBar, ChevronDown, Martini } from "lucide-react";
+import { serviceDate } from "@/lib/staff/service-day";
 import { bestsellerStart, type BestsellerPeriod } from "@/lib/staff/bestseller-period";
 import type { BestsellerFeed } from "@/lib/staff/types";
 
@@ -47,8 +48,13 @@ export function Bestsellers({example,category="all"}:{example:boolean;category?:
         if(!res.ok) throw new Error();
         const data=await res.json();
         if(!controller.signal.aborted){
-          setFeed(data.feed ?? null);
-          setMessage(data.state==="setup" ? "SumUp ist noch nicht verbunden." : "");
+          if(data.feed?.incomplete){
+            setFeed(previous=>previous && !previous.incomplete && bestsellerStart(Date.parse(previous.asOf),period)===bestsellerStart(Date.parse(data.feed.asOf),period)?previous:null);
+            setMessage("Artikel werden noch synchronisiert …");
+          }else{
+            setFeed(data.feed ?? null);
+            setMessage(data.state==="setup" ? "SumUp ist noch nicht verbunden." : "");
+          }
         }
       } catch {if(!controller.signal.aborted)setMessage("Aktualisierung fehlgeschlagen.");}
       finally {busy=false;if(!controller.signal.aborted)setLoading(false);}
@@ -76,7 +82,7 @@ export function Bestsellers({example,category="all"}:{example:boolean;category?:
       <span>{i+1}</span><div><b>{p.name}</b><div className="best-track"><i style={{width:feed.products[0].quantity>0?100*p.quantity/feed.products[0].quantity+"%":"0%"}}/></div></div><strong>{p.quantity} ×</strong>
     </li>)}</ol>}
     {feed && !feed.products.length && !feed.incomplete && <p>In diesem Zeitraum noch keine zugeordneten Artikel verkauft.</p>}
-    {!example && message && <p role="status">{message}</p>}
+    {!example && message && <small role="status" className="bestseller-sync-note">{message}{feed && " · Letzter bestätigter Stand"}</small>}
     {!!feed?.incomplete && <div className="bestseller-unavailable" role="status">
       <b>Für diesen Zeitraum fehlt eine verlässliche Artikelübersicht.</b>
       <p>{category==="cocktails" ? "Bei einzelnen Zahlungen fehlen verlässliche Produktkategorien oder Stückzahlen. Deshalb zeigen wir keine möglicherweise falsche Cocktail-Rangliste." : `Bei ${feed.incomplete} Zahlungen fehlen eindeutige Artikel oder Stückzahlen. Deshalb zeigen wir hier keine Rangliste.`}</p>
@@ -89,14 +95,19 @@ export function Bestsellers({example,category="all"}:{example:boolean;category?:
 }
 
 function CocktailCounter({example}:{example:boolean}){
-  const [counts,setCounts]=useState<{sumup:number;included:number}|null>(example?{sumup:29,included:19}:null);
+  const [counts,setCounts]=useState<{sumup:number;included:number;date:string}|null>(example?{sumup:29,included:19,date:serviceDate(Date.now())}:null);
   const [unavailable,setUnavailable]=useState(false);
   const [lastEvening,setLastEvening]=useState<{date:string;total:number}|null>(null);
   const [cheering,setCheering]=useState(false);
   useEffect(()=>{
     if(example)return;
     const controller=new AbortController();
+    let busy=false;
     async function refresh(){
+      if(busy)return;
+      busy=true;
+      const date=serviceDate(Date.now());
+      setCounts(previous=>previous?.date===date?previous:null);
       try{
         const responses=await Promise.all([
           fetch("/api/staff/bestsellers?period=evening&category=cocktails",{cache:"no-store",signal:controller.signal}),
@@ -106,8 +117,8 @@ function CocktailCounter({example}:{example:boolean}){
         if(responses.some(r=>!r.ok))throw new Error();
         const [sumup,included]=await Promise.all(responses.map(r=>r.json()));
         if(sumup.feed?.incomplete||included.feed?.incomplete||typeof sumup.feed?.totalQuantity!=="number"||typeof included.feed?.cocktailTotal!=="number")throw new Error();
-        if(!controller.signal.aborted){setCounts({sumup:sumup.feed.totalQuantity,included:included.feed.cocktailTotal});setUnavailable(false);}
-      }catch{if(!controller.signal.aborted){setCounts(null);setUnavailable(true);}}
+        if(!controller.signal.aborted){setCounts({sumup:sumup.feed.totalQuantity,included:included.feed.cocktailTotal,date});setUnavailable(false);}
+      }catch{if(!controller.signal.aborted){setUnavailable(true);}}finally{busy=false;}
     }
     void refresh();
     const timer=setInterval(refresh,60000);
@@ -137,7 +148,8 @@ function CocktailCounter({example}:{example:boolean}){
         <i style={{flex:counts.sumup||0.001}}/><i style={{flex:counts.included||0.001}}/>
       </div>
       <div className="cocktail-counter-sources"><span>SumUp {counts.sumup}</span><span>Included {counts.included}</span></div>
-    </>:<p className="cocktail-counter-pending">{unavailable?"Zählung derzeit nicht vollständig verfügbar.":"Cocktails werden gezählt …"}</p>}
+    </>:<p className="cocktail-counter-pending">{unavailable?"Artikel werden noch synchronisiert …":"Cocktails werden gezählt …"}</p>}
+    {counts && unavailable && <small role="status" className="bestseller-sync-note">Artikel werden noch synchronisiert … · Letzter bestätigter Stand</small>}
     <small>Erfasste Bestellungen · Tageswechsel 03:00 Uhr</small>
     {lastEvening && <div className="cocktail-counter-previous"><span>Letzter Verkaufsabend · {new Intl.DateTimeFormat("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:"UTC"}).format(new Date(lastEvening.date+"T12:00:00Z"))}</span><strong>{lastEvening.total} Cocktails</strong></div>}
   </div>;

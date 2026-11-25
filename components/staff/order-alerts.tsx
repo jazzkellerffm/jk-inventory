@@ -174,8 +174,9 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
       batch.current = undefined;
       const list = orderBatch.current.splice(0);
       if (document.hidden || !list.length) return;
-      const first = list.find(n => n.kind === "food") ?? list[0];
-      queue(list.length === 1 ? first : {...first,label:list.length+" neue Bestellhinweise"});
+      const groups = new Map<string, Notice[]>();
+      for(const notice of list){const key=notice.target;const group=groups.get(key)??[];group.push(notice);groups.set(key,group);}
+      for(const group of groups.values()){const first=group[0];queue(group.length===1?first:{...first,label:group.length+" neue Bestellhinweise · "+(first.target==="included-title"?"Included Drinks":"SumUp")});}
     },350);
   },[queue]);
 
@@ -221,7 +222,7 @@ export function OrderAlerts({board, food, demo, bookings, onBooking}: {bookings?
       id:"test", at:Date.now()/1000, label:"Premium – 2 Guests · Test", eventName:"Testbuchung"
     }))}>Buchung testen</button>}
     {soundEnabled && mode !== "off" && audioFailed && <small role="status">Ton nicht verfügbar. Hinweise erscheinen oben.</small>}
-    <div role="status" aria-live="polite">{notice && <a className="staff-order-banner" data-kind={notice.kind} href={"#"+notice.target} onClick={()=>{if (notice.booking) onBooking(notice.booking); advance();}}>{notice.label}</a>}</div>
+    <div role="status" aria-live="polite">{notice && <a className="staff-order-banner" data-kind={notice.kind} data-source={notice.target==="included-title"?"included":notice.target==="payments"?"sumup":undefined} href={"#"+notice.target} onClick={()=>{if (notice.booking) onBooking(notice.booking); advance();}}>{notice.label}</a>}</div>
   </aside>;
 }
 

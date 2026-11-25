@@ -836,3 +836,7 @@
 .admin-month h2 select:focus { outline:none; }
 .admin-month h2 select:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 @media (hover:none) and (pointer:coarse) { .admin-month h2 select:focus-visible { outline:none; border-color:var(--accent); } }
+
+.staff-order-banner[data-source="sumup"] { background:#f4e3e3; }
+.staff-order-banner[data-source="included"] { background:var(--cream); }
+.bestseller-sync-note { display:block; margin:8px 0; font-size:12px; font-weight:400; color:var(--muted); }

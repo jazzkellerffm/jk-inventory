@@ -161,7 +161,7 @@
   },
   {
     "date": "2026-11-26",
-    "role": "Team · Aufgaben noch offen",
+    "role": "Bar inkl. Backstage",
     "names": [
       "Hamad",
       "Adri"
@@ -177,9 +177,16 @@
   },
   {
     "date": "2026-11-26",
+    "role": "Service inkl. Snacks",
+    "names": [
+      "Chelly"
+    ]
+  },
+  {
+    "date": "2026-11-26",
     "role": "Door",
     "names": [
-      "Ana"
+      "Anna"
     ]
   },
   {
